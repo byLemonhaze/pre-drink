@@ -123,8 +123,8 @@ export default function VaultGate() {
           </div>
           <span>pre-drink.</span>
         </div>
-        <div className="eyebrow">YOUR STORY. UNDER YOUR CONTROL.</div>
-        <h1>{create ? "A key of your own." : "Welcome back."}</h1>
+        <div className="eyebrow">LOCAL VAULT / ENCRYPTED</div>
+        <h1>{create ? "Create vault" : "Unlock vault"}</h1>
         <p>
           {create
             ? "Create your encrypted vault with a long, unique password. Only you can unlock it."

@@ -4,22 +4,23 @@
   place-items: center;
   padding: 35px;
   background:
-    radial-gradient(ellipse at 70% 20%, #e8eddc, transparent 65%), #f6f5f0;
+    radial-gradient(ellipse at 70% 20%, var(--surface), transparent 65%),
+    var(--surface);
 }
 .unlock-card {
   width: 470px;
   max-width: 100%;
-  background: #fcfdf8;
-  border: 1px solid #dce2d2;
-  border-radius: 15px;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 5px;
   padding: 38px;
-  box-shadow: 0 18px 65px #3a482d0a;
+  box-shadow: 0 18px 65px #0005;
 }
 .unlock-card .brand {
   margin: 0 0 38px;
 }
 .unlock-card h1 {
-  font-family: Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 38px;
   font-weight: 400;
   margin: 15px 0;
@@ -27,7 +28,7 @@
 .unlock-card > p {
   font-size: 12px;
   line-height: 1.9;
-  color: #7a846a;
+  color: var(--muted);
 }
 .unlock-card form {
   margin: 25px 0;
@@ -41,7 +42,7 @@ form label:not(.checkbox-row) {
   flex-direction: column;
   gap: 8px;
   font-size: 11px;
-  color: #687658;
+  color: var(--text);
   margin: 18px 0 12px;
 }
 form input:not([type="checkbox"]),
@@ -50,10 +51,10 @@ form textarea,
 .memory-filters > input,
 .memory-filters > select {
   width: 100%;
-  border: 1px solid #d8dfcc;
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: #fffffb;
-  color: #3e4a32;
+  background: var(--canvas);
+  color: var(--text);
   padding: 11px;
   font: inherit;
   font-size: 13px;
@@ -69,21 +70,21 @@ form textarea {
   align-items: flex-start;
   font-size: 11px;
   line-height: 1.7;
-  color: #73805f;
+  color: var(--text);
   margin: 14px 0;
 }
 .checkbox-row input {
-  accent-color: #627f3c;
+  accent-color: var(--accent);
   margin-top: 3px;
   flex-shrink: 0;
 }
 .security-caption {
   display: flex;
   gap: 9px;
-  color: #809365;
+  color: var(--muted);
   font-size: 10px;
   line-height: 1.8;
-  border-top: 1px solid #e1e6d7;
+  border-top: 1px solid var(--line);
   padding-top: 20px;
   margin-bottom: 15px;
 }
@@ -91,16 +92,16 @@ form textarea {
   flex-shrink: 0;
 }
 .form-error {
-  background: #f9ebe4;
-  color: #955947 !important;
-  border: 1px solid #ead3c8;
+  background: var(--surface);
+  color: var(--text) !important;
+  border: 1px solid var(--line);
   border-radius: 5px;
   padding: 10px;
   font-size: 12px !important;
   margin: 14px 0 !important;
 }
 .migration-note {
-  background: #edf1e2;
+  background: var(--surface);
   padding: 14px;
   border-radius: 6px;
   font-size: 12px;
@@ -109,12 +110,12 @@ form textarea {
   font-size: 11px;
   line-height: 1.8;
   margin-top: 8px;
-  color: #83916f;
+  color: var(--muted);
 }
 .button.secondary {
-  background: #edf1e3;
-  border: 1px solid #dbe3cd;
-  color: #64784a;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  color: var(--text);
 }
 .topbar .offline-badge {
   margin-left: auto;
@@ -166,10 +167,10 @@ form textarea {
   gap: 12px;
   font-size: 9px;
   letter-spacing: 0.7px;
-  color: #98a587;
+  color: var(--muted);
 }
 .approval {
-  border: 1px solid #dce2d1;
+  border: 1px solid var(--line);
   border-radius: 4px;
   padding: 4px 6px;
   letter-spacing: 0;
@@ -177,13 +178,13 @@ form textarea {
   white-space: nowrap;
 }
 .approval.ready {
-  background: #e8efd9;
-  color: #718a4c;
+  background: var(--surface);
+  color: var(--text);
 }
 .memory-content {
   white-space: pre-wrap;
   font-size: 13px !important;
-  color: #526344 !important;
+  color: var(--text) !important;
   line-height: 1.8 !important;
   margin: 18px 0 !important;
   overflow-wrap: anywhere;
@@ -194,7 +195,7 @@ form textarea {
   text-align: left;
   padding: 0;
   font-size: 10px;
-  color: #91a177;
+  color: var(--muted);
   display: flex;
   align-items: center;
   gap: 6px;
@@ -206,17 +207,17 @@ form textarea {
   gap: 14px;
   margin-top: 20px;
   padding-top: 14px;
-  border-top: 1px solid #e8ecdf;
+  border-top: 1px solid var(--line);
   flex-wrap: wrap;
   font-size: 10px;
-  color: #9c8573;
+  color: var(--muted);
 }
 .card-actions button {
   border: 0;
   background: none;
   padding: 0;
   font-size: 11px;
-  color: #7a8e60;
+  color: var(--muted);
 }
 .empty-layer {
   display: flex;
@@ -224,14 +225,14 @@ form textarea {
   flex-direction: column;
   text-align: center;
   padding: 65px 20px;
-  color: #9caa88;
+  color: var(--muted);
   gap: 16px;
 }
 .empty-layer h3 {
-  font-family: Georgia, serif;
+  font-family: var(--font-ui);
   font-size: 25px;
   font-weight: 400;
-  color: #72875a;
+  color: var(--text);
 }
 .empty-layer p {
   font-size: 12px;
@@ -241,7 +242,7 @@ form textarea {
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: #27331d66;
+  background: var(--raised);
   backdrop-filter: blur(6px);
   z-index: 50;
   display: flex;
@@ -251,14 +252,14 @@ form textarea {
 }
 .editor-modal {
   position: relative;
-  background: #fafbf5;
-  border: 1px solid #d9e2c9;
-  border-radius: 12px;
+  background: var(--canvas);
+  border: 1px solid var(--line);
+  border-radius: 5px;
   padding: 32px;
   max-height: 92vh;
   overflow: auto;
   width: 580px;
-  box-shadow: 0 18px 65px #1c281e33;
+  box-shadow: 0 18px 65px #0005;
 }
 .editor-modal.wide {
   width: 720px;
@@ -269,7 +270,7 @@ form textarea {
   right: 18px;
 }
 .editor-modal h2 {
-  font-family: Georgia, serif;
+  font-family: var(--font-ui);
   font-weight: 400;
   font-size: 30px;
   letter-spacing: -0.6px;
@@ -278,7 +279,7 @@ form textarea {
 .editor-modal > p {
   font-size: 12px;
   line-height: 1.8;
-  color: #8c9b7a;
+  color: var(--muted);
   max-width: 440px;
 }
 .form-actions {
@@ -291,12 +292,12 @@ form textarea {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid #e2e8d6;
-  background: #f2f5ea;
+  border: 1px solid var(--line);
+  background: var(--surface);
   border-radius: 4px;
   padding: 6px 8px;
   margin-top: 13px;
-  color: #84996a;
+  color: var(--muted);
   font-size: 9px;
 }
 .brief-excerpt {
@@ -312,10 +313,10 @@ form textarea {
   display: flex;
   gap: 12px;
   padding: 15px;
-  background: #f2eedf;
-  border: 1px solid #e6dfc5;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 6px;
-  color: #8b7b4c !important;
+  color: var(--text) !important;
   line-height: 1.9 !important;
 }
 .sharing-warning svg {
@@ -325,8 +326,8 @@ form textarea {
 .config-box {
   margin-top: 22px;
   padding: 18px;
-  background: #eef2e3;
-  border: 1px solid #d7e2c6;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 6px;
   font-size: 12px;
 }
@@ -336,13 +337,13 @@ form textarea {
 .config-box textarea {
   width: 100%;
   margin: 15px 0;
-  background: #fafdf3;
-  border: 1px solid #d5e0c2;
+  background: var(--canvas);
+  border: 1px solid var(--line);
   padding: 12px;
   border-radius: 5px;
   font-family: monospace;
   font-size: 10px;
-  color: #607c42;
+  color: var(--text);
   resize: vertical;
 }
 .client-row {
@@ -351,15 +352,15 @@ form textarea {
   align-items: center;
   justify-content: space-between;
   padding: 17px 20px;
-  border: 1px solid #dce4d0;
-  background: #f0f4e7;
-  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 5px;
   margin-bottom: 12px;
   font-size: 12px;
 }
 .client-row p {
   font-size: 10px;
-  color: #8a9c74;
+  color: var(--muted);
   margin-top: 7px;
 }
 .context-preview {
@@ -369,10 +370,10 @@ form textarea {
   margin-top: 20px;
   font-size: 11px;
   line-height: 1.8;
-  background: #f0f4e6;
-  border: 1px solid #dce6cb;
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: 6px;
-  color: #6c8154;
+  color: var(--text);
   max-height: 400px;
   overflow: auto;
 }
@@ -406,4 +407,168 @@ form textarea {
   .section-heading .button {
     margin-top: 15px;
   }
+}
+
+/* Vault controls share the same system palette as the archive. */
+.vault-gate {
+  background: var(--canvas);
+}
+.unlock-card {
+  width: 460px;
+  background: var(--surface);
+  border: 1px solid #40454e;
+  border-radius: 6px;
+  padding: 32px;
+  box-shadow: 0 22px 80px #0007;
+}
+.unlock-card .brand {
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+}
+.unlock-card h1 {
+  font-family: var(--font-ui);
+  font-size: 29px;
+  font-weight: 600;
+  letter-spacing: -0.8px;
+}
+.unlock-card > p,
+.editor-modal > p {
+  font-size: 13px;
+  color: #aeb4be;
+}
+form label:not(.checkbox-row) {
+  color: #c4c9d1;
+  font-size: 12px;
+}
+form input:not([type="checkbox"]),
+form select,
+form textarea,
+.memory-filters > input,
+.memory-filters > select {
+  background: #101216;
+  border-color: #3b424d;
+  border-radius: 3px;
+  color: var(--text);
+}
+form textarea {
+  line-height: 1.8;
+}
+.checkbox-row {
+  color: #b7bec9;
+  font-size: 12px;
+}
+.security-caption {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+.security-caption svg {
+  color: var(--accent);
+}
+.button.secondary {
+  background: #272c34;
+  color: #d5dae2;
+  border-color: #414854;
+}
+.lock-button {
+  color: var(--accent) !important;
+}
+.memory-grid {
+  gap: 12px;
+}
+.memory-meta {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-size: 10px;
+}
+.approval {
+  font-family: var(--font-mono);
+  color: #afb6c1;
+  background: #20242a;
+  border-color: #454b55;
+  border-radius: 3px;
+}
+.approval.ready {
+  color: #acd1b8;
+  background: #233329;
+  border-color: #435e4b;
+}
+.memory-content {
+  color: #d9dde4 !important;
+  font-size: 14px !important;
+}
+.source-link {
+  color: var(--accent);
+  font-size: 11px;
+}
+.card-actions button {
+  color: #c4cbd7;
+}
+.card-actions button:hover {
+  color: var(--accent);
+}
+.empty-layer h3 {
+  font-family: var(--font-ui);
+  font-weight: 550;
+  font-size: 23px;
+  color: var(--text);
+}
+.empty-layer {
+  color: var(--muted);
+}
+.modal-backdrop {
+  background: #0009;
+  backdrop-filter: blur(4px);
+}
+.editor-modal {
+  background: #1c2026;
+  border-color: #4a515d;
+  border-radius: 6px;
+  box-shadow: 0 20px 80px #0009;
+}
+.editor-modal h2 {
+  font-family: var(--font-ui);
+  font-size: 25px;
+  font-weight: 600;
+}
+.save-memory-button {
+  background: #29271f;
+  border-color: #4d4435;
+  color: #d8b681;
+  font-size: 11px;
+}
+.sharing-warning {
+  background: #30291f;
+  color: #e0bd89 !important;
+  border-color: #594a33;
+}
+.form-error {
+  background: #312024;
+  border-color: #684047;
+  color: #f1aaa5 !important;
+}
+.migration-note {
+  background: #272b32;
+}
+.config-box {
+  background: #20242a;
+  border-color: #404754;
+}
+.config-box textarea,
+.context-preview {
+  background: #101216;
+  border-color: #3a424e;
+  color: #d1b790;
+  border-radius: 3px;
+  font-family: var(--font-mono);
+}
+.client-row {
+  background: #1d2228;
+  border-color: #383f49;
+  border-radius: 4px;
+}
+.client-row p {
+  color: #aab3c1;
+  font-size: 11px;
 }

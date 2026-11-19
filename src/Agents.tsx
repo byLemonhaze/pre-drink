@@ -66,8 +66,8 @@ export default function Agents({ sharing }: { sharing: boolean }) {
   }
   return (
     <div className="secondary-page">
-      <div className="eyebrow">MCP · CONTROLLED ACCESS TO YOUR CONTEXT</div>
-      <h1>Let the right context through.</h1>
+      <div className="eyebrow">MCP / CLIENT PERMISSIONS</div>
+      <h1>Agent access</h1>
       <p className="page-intro">
         An agent can ask for approved facts, decisions, projects, and curated
         briefs. You control who can connect.

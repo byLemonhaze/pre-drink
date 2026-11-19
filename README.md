@@ -84,6 +84,7 @@ Generate synthetic fixtures with `python3 scripts/create_sample_export.py`. Debu
 - [Validation record](docs/VALIDATION.md)
 - [Product vision, requirements and ideas](docs/PRODUCT.md)
 - [Architecture and design decisions](docs/ARCHITECTURE.md)
+- [Interface direction](docs/DESIGN.md)
 - [Security model](docs/SECURITY.md)
 - [MCP integration](docs/MCP.md)
 - [Backup and recovery](docs/RECOVERY.md)

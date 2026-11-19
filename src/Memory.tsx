@@ -75,7 +75,7 @@ export function MemoryEditor({
           <X size={17} />
         </button>
         <div className="eyebrow">LAYER 02 · MEMORY</div>
-        <h2>{memory ? "Refine this memory." : "Keep the useful part."}</h2>
+        <h2>{memory ? "Edit memory" : "New memory"}</h2>
         <p>
           Turn the conversation into one clear, lasting note. Your source stays
           linked; your original chat stays intact.
@@ -182,10 +182,10 @@ export function MemoryView({
   );
   return (
     <div className="secondary-page memory-page">
-      <div className="eyebrow">LAYER 02 · THE PARTS THAT MATTER</div>
+      <div className="eyebrow">02 / REVIEWED KNOWLEDGE</div>
       <div className="section-heading">
         <div>
-          <h1>Make it memorable.</h1>
+          <h1>Memory</h1>
           <p className="page-intro">
             Facts, decisions, and projects. Written and approved by you.
           </p>

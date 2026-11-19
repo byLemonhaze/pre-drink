@@ -477,9 +477,9 @@ function App({ onLock, sharing }: { onLock: () => void; sharing: boolean }) {
           <>
             <section className="page-heading">
               <div>
-                <div className="eyebrow">A LITTLE ORDER, A LOT OF CLARITY</div>
+                <div className="eyebrow">01 / SOURCE MATERIAL</div>
                 <h1>
-                  Your archive<span className="heading-dot">.</span>
+                  Archive<span className="heading-dot">.</span>
                 </h1>
                 <p>Your AI history, sober and ready.</p>
               </div>
@@ -522,16 +522,16 @@ function App({ onLock, sharing }: { onLock: () => void; sharing: boolean }) {
                     HISTORY
                   </div>
                   <h2>
-                    Good conversations.
+                    Your history,
                     <br />
-                    <span>Worth keeping.</span>
+                    <span>under your control.</span>
                   </h2>
                   <p>
                     Bring your scattered chats home. One quiet place to find the
                     ideas, answers, and rabbit holes you want to come back to.
                   </p>
                   <div className="hero-action">
-                    {importButton("Bring in your first export")}
+                    {importButton("Import ChatGPT export")}
                     <span>Start with a ChatGPT ZIP</span>
                   </div>
                   <div className="privacy-note">
@@ -814,8 +814,8 @@ function App({ onLock, sharing }: { onLock: () => void; sharing: boolean }) {
 
         {page === "imports" && (
           <div className="secondary-page">
-            <div className="eyebrow">BRING YOUR HISTORY HOME</div>
-            <h1>Small ZIP. Big history.</h1>
+            <div className="eyebrow">IMPORT / OFFICIAL EXPORTS</div>
+            <h1>Import history</h1>
             <p className="page-intro">
               Import an official ChatGPT export. Everything is read and stored
               on this Mac.
@@ -876,8 +876,8 @@ function App({ onLock, sharing }: { onLock: () => void; sharing: boolean }) {
 
         {page === "settings" && (
           <div className="secondary-page">
-            <div className="eyebrow">PRIVATE BY DESIGN</div>
-            <h1>A vault, on your terms.</h1>
+            <div className="eyebrow">SECURITY / LOCAL STORAGE</div>
+            <h1>Vault settings</h1>
             <p className="page-intro">
               No account to create. No server to trust. Your conversations live
               here.
@@ -936,18 +936,18 @@ function App({ onLock, sharing }: { onLock: () => void; sharing: boolean }) {
                 {stats.database_path || "Available in the Mac app"}
               </code>
               <p className="fine-print">
-                Your archive, memory, briefs, and search index are encrypted
-                with SQLCipher AES-256 and authenticated pages. Argon2id derives
-                the key from your password. No password or database key is
-                saved. Automatic locking follows 15 minutes without activity in
-                this app, and system/display sleep or user-session switching.
+                Archive, memory, briefs, and search index are encrypted with
+                SQLCipher AES-256 and authenticated pages. Argon2id derives the
+                key from your password. No password or database key is saved.
+                Automatic locking follows 15 minutes without activity in this
+                app, and system/display sleep or user-session switching.
                 Original export ZIPs and old Mac backups are outside this
                 protection.
               </p>
             </section>
             <Backup />
             <section className="settings-card">
-              <h2>Know the boundaries.</h2>
+              <h2>Security boundaries</h2>
               <p>
                 Encryption protects stored files, not a compromised Mac or
                 content already received by an agent. Privacy detection is a
@@ -969,7 +969,7 @@ function App({ onLock, sharing }: { onLock: () => void; sharing: boolean }) {
       {dragging && (
         <div className="drop-overlay">
           <FileArchive size={48} />
-          <h2>Make yourself at home.</h2>
+          <h2>Drop ChatGPT export</h2>
           <p>Drop your official ChatGPT export ZIP.</p>
         </div>
       )}

@@ -1,5 +1,7 @@
 # macOS distribution
 
+**Pre-release visibility:** Keep the repository private and Pages unpublished until the owner explicitly chooses to launch. A successful build or UI change does not authorize making either public.
+
 Local/ad-hoc builds do not establish a verified publisher identity. Developer ID signing associates the app with an Apple identity and lets macOS detect modification. Notarization adds Apple's automated distribution check and ticket. Neither replaces vault encryption or a security audit. References: [Apple Developer ID](https://developer.apple.com/developer-id/), [Tauri signing](https://v2.tauri.app/distribute/sign/macos/).
 
 Developer ID signing/notarization have not been completed for this version. Do not label local artifacts as signed public releases.

@@ -39,10 +39,10 @@ export default function Briefs() {
   }
   return (
     <div className="secondary-page">
-      <div className="eyebrow">LAYER 03 · THE STORY YOU CHOOSE TO SHARE</div>
+      <div className="eyebrow">03 / CURATED CONTEXT</div>
       <div className="section-heading">
         <div>
-          <h1>Briefs with boundaries.</h1>
+          <h1>Briefs</h1>
           <p className="page-intro">
             Turn approved memories into a project spec, handoff, or reusable
             context pack.
@@ -186,7 +186,7 @@ function BriefEditor({
           <X size={17} />
         </button>
         <div className="eyebrow">CURATED, NOT AUTOMATIC</div>
-        <h2>{brief ? "Review your brief." : "Write the handoff."}</h2>
+        <h2>{brief ? "Edit brief" : "New brief"}</h2>
         <form onSubmit={save}>
           <label>
             Title

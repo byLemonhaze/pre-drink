@@ -1,15 +1,19 @@
 :root {
-  --paper: #f3f0e8;
-  --ink: #262c27;
-  --muted: #686c62;
-  --line: #d8d8cd;
-  --accent: #b54e36;
-  --green: #355d49;
-  --white: #fffdf7;
+  color-scheme: dark;
+  --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --paper: #111316;
+  --ink: #e6e8ec;
+  --muted: #a1a7b1;
+  --line: #343a43;
+  --accent: #deb477;
+  --green: #deb477;
+  --white: #1b1e24;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--ink);
   background: var(--paper);
   font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
   scroll-behavior: smooth;
 }
 * {
@@ -97,7 +101,7 @@ p {
   margin-top: 0;
 }
 h1 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-ui);
   font-size: 70px;
   line-height: 1.03;
   letter-spacing: -3.6px;
@@ -161,7 +165,7 @@ h1 em {
   position: relative;
   height: 424px;
   margin: 0 0 0 10px;
-  background-image: radial-gradient(#bfc4b8 0.7px, transparent 0.7px);
+  background-image: radial-gradient(#343a43 0.7px, transparent 0.7px);
   background-size: 17px 17px;
   border-radius: 12px;
 }
@@ -178,9 +182,9 @@ h1 em {
 .paper {
   position: absolute;
   width: 330px;
-  border: 1px solid #d4d6cb;
+  border: 1px solid #454c58;
   border-radius: 7px;
-  box-shadow: 0 8px 22px #293d2510;
+  box-shadow: 0 8px 22px #0005;
   padding: 23px 25px;
 }
 .paper-label {
@@ -203,7 +207,7 @@ h1 em {
   margin-bottom: 15px;
 }
 .archive-paper {
-  background: #e6e8dc;
+  background: #222730;
   left: 12px;
   top: 48px;
   transform: rotate(-6deg);
@@ -217,7 +221,7 @@ h1 em {
 }
 .lines i {
   height: 3px;
-  background: #b8bfac;
+  background: #505969;
   border-radius: 8px;
 }
 .lines i:nth-child(2) {
@@ -230,10 +234,10 @@ h1 em {
   font-size: 9px;
   display: block;
   margin-top: 12px;
-  color: #737969;
+  color: #a6afbd;
 }
 .memory-paper {
-  background: #fbf9f1;
+  background: #1e2229;
   right: 1px;
   top: 137px;
   transform: rotate(3deg);
@@ -245,7 +249,7 @@ h1 em {
   color: var(--green);
 }
 .brief-paper {
-  background: #fffdf7;
+  background: #1b1e24;
   left: 35px;
   top: 259px;
   transform: rotate(-2deg);
@@ -263,7 +267,7 @@ h1 em {
   align-items: center;
   gap: 6px;
   border-radius: 30px;
-  background: #edf1e7;
+  background: #30291f;
   color: var(--green);
   font-size: 8px;
   padding: 6px 10px;
@@ -296,7 +300,7 @@ h1 em {
   padding-bottom: 90px;
 }
 h2 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-ui);
   font-size: 44px;
   line-height: 1.1;
   font-weight: 400;
@@ -335,7 +339,7 @@ h3 {
   margin-top: 22px;
 }
 .privacy {
-  background: #e2e7dc;
+  background: #191d23;
   padding: 74px 0;
 }
 .privacy-grid {
@@ -348,7 +352,7 @@ h3 {
 }
 .privacy-intro {
   font-size: 15px;
-  color: #546253;
+  color: #afb7c4;
   line-height: 1.8;
   max-width: 420px;
 }
@@ -359,7 +363,7 @@ h3 {
 .privacy-list > div {
   display: flex;
   gap: 22px;
-  border-top: 1px solid #c0cbbb;
+  border-top: 1px solid #343b46;
   padding: 23px 0 5px;
 }
 .privacy-list > div:first-child {
@@ -375,7 +379,7 @@ h3 {
 .privacy-list p {
   font-size: 13px;
   line-height: 1.8;
-  color: #546253;
+  color: #afb7c4;
 }
 .privacy-list strong {
   display: block;
@@ -614,6 +618,235 @@ footer > div {
 }
 @media (prefers-reduced-motion: reduce) {
   :root {
+    color-scheme: dark;
+    --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     scroll-behavior: auto;
+  }
+}
+
+/* Dark system identity, shared with the desktop vault. */
+.brand {
+  font-family: var(--font-mono);
+  font-size: 21px;
+  letter-spacing: -1px;
+}
+.topbar {
+  height: 90px;
+  border-bottom: 1px solid var(--line);
+}
+.topbar nav {
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.hero {
+  padding-top: 80px;
+  padding-bottom: 100px;
+}
+h1 {
+  font-family: var(--font-ui);
+  font-weight: 650;
+  font-size: 65px;
+  line-height: 1.08;
+  letter-spacing: -3.5px;
+}
+h1 em {
+  font-style: normal;
+  font-weight: 650;
+}
+h2 {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 42px;
+  line-height: 1.15;
+  letter-spacing: -1.7px;
+}
+.eyebrow,
+.footnote,
+.detail,
+.step-no,
+.specimen-label {
+  font-family: var(--font-mono);
+}
+.primary {
+  background: var(--accent);
+  color: #191713;
+  border: 1px solid #eac48f;
+  border-radius: 3px;
+}
+.primary:not(:disabled):hover {
+  background: #edc78e;
+}
+.button:disabled {
+  opacity: 1;
+  background: #242830;
+  color: #b6beca;
+  border-color: #424a57;
+}
+.source-link {
+  color: #c1c8d3;
+}
+.specimen {
+  border: 1px solid #343c48;
+  border-radius: 4px;
+  background-color: #15191f;
+  height: 440px;
+}
+.specimen-label {
+  padding: 13px 14px;
+  margin: 0;
+  border-bottom: 1px solid var(--line);
+  background: #20252d;
+}
+.paper {
+  width: 320px;
+  border-radius: 3px;
+  box-shadow: 7px 7px 0 #090b0e;
+  padding: 21px 23px;
+}
+.paper-label {
+  color: #b0bac8;
+}
+.paper-title {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 21px;
+  color: #e6e8ec;
+}
+.paper p {
+  color: #b0b9c7;
+}
+.archive-paper {
+  transform: none;
+  top: 65px;
+  left: 20px;
+  height: 170px;
+}
+.memory-paper {
+  transform: none;
+  top: 162px;
+  right: 16px;
+  height: 166px;
+}
+.brief-paper {
+  transform: none;
+  top: 276px;
+  left: 36px;
+  height: 146px;
+  border-color: #7b6647;
+}
+.brief-paper .paper-title {
+  font-size: 20px;
+}
+.share-pill {
+  border-radius: 2px;
+  color: #e2bd87;
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+.stamp {
+  color: #a9c8b4;
+}
+.privacy {
+  border-top: 1px solid #323943;
+  border-bottom: 1px solid #323943;
+}
+.privacy a {
+  color: #e0bb85;
+}
+.steps {
+  gap: 0;
+  border: 1px solid var(--line);
+  background: #191d23;
+  border-radius: 3px;
+}
+.steps article {
+  padding: 27px;
+}
+.steps article + article {
+  border-left: 1px solid var(--line);
+}
+.detail {
+  color: #c4ab84;
+  line-height: 1.8;
+}
+.download {
+  background: #181c22;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  margin-bottom: 70px;
+}
+footer {
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 1050px) {
+  h1 {
+    font-size: 55px;
+  }
+  .paper {
+    width: 285px;
+  }
+  .brief-paper {
+    left: 20px;
+  }
+}
+@media (max-width: 760px) {
+  .hero {
+    padding-top: 45px;
+    padding-bottom: 65px;
+  }
+  h1 {
+    font-size: 48px;
+    letter-spacing: -2px;
+  }
+  h2,
+  .privacy h2,
+  .download h2 {
+    font-size: 33px;
+    letter-spacing: -1.2px;
+  }
+  .specimen {
+    height: 432px;
+  }
+  .paper {
+    width: min(290px, calc(100% - 28px));
+    padding: 17px;
+  }
+  .archive-paper {
+    left: 8px;
+  }
+  .memory-paper {
+    right: 8px;
+  }
+  .brief-paper {
+    left: 12px;
+    height: 151px;
+  }
+  .paper-title,
+  .brief-paper .paper-title {
+    font-size: 18px;
+  }
+  .steps article + article {
+    border-left: 0;
+  }
+  .steps article {
+    padding: 25px;
+  }
+  .steps {
+    gap: 0;
+  }
+  .steps article:first-child {
+    border-top: 0;
+  }
+  .download {
+    margin: 0 12px 40px;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+  .topbar nav {
+    font-size: 10px;
+  }
+  .brand {
+    font-size: 20px;
   }
 }

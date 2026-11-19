@@ -36,7 +36,7 @@ export default function Backup() {
   }
   return (
     <section className="settings-card">
-      <h2>An encrypted copy, just in case.</h2>
+      <h2>Encrypted backup</h2>
       <p>
         Your backup includes archive snapshots, memory, and briefs. Choose a
         password for the backup; it can differ from your vault password. A
