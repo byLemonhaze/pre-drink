@@ -108,6 +108,7 @@ impl Vault {
                     .memories(Some(kind), "", true)?
                     .into_iter()
                     .take(50)
+                    .map(crate::memory::AgentMemory::from)
                     .collect::<Vec<_>>();
                 serde_json::to_value(items).map_err(|e| e.to_string())
             }

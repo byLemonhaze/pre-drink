@@ -15,11 +15,11 @@ pub struct Brief {
     pub updated_at: f64,
 }
 #[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct BriefInput {
     pub id: Option<String>,
     pub title: String,
     pub content: String,
-    pub approved: bool,
     pub private: bool,
     pub source_ids: Vec<String>,
 }
@@ -44,12 +44,12 @@ impl Vault {
             .as_secs_f64();
         let tx = self.connection.transaction().map_err(|e| e.to_string())?;
         if input.id.is_some() {
-            let changed=tx.execute("UPDATE briefs SET title=?1,content=?2,approved=?3,private=?4,sensitive=?5,updated_at=?6 WHERE id=?7",params![input.title,input.content,input.approved,input.private,sensitive,now,id]).map_err(|e|e.to_string())?;
+            let changed=tx.execute("UPDATE briefs SET title=?1,content=?2,approved=?3,private=?4,sensitive=?5,updated_at=?6 WHERE id=?7",params![input.title,input.content,false,input.private,sensitive,now,id]).map_err(|e|e.to_string())?;
             if changed == 0 {
                 return Err("Brief no longer exists.".into());
             }
         } else {
-            tx.execute("INSERT INTO briefs(id,title,content,approved,private,sensitive,updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7)",params![id,input.title,input.content,input.approved,input.private,sensitive,now]).map_err(|e|e.to_string())?;
+            tx.execute("INSERT INTO briefs(id,title,content,approved,private,sensitive,updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7)",params![id,input.title,input.content,false,input.private,sensitive,now]).map_err(|e|e.to_string())?;
         }
         // Existing provenance cannot be silently removed. Orphaned sources keep a brief blocked.
         for source in input.source_ids {

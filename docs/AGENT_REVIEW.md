@@ -4,7 +4,7 @@ Review the implementation as an early working native product with outstanding re
 
 ## Start here
 
-Read README, PRODUCT, ARCHITECTURE, SECURITY, MCP and RECOVERY in that order. Source is independent of Loominary; see PROVENANCE. Current scope is ChatGPT only. User data is deliberately absent from this repository.
+Read README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE in that order. Source is independent of Loominary; see PROVENANCE. Current scope is ChatGPT only. User data is deliberately absent from this repository.
 
 ## Safe local verification
 
@@ -38,6 +38,6 @@ Report findings with severity, exact code path, reproduction, impact, and a prop
 
 ## Evidence and limitations
 
-27 automated cases cover importer behavior, storage and privacy boundaries, encryption/backups/migration, and one real stdio MCP integration. Native synthetic-data verification covered creating a vault, picker import, approved memory, approved brief, context preview and manual lock. See VALIDATION for final command results and dependency warnings.
+35 automated cases cover importer behavior, storage and privacy boundaries, encryption/backups/migration, and one real stdio MCP integration. Native synthetic-data verification covered creating a vault, picker import, approved memory, approved brief, context preview and manual lock. See VALIDATION for final command results and dependency warnings.
 
 Not yet verified: representative real exports, actual file drag, large-library performance, every supported OS/hardware, external client setup screens, full sleep/lock-screen behavior, independent security audit. In-app restore, password rotation, dedicated Markdown file export, per-brief grants and tagging UI remain roadmap items.

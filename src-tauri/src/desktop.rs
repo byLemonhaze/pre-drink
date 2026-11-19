@@ -130,6 +130,29 @@ async fn save_memory(input: MemoryInput, store: State<'_, Store>) -> Result<Stri
     owner_op(store.inner().clone(), move |v| v.save_memory(input)).await
 }
 #[tauri::command]
+async fn approval_review(
+    kind: String,
+    id: String,
+    store: State<'_, Store>,
+) -> Result<crate::review::ApprovalReview, String> {
+    owner_op(store.inner().clone(), move |v| {
+        v.approval_review(&kind, &id)
+    })
+    .await
+}
+#[tauri::command]
+async fn approve_review(
+    kind: String,
+    id: String,
+    review_hash: String,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    owner_op(store.inner().clone(), move |v| {
+        v.approve_review(&kind, &id, &review_hash)
+    })
+    .await
+}
+#[tauri::command]
 async fn delete_memory(id: String, store: State<'_, Store>) -> Result<(), String> {
     owner_op(store.inner().clone(), move |v| v.delete_memory(&id)).await
 }
@@ -228,6 +251,7 @@ pub fn run() {
                 let _ = handle.emit("vault-locked", ());
             }));
             let store = Arc::new(Mutex::new(session));
+            #[cfg(target_os = "macos")]
             crate::mac_lock::register(store.clone());
             crate::broker::serve(&data.join("agents.sock"), store.clone())
                 .map_err(std::io::Error::other)?;
@@ -247,6 +271,8 @@ pub fn run() {
             get_stats,
             list_memory,
             save_memory,
+            approval_review,
+            approve_review,
             delete_memory,
             preview_context,
             list_clients,

@@ -49,7 +49,7 @@ The GUI is the only process owning an unlocked database connection. The MCP brid
 - **tags/conversation_tags:** schema reserved; no editing UI yet.
 - **search_index:** encrypted FTS5 text, rebuilt per affected conversation in the import transaction.
 
-Schema version 2 adds the source marker and curated layers. Reject newer unknown schema versions. Encryption format 1 is separately defined in `crypto.rs`; schema upgrades must not silently change key derivation.
+Schema version 2 added the source marker and curated layers. Schema version 3 rescans existing content with current privacy rules and resets previous approvals once. Encrypted backups retain schema version 3 and current approvals. Reject newer unknown schema versions. Encryption format 1 is separately defined in `crypto.rs`; schema upgrades must not silently change key derivation.
 
 ## Decisions and tradeoffs
 
@@ -71,7 +71,7 @@ A stand-alone agent opening the database would need a password, saved key or ano
 
 ### Reviewed source chains
 
-Raw history is evidence, not approved memory. Notes and briefs require approval and retain provenance. Eligibility is computed at query time to reflect later privacy/source changes. A brief is not silently rewritten by an agent or automatically approved after changing a source.
+Raw history is evidence, not approved memory. Saves always clear approval. The owner-only review command returns persisted content, current supporting notes and a snapshot hash; a separate approval command rechecks that snapshot under the session mutex. MCP has access to neither command. Memory list tools serialize a dedicated response without archive provenance. Schema-v3 upgrade rescans stored content and clears old approvals once. Notes and briefs require approval and retain provenance. Eligibility is computed at query time to reflect later privacy/source changes. A brief is not silently rewritten by an agent or automatically approved after changing a source.
 
 ### Local transport with explicit sharing
 

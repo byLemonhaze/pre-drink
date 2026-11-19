@@ -61,4 +61,4 @@ CREATE TABLE IF NOT EXISTS brief_sources (
   memory_id TEXT REFERENCES memory(id) ON DELETE SET NULL, reviewed_at REAL NOT NULL,
   UNIQUE(brief_id,memory_id)
 );
-PRAGMA user_version = 2;
+-- Version is advanced only after migrations finish in db.rs.

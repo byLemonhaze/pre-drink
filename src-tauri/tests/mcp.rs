@@ -25,20 +25,25 @@ fn actual_stdio_client_negotiates_lists_tools_and_obeys_lock_and_revocation() {
         .prefix("pd-mcp-")
         .tempdir_in("/tmp")
         .unwrap();
+    use std::os::unix::fs::PermissionsExt;
+    std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
     let mut session = Session::new(dir.path().into());
     session
         .unlock("a unique temporary password", true, false)
         .unwrap();
     let v = session.access().unwrap();
-    v.save_memory(MemoryInput {
-        id: None,
-        kind: "fact".into(),
-        content: "Pre-Drink is local.".into(),
-        source_message_id: None,
-        approved: true,
-        private: false,
-    })
-    .unwrap();
+    let note = v
+        .save_memory(MemoryInput {
+            id: None,
+            kind: "fact".into(),
+            content: "Pre-Drink is local.".into(),
+            source_message_id: None,
+            private: false,
+        })
+        .unwrap();
+    let review = v.approval_review("memory", &note).unwrap();
+    v.approve_review("memory", &note, &review.review_hash)
+        .unwrap();
     let client = v.create_client("Isolated MCP check", false).unwrap();
     let store: Store = Arc::new(Mutex::new(session));
     let socket = dir.path().join("agents.sock");

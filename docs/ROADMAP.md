@@ -24,6 +24,8 @@ Current scope: **ChatGPT only**, local and offline by default. Encrypted archive
 - Pagination for larger agent result sets and better topic matching.
 - Conversation tagging UI (schema exists).
 
+Review findings, implemented fixes, and retained product ideas are tracked in [REVIEW_RESPONSE](REVIEW_RESPONSE.md). Signing remains a release blocker.
+
 ## Explicitly later
 
 Claude and Grok official-export parsers. Optional local-model assistance if requested. No automatic extraction, cloud sync, semantic embeddings, Gemini, mobile, live capture, or team features in current scope.

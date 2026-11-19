@@ -62,7 +62,7 @@ impl Vault {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .map_err(|e| e.to_string())?;
-        if version > 2 {
+        if version > 3 {
             return Err("This vault needs a newer Pre-Drink version.".into());
         }
         if version == 1 {
@@ -71,6 +71,50 @@ impl Vault {
         connection
             .execute_batch(include_str!("schema.sql"))
             .map_err(|e| e.to_string())?;
+        if version < 3 {
+            // Reclassify existing vaults before any sharing can start. Keep old
+            // restrictions; the new review contract requires explicit reapproval.
+            connection
+                .execute_batch("BEGIN IMMEDIATE;")
+                .map_err(|e| e.to_string())?;
+            let refreshed = (|| -> Result<(), String> {
+                for (table, column) in [
+                    ("messages", "content"),
+                    ("conversations", "title"),
+                    ("memory", "content"),
+                    ("briefs", "title || ' ' || content"),
+                ] {
+                    let mut stmt = connection
+                        .prepare(&format!(
+                            "SELECT id,{column} FROM {table} WHERE sensitive=0"
+                        ))
+                        .map_err(|e| e.to_string())?;
+                    let rows = stmt
+                        .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))
+                        .map_err(|e| e.to_string())?
+                        .collect::<Result<Vec<_>, _>>()
+                        .map_err(|e| e.to_string())?;
+                    for (id, content) in rows {
+                        if crate::privacy::is_sensitive(&content) {
+                            connection
+                                .execute(
+                                    &format!("UPDATE {table} SET sensitive=1 WHERE id=?1"),
+                                    [id],
+                                )
+                                .map_err(|e| e.to_string())?;
+                        }
+                    }
+                }
+                connection.execute_batch("UPDATE conversations SET sensitive=1 WHERE EXISTS(SELECT 1 FROM messages WHERE conversation_id=conversations.id AND sensitive=1); UPDATE memory SET approved=0; UPDATE briefs SET approved=0; PRAGMA user_version=3;").map_err(|e| e.to_string())
+            })();
+            if let Err(error) = refreshed {
+                let _ = connection.execute_batch("ROLLBACK;");
+                return Err(error);
+            }
+            connection
+                .execute_batch("COMMIT;")
+                .map_err(|e| e.to_string())?;
+        }
         Ok(Self { connection, path })
     }
 
@@ -111,7 +155,7 @@ impl Vault {
                 .map_err(|_| "Couldn't create encrypted backup.")?;
             let exported = self
                 .connection
-                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=2;");
+                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=3;");
             let detached = self.connection.execute_batch("DETACH DATABASE backup;");
             exported
                 .and(detached)

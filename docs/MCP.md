@@ -27,6 +27,8 @@ The stdio handshake, discovery and calls are integration tested. Individual thir
 | `search_conversations(query, limit)` | Additional chat scope  | Up to 50 safe conversation matches with previews                                               |
 | `mark_private(conversation_id)`      | Additional chat scope  | Makes a conversation private; cannot undo privacy                                              |
 
+Memory list responses contain only `id`, `kind`, `content` and `updated_at`. Source conversation titles and IDs are not included. Memory-only context packs omit source-message IDs.
+
 Chat-enabled context packs can add up to five safe excerpts. Local preview shows memory-only scope. Memory/brief topic matching is literal case-insensitive substring matching, not semantic search. Chat search uses literal FTS terms. A topic is not an authorization boundary. All tools enforce privacy and source eligibility; approval does not bypass those filters.
 
 ## Control and cost

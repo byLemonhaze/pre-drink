@@ -1,3 +1,4 @@
+import ReviewDialog from "./Review";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { FileText, Plus, ShieldCheck, X } from "lucide-react";
@@ -32,7 +33,6 @@ export function MemoryEditor({
   const [content, setContent] = useState(
     memory?.content || source?.content || "",
   );
-  const [approved, setApproved] = useState(memory?.approved || false);
   const [privateNote, setPrivate] = useState(memory?.private || false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -47,7 +47,6 @@ export function MemoryEditor({
           kind,
           content,
           source_message_id: memory?.source_message_id || source?.id || null,
-          approved,
           private: privateNote,
         },
       });
@@ -98,7 +97,6 @@ export function MemoryEditor({
               maxLength={16000}
               onChange={(e) => {
                 setContent(e.target.value);
-                setApproved(false);
               }}
               required
             />
@@ -111,14 +109,10 @@ export function MemoryEditor({
             />
             Keep this memory private
           </label>
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={approved}
-              onChange={(e) => setApproved(e.target.checked)}
-            />
-            I reviewed this note and approve it for agent sharing
-          </label>
+          <p className="fine-print">
+            Saving returns this item to draft. Use Review &amp; approve on its
+            card to share the saved version.
+          </p>
           <p className="fine-print">
             Approval never overrides a private or sensitive source. Sharing also
             needs an authorized client and an unlocked vault.
@@ -158,6 +152,7 @@ export function MemoryView({
   const [editing, setEditing] = useState<MemoryItem | null | undefined>();
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState<string | null>(null);
   const refresh = () =>
     invoke<MemoryItem[]>("list_memory")
       .then(setItems)
@@ -254,6 +249,9 @@ export function MemoryView({
               </button>
             )}
             <div className="card-actions">
+              <button onClick={() => setReviewing(m.id)}>
+                Review &amp; approve
+              </button>
               <button onClick={() => setEditing(m)}>Edit</button>
               {deleting === m.id ? (
                 <>
@@ -279,6 +277,14 @@ export function MemoryView({
             notes start as drafts.
           </p>
         </div>
+      )}
+      {reviewing && (
+        <ReviewDialog
+          kind="memory"
+          id={reviewing}
+          onClose={() => setReviewing(null)}
+          onApproved={() => void refresh()}
+        />
       )}
       {editing !== undefined && (
         <MemoryEditor

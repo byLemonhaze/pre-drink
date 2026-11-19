@@ -5,6 +5,7 @@ pub mod import;
 pub mod memory;
 pub mod model;
 pub mod privacy;
+pub mod review;
 
 pub mod agents;
 #[cfg(unix)]

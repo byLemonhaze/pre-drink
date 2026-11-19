@@ -1,7 +1,7 @@
 //! Owner-only Unix socket. It never receives a vault password or opens the database.
 use crate::{agents::AgentRequest, session::Store};
 use std::{
-    io::{BufRead, BufReader, Write},
+    io::{Read, Write},
     os::unix::{
         fs::PermissionsExt,
         net::{UnixListener, UnixStream},
@@ -11,11 +11,18 @@ use std::{
         atomic::{AtomicUsize, Ordering},
         Arc,
     },
-    time::Duration,
+    time::{Duration, Instant},
 };
 use zeroize::Zeroize;
 
 pub fn serve(path: &Path, store: Store) -> Result<(), String> {
+    // The parent protects the socket even during bind-before-chmod. Do not
+    // temporarily change the process-wide umask in a multithreaded app.
+    let parent = path.parent().ok_or("Missing private socket directory.")?;
+    let metadata = std::fs::symlink_metadata(parent).map_err(|e| e.to_string())?;
+    if !metadata.is_dir() || metadata.permissions().mode() & 0o077 != 0 {
+        return Err("The agent socket requires a private directory (0700).".into());
+    }
     // Caller holds the application's exclusive instance lock before replacing a stale socket.
     if path.exists() {
         std::fs::remove_file(path).map_err(|e| e.to_string())?;
@@ -42,22 +49,40 @@ pub fn serve(path: &Path, store: Store) -> Result<(), String> {
     Ok(())
 }
 
+fn read_request(stream: &mut UnixStream) -> Result<zeroize::Zeroizing<Vec<u8>>, String> {
+    let deadline = Instant::now() + Duration::from_secs(3);
+    let mut bytes = zeroize::Zeroizing::new(Vec::new());
+    let mut chunk = zeroize::Zeroizing::new([0u8; 4096]);
+    loop {
+        let remaining = deadline
+            .checked_duration_since(Instant::now())
+            .filter(|d| !d.is_zero())
+            .ok_or("Client request deadline exceeded.")?;
+        stream
+            .set_read_timeout(Some(remaining.min(Duration::from_secs(2))))
+            .map_err(|e| e.to_string())?;
+        let n = stream
+            .read(&mut *chunk)
+            .map_err(|_| "Invalid or timed-out client request.")?;
+        if n == 0 {
+            return Err("Incomplete client request.".into());
+        }
+        let end = chunk[..n].iter().position(|b| *b == b'\n').map(|i| i + 1);
+        bytes.extend_from_slice(&chunk[..end.unwrap_or(n)]);
+        if bytes.len() > 65_536 {
+            return Err("Request is too large.".into());
+        }
+        if end.is_some() {
+            return Ok(bytes);
+        }
+    }
+}
+
 fn handle(mut stream: UnixStream, store: Store) -> Result<(), String> {
-    stream
-        .set_read_timeout(Some(Duration::from_secs(2)))
-        .map_err(|e| e.to_string())?;
     stream
         .set_write_timeout(Some(Duration::from_secs(2)))
         .map_err(|e| e.to_string())?;
-    let mut bytes = Vec::new();
-    use std::io::Read;
-    BufReader::new(&stream)
-        .take(65_537)
-        .read_until(b'\n', &mut bytes)
-        .map_err(|_| "Invalid client request.")?;
-    if bytes.len() > 65_536 || bytes.last() != Some(&b'\n') {
-        return Err("Request is too large or incomplete.".into());
-    }
+    let mut bytes = read_request(&mut stream)?;
     let parsed = serde_json::from_slice::<AgentRequest>(&bytes);
     bytes.zeroize();
     let mut request = parsed.map_err(|_| "Invalid client request.")?;
@@ -85,4 +110,52 @@ fn handle(mut stream: UnixStream, store: Store) -> Result<(), String> {
         .map_err(|_| "Client disconnected.".to_string());
     encoded.zeroize();
     sent
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn trickled_requests_cannot_extend_the_read_deadline() {
+        let (mut server, mut client) = UnixStream::pair().unwrap();
+        let writer = std::thread::spawn(move || {
+            for _ in 0..12 {
+                if client.write_all(b" ").is_err() {
+                    break;
+                }
+                std::thread::sleep(Duration::from_millis(400));
+            }
+        });
+        let started = Instant::now();
+        assert!(read_request(&mut server).is_err());
+        assert!(started.elapsed() < Duration::from_secs(4));
+        drop(server);
+        writer.join().unwrap();
+    }
+
+    #[test]
+    fn incomplete_and_oversized_requests_fail() {
+        for payload in [b"{}".to_vec(), vec![b' '; 65_537]] {
+            let (mut server, mut client) = UnixStream::pair().unwrap();
+            let writer = std::thread::spawn(move || {
+                let _ = client.write_all(&payload);
+            });
+            assert!(read_request(&mut server).is_err());
+            drop(server);
+            writer.join().unwrap();
+        }
+    }
+
+    #[test]
+    fn public_parent_directory_is_rejected_before_binding() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o755)).unwrap();
+        let store = Arc::new(std::sync::Mutex::new(crate::session::Session::new(
+            dir.path().into(),
+        )));
+        let path = dir.path().join("agents.sock");
+        assert!(serve(&path, store).is_err());
+        assert!(!path.exists());
+    }
 }

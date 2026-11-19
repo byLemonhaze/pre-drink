@@ -19,13 +19,32 @@ pub struct Memory {
     pub updated_at: f64,
 }
 
+// Deliberately excludes all archive provenance, even for chat-enabled clients.
+#[derive(Serialize)]
+pub struct AgentMemory {
+    pub id: String,
+    pub kind: String,
+    pub content: String,
+    pub updated_at: f64,
+}
+impl From<Memory> for AgentMemory {
+    fn from(m: Memory) -> Self {
+        Self {
+            id: m.id,
+            kind: m.kind,
+            content: m.content,
+            updated_at: m.updated_at,
+        }
+    }
+}
+
 #[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct MemoryInput {
     pub id: Option<String>,
     pub kind: String,
     pub content: String,
     pub source_message_id: Option<String>,
-    pub approved: bool,
     pub private: bool,
 }
 
@@ -50,7 +69,7 @@ impl Vault {
         if let Some(id) = input.id {
             // An edit cannot sever provenance to bypass the source's privacy policy.
             let changed = self.connection.execute("UPDATE memory SET type=?1,content=?2,approved=?3,private=?4,sensitive=?5,updated_at=?6 WHERE id=?7",
-                params![input.kind,content,input.approved,input.private,sensitive,timestamp,id]).map_err(|e| e.to_string())?;
+                params![input.kind,content,false,input.private,sensitive,timestamp,id]).map_err(|e| e.to_string())?;
             if changed == 0 {
                 return Err("Memory not found.".into());
             }
@@ -71,7 +90,7 @@ impl Vault {
             }
             let id = uuid::Uuid::new_v4().to_string();
             self.connection.execute("INSERT INTO memory(id,type,content,source_message_id,approved,private,sensitive,created_at,updated_at,had_source) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?8,?9)",
-                params![id,input.kind,content,input.source_message_id,input.approved,input.private,sensitive,timestamp,input.source_message_id.is_some()]).map_err(|e| e.to_string())?;
+                params![id,input.kind,content,input.source_message_id,false,input.private,sensitive,timestamp,input.source_message_id.is_some()]).map_err(|e| e.to_string())?;
             Ok(id)
         }
     }
@@ -174,7 +193,7 @@ impl Vault {
                 break;
             }
             text.push_str(&entry);
-            if let Some(source) = m.source_message_id {
+            if let Some(source) = m.source_message_id.filter(|_| include_chats) {
                 text.push_str(&format!("Source message: {source}\n\n"));
             }
             count += 1;

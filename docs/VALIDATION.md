@@ -6,9 +6,9 @@ Verified locally on 2026-11-19 using synthetic data only. No user export, vault,
 | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
 | Frontend TypeScript + production bundle    | Passed                                                                                                                    |
 | Prettier and Rust formatting               | Passed                                                                                                                    |
-| Cargo tests (locked dependencies)          | 27 passed: 14 importer/vault, 12 security, 1 actual stdio MCP integration; doctests completed                             |
+| Cargo tests (locked dependencies)          | 35 passed: 14 importer/vault, 17 security, 3 broker, 1 actual stdio MCP integration; doctests completed                   |
 | Clippy, all targets, warnings denied       | Passed                                                                                                                    |
-| Optimized Apple Silicon app bundle         | Built, approximately 19.8 MiB                                                                                             |
+| Optimized Apple Silicon app bundle         | Previously built at a31608c, approximately 19.8 MiB; this review-fix pass builds a debug app                              |
 | Signing inspection                         | Local linker/ad-hoc signature only; no Developer ID identity, sealed public-distribution signature or notarization ticket |
 | Native synthetic workflow                  | Vault creation, picker import, source-linked memory approval, brief approval, context preview and manual lock verified    |
 | Landing page                               | Desktop and 375/320-pixel layouts reviewed; no horizontal overflow after fix; FAQ and download-status navigation verified |
@@ -24,10 +24,16 @@ The ZIP dependency was upgraded from 4.6.1 to 9.7.3 after six published advisori
 - `proc-macro-error 1.0.4`: unmaintained ([RUSTSEC-2024-0370](https://rustsec.org/advisories/RUSTSEC-2024-0370)); present in the cross-platform lockfile, absent from the active macOS dependency graph.
 - `glib 0.18.5`: iterator unsoundness ([RUSTSEC-2024-0429](https://rustsec.org/advisories/RUSTSEC-2024-0429)); present in the cross-platform lockfile, absent from the active macOS dependency graph. Linux is not supported by this release; do not reuse this assessment for a Linux build.
 
-Scans are time-specific and not proof of absence of vulnerabilities. Re-run at release. The application has not received an independent security audit.
+Scans are time-specific and not proof of absence of vulnerabilities. Re-run at release. The application has not received a formal independent security audit. An owner-supplied AI review and its dispositions are recorded in REVIEW_RESPONSE.
 
 ## Remaining evidence needed
 
 Representative real ChatGPT export compatibility; physical drag-and-drop; large-library performance/cancellation; complete sleep and lock-screen behavior; individual third-party client configuration; supported OS/hardware matrix; independent security review; Developer ID signing/notarization and verified distribution artifact.
 
 The landing page intentionally does not offer the ad-hoc local bundle as a signed public download. Source builds are available under MIT.
+
+## Review-fix verification
+
+The 35 cases above pass with the stronger approval, credential and metadata boundaries. The backup regression additionally verifies that a schema-v3 encrypted backup preserves current approvals when restored. Frontend compilation, formatting, Clippy and the repository guard pass. Refreshed npm/cargo audits report the same results above. The debug native bundle builds successfully.
+
+The new two-step review screen still needs an end-to-end native UI check. Automation reached the lock screen, but synthetic unlock attempts did not establish a verified session; the computer-use connection then became inactive and timed out, including after reconnecting. No successful native approval flow is claimed for this patch. Earlier native workflow verification in the table applies to the previous interface. Only synthetic temporary fixtures were used; no personal export or password was requested.

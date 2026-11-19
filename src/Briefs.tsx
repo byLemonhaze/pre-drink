@@ -1,3 +1,4 @@
+import ReviewDialog from "./Review";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Plus, X } from "lucide-react";
@@ -19,6 +20,7 @@ export default function Briefs() {
   const [editing, setEditing] = useState<Brief | null | undefined>();
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [reviewing, setReviewing] = useState<string | null>(null);
   const [restricted, setRestricted] = useState(false);
   const refresh = () =>
     Promise.all([
@@ -84,6 +86,9 @@ export default function Briefs() {
               notes require a new review.
             </p>
             <div className="card-actions">
+              <button onClick={() => setReviewing(b.id)}>
+                Review &amp; approve
+              </button>
               <button onClick={() => setEditing(b)}>Edit & review</button>
               {deleting === b.id ? (
                 <>
@@ -106,6 +111,14 @@ export default function Briefs() {
             your vault.
           </p>
         </div>
+      )}
+      {reviewing && (
+        <ReviewDialog
+          kind="brief"
+          id={reviewing}
+          onClose={() => setReviewing(null)}
+          onApproved={() => void refresh()}
+        />
       )}
       {editing !== undefined && (
         <BriefEditor
@@ -132,7 +145,6 @@ function BriefEditor({
   const [title, setTitle] = useState(brief?.title || "");
   const [content, setContent] = useState(brief?.content || "");
   const [sources, setSources] = useState<string[]>(brief?.source_ids || []);
-  const [approved, setApproved] = useState(false);
   const [privateBrief, setPrivate] = useState(brief?.private || false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -146,7 +158,6 @@ function BriefEditor({
       (previous) =>
         previous + `${previous ? "\n\n" : ""}## ${m.kind}\n${m.content}`,
     );
-    setApproved(false);
   }
   async function save(e: React.FormEvent) {
     e.preventDefault();
@@ -157,7 +168,6 @@ function BriefEditor({
           id: brief?.id || null,
           title,
           content,
-          approved,
           private: privateBrief,
           source_ids: sources,
         },
@@ -196,7 +206,6 @@ function BriefEditor({
               maxLength={200}
               onChange={(e) => {
                 setTitle(e.target.value);
-                setApproved(false);
               }}
               required
             />
@@ -232,7 +241,6 @@ function BriefEditor({
               maxLength={32000}
               onChange={(e) => {
                 setContent(e.target.value);
-                setApproved(false);
               }}
               required
             />
@@ -245,14 +253,10 @@ function BriefEditor({
             />
             Keep this brief private
           </label>
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={approved}
-              onChange={(e) => setApproved(e.target.checked)}
-            />
-            I reviewed the brief and its current sources; approve it for sharing
-          </label>
+          <p className="fine-print">
+            Saving returns this item to draft. Use Review &amp; approve on its
+            card to share the saved version.
+          </p>
           <p className="fine-print">
             Private, sensitive, deleted, or unapproved sources always block
             sharing. If a source was deleted, create a fresh brief with valid

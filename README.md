@@ -94,3 +94,7 @@ Generate synthetic fixtures with `python3 scripts/create_sample_export.py`. Debu
 - [Project provenance](docs/PROVENANCE.md)
 
 This is an **independent implementation, not a Loominary fork**. Loominary informed the export and branch model. No Loominary source, live userscript, extension code, or branding was copied. See provenance for references and reuse policy.
+
+## Security review follow-up
+
+See [review findings and responses](docs/REVIEW_RESPONSE.md) for the implemented fixes and remaining release gates. Saving now always produces a draft; use **Review & approve** to approve the saved version. On the first schema-v3 upgrade, existing contents are rescanned and previous memory/brief approvals are cleared once. Content and passwords are preserved. Developer ID signing and notarization are still required before public distribution.

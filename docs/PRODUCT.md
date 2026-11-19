@@ -28,7 +28,7 @@ The phrase “whole story” means the conversation material present in imported
 
 ### Memory: reviewed knowledge
 
-A user selects a message and saves a rewritten **fact**, **decision**, or **project** note. Notes can also be authored independently. They can be edited, deleted, marked private, or explicitly approved. Source-linked notes keep provenance and a route back to the conversation. Source restrictions propagate; approval never overrides privacy.
+A user selects a message and saves a rewritten **fact**, **decision**, or **project** note. Notes can also be authored independently. They can be edited, deleted, marked private, or explicitly approved. Saving always returns the note to draft. A separate review displays the saved version; approval is bound to that exact version and rejected if anything changes. Source-linked notes keep provenance and a route back to the conversation. Source restrictions propagate; approval never overrides privacy.
 
 Example using invented project data: a long discussion about an offline notebook becomes “The first release stores notes locally and supports one owner.” The archive remains unchanged. The note is editable and unapproved until its owner reviews it.
 

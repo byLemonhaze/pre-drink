@@ -9,16 +9,24 @@ use pre_drink::{
 };
 use serde_json::json;
 const PASSWORD: &str = "a long unique vault phrase";
-fn memory(v: &Vault, approved: bool, source: Option<String>) -> String {
-    v.save_memory(MemoryInput {
-        id: None,
-        kind: "decision".into(),
-        content: "Pre-Drink supports ChatGPT only.".into(),
-        source_message_id: source,
-        approved,
-        private: false,
-    })
-    .unwrap()
+fn memory(v: &mut Vault, approved: bool, source: Option<String>) -> String {
+    let id = v
+        .save_memory(MemoryInput {
+            id: None,
+            kind: "decision".into(),
+            content: "Pre-Drink supports ChatGPT only.".into(),
+            source_message_id: source,
+            private: false,
+        })
+        .unwrap();
+    if approved {
+        approve(v, "memory", &id);
+    }
+    id
+}
+fn approve(v: &mut Vault, kind: &str, id: &str) {
+    let review = v.approval_review(kind, id).unwrap();
+    v.approve_review(kind, id, &review.review_hash).unwrap();
 }
 fn sample(v: &mut Vault) -> (String, String) {
     let c=parse_conversation(&json!({"id":"story","title":"Pre-Drink planning","current_node":"m","mapping":{"m":{"parent":null,"message":{"author":{"role":"user"},"content":{"parts":["We will keep Pre-Drink local."]}}}}}),&mut ImportReport::default()).unwrap();
@@ -43,7 +51,7 @@ fn encrypted_database_and_journal_do_not_contain_plaintext() {
     let path = dir.path().join("vault.enc.sqlite3");
     let mut v = Vault::create(&path, PASSWORD).unwrap();
     sample(&mut v);
-    memory(&v, true, None);
+    memory(&mut v, true, None);
     for name in ["vault.enc.sqlite3", "vault.enc.sqlite3-wal"] {
         let bytes = std::fs::read(dir.path().join(name)).unwrap();
         assert!(!bytes.starts_with(b"SQLite format 3\0"));
@@ -111,12 +119,13 @@ fn backup_is_encrypted_verified_and_opens_with_its_own_password() {
     let path = dir.path().join("backup");
     let mut v = Vault::memory().unwrap();
     sample(&mut v);
-    memory(&v, true, None);
+    memory(&mut v, true, None);
     v.encrypted_backup(&path, PASSWORD).unwrap();
     assert!(Vault::open(&path, "wrong password").is_err());
     let restored = Vault::open(&path, PASSWORD).unwrap();
     assert_eq!(restored.stats().unwrap().messages, 1);
     assert_eq!(restored.memories(None, "", false).unwrap().len(), 1);
+    assert_eq!(restored.memories(None, "", true).unwrap().len(), 1);
     assert!(v.encrypted_backup(&path, PASSWORD).is_err());
 }
 
@@ -128,7 +137,7 @@ fn migrates_old_plaintext_without_losing_private_flags() {
     let old = rusqlite::Connection::open(&source).unwrap();
     let schema = include_str!("../src/schema.sql")
         .replace("  had_source INTEGER NOT NULL DEFAULT 0,\n", "")
-        .replace("PRAGMA user_version = 2;", "PRAGMA user_version = 1;");
+        + "\nPRAGMA user_version = 1;";
     old.execute_batch(&schema).unwrap();
     old.execute("INSERT INTO conversations(id,platform,title,private,raw_json) VALUES ('old','chatgpt','Old private history',1,'{}')",[]).unwrap();
     drop(old);
@@ -146,16 +155,15 @@ fn migrates_old_plaintext_without_losing_private_flags() {
 
 #[test]
 fn unapproved_private_and_sensitive_memory_never_reaches_agents() {
-    let v = Vault::memory().unwrap();
-    memory(&v, false, None);
-    let id = memory(&v, true, None);
+    let mut v = Vault::memory().unwrap();
+    memory(&mut v, false, None);
+    let id = memory(&mut v, true, None);
     assert_eq!(v.memories(None, "", true).unwrap().len(), 1);
     v.save_memory(MemoryInput {
         id: Some(id.clone()),
         kind: "fact".into(),
         content: "Pre-Drink is private.".into(),
         source_message_id: None,
-        approved: true,
         private: true,
     })
     .unwrap();
@@ -165,7 +173,6 @@ fn unapproved_private_and_sensitive_memory_never_reaches_agents() {
         kind: "fact".into(),
         content: "Pre-Drink email me@example.org".into(),
         source_message_id: None,
-        approved: true,
         private: false,
     })
     .unwrap();
@@ -176,16 +183,17 @@ fn unapproved_private_and_sensitive_memory_never_reaches_agents() {
 fn source_privacy_propagates_through_memory_and_briefs() {
     let mut v = Vault::memory().unwrap();
     let (conversation, source) = sample(&mut v);
-    let note = memory(&v, true, Some(source));
-    v.save_brief(BriefInput {
-        id: None,
-        title: "Pre-Drink spec".into(),
-        content: "Pre-Drink supports ChatGPT only.".into(),
-        approved: true,
-        private: false,
-        source_ids: vec![note.clone()],
-    })
-    .unwrap();
+    let note = memory(&mut v, true, Some(source));
+    let brief = v
+        .save_brief(BriefInput {
+            id: None,
+            title: "Pre-Drink spec".into(),
+            content: "Pre-Drink supports ChatGPT only.".into(),
+            private: false,
+            source_ids: vec![note.clone()],
+        })
+        .unwrap();
+    approve(&mut v, "brief", &brief);
     assert_eq!(v.briefs(true, "").unwrap().len(), 1);
     v.mark_private(&conversation, true).unwrap();
     assert!(v.memories(None, "", true).unwrap().is_empty());
@@ -199,7 +207,6 @@ fn source_privacy_propagates_through_memory_and_briefs() {
         kind: "fact".into(),
         content: "Pre-Drink source stays attached.".into(),
         source_message_id: None,
-        approved: true,
         private: false,
     })
     .unwrap();
@@ -209,36 +216,36 @@ fn source_privacy_propagates_through_memory_and_briefs() {
 #[test]
 fn briefs_need_review_after_source_changes_and_fail_closed_on_deletion() {
     let mut v = Vault::memory().unwrap();
-    let note = memory(&v, true, None);
+    let note = memory(&mut v, true, None);
     let id = v
         .save_brief(BriefInput {
             id: None,
             title: "Spec".into(),
             content: "Pre-Drink spec.".into(),
-            approved: true,
             private: false,
             source_ids: vec![note.clone()],
         })
         .unwrap();
+    approve(&mut v, "brief", &id);
     v.save_memory(MemoryInput {
         id: Some(note.clone()),
         kind: "decision".into(),
         content: "Pre-Drink is a Mac app.".into(),
         source_message_id: None,
-        approved: true,
         private: false,
     })
     .unwrap();
     assert!(v.briefs(true, "").unwrap().is_empty());
+    approve(&mut v, "memory", &note);
     v.save_brief(BriefInput {
-        id: Some(id),
+        id: Some(id.clone()),
         title: "Spec".into(),
         content: "Pre-Drink updated spec.".into(),
-        approved: true,
         private: false,
         source_ids: vec![note.clone()],
     })
     .unwrap();
+    approve(&mut v, "brief", &id);
     assert_eq!(v.briefs(true, "").unwrap().len(), 1);
     v.delete_memory(&note).unwrap();
     assert!(v.briefs(true, "").unwrap().is_empty());
@@ -248,7 +255,7 @@ fn briefs_need_review_after_source_changes_and_fail_closed_on_deletion() {
 fn clients_need_valid_tokens_and_scopes_and_can_be_revoked() {
     let mut v = Vault::memory().unwrap();
     sample(&mut v);
-    memory(&v, true, None);
+    memory(&mut v, true, None);
     let client = v.create_client("Memory client", false).unwrap();
     let req = request(&client.client.id, &client.token, "get_decisions");
     assert_eq!(v.agent_call(&req).unwrap().as_array().unwrap().len(), 1);
@@ -301,4 +308,198 @@ fn locking_and_idle_expiry_drop_vault_and_sharing() {
     assert!(!s.sharing);
     s.lock();
     assert!(s.access().is_err());
+}
+
+#[test]
+fn memory_only_agents_receive_no_archive_metadata() {
+    let mut v = Vault::memory().unwrap();
+    let (_, source) = sample(&mut v);
+    memory(&mut v, true, Some(source.clone()));
+    let c = v.create_client("Memory only", false).unwrap();
+    let result = v
+        .agent_call(&request(&c.client.id, &c.token, "get_decisions"))
+        .unwrap();
+    let object = result[0].as_object().unwrap();
+    assert_eq!(object.len(), 4);
+    for key in ["id", "kind", "content", "updated_at"] {
+        assert!(object.contains_key(key));
+    }
+    let pack = v.context_pack("Pre-Drink", false).unwrap();
+    assert!(!pack.contains("Source message:"));
+    assert!(!pack.contains(&source));
+    assert!(!result.to_string().contains("Pre-Drink planning"));
+}
+
+#[test]
+fn saves_are_drafts_and_approval_is_bound_to_reviewed_version() {
+    let mut v = Vault::memory().unwrap();
+    let id = memory(&mut v, false, None);
+    let review = v.approval_review("memory", &id).unwrap();
+    approve(&mut v, "memory", &id);
+    v.save_memory(MemoryInput {
+        id: Some(id.clone()),
+        kind: "fact".into(),
+        content: "A different saved note.".into(),
+        source_message_id: None,
+        private: false,
+    })
+    .unwrap();
+    assert!(v.memories(None, "", true).unwrap().is_empty());
+    assert!(v
+        .approve_review("memory", &id, &review.review_hash)
+        .is_err());
+    approve(&mut v, "memory", &id);
+    assert_eq!(v.memories(None, "", true).unwrap().len(), 1);
+    // Old or forged command payloads cannot turn saving into approval.
+    assert!(serde_json::from_value::<MemoryInput>(json!({"id":id,"kind":"fact","content":"Changed","source_message_id":null,"private":false,"approved":true})).is_err());
+    assert!(serde_json::from_value::<BriefInput>(json!({"id":null,"title":"Changed","content":"Changed","source_ids":[],"private":false,"approved":true})).is_err());
+}
+
+#[test]
+fn brief_review_rejects_changed_sources_and_changed_text() {
+    let mut v = Vault::memory().unwrap();
+    let note = memory(&mut v, true, None);
+    let id = v
+        .save_brief(BriefInput {
+            id: None,
+            title: "Spec".into(),
+            content: "Pre-Drink spec.".into(),
+            private: false,
+            source_ids: vec![note.clone()],
+        })
+        .unwrap();
+    let original = v.approval_review("brief", &id).unwrap();
+    assert_eq!(original.sources.len(), 1);
+    approve(&mut v, "brief", &id);
+    v.save_memory(MemoryInput {
+        id: Some(note.clone()),
+        kind: "fact".into(),
+        content: "A changed source.".into(),
+        source_message_id: None,
+        private: false,
+    })
+    .unwrap();
+    approve(&mut v, "memory", &note);
+    assert!(v
+        .approve_review("brief", &id, &original.review_hash)
+        .is_err());
+    let fresh = v.approval_review("brief", &id).unwrap();
+    v.save_brief(BriefInput {
+        id: Some(id.clone()),
+        title: "New spec".into(),
+        content: "Revised brief.".into(),
+        private: false,
+        source_ids: vec![note],
+    })
+    .unwrap();
+    assert!(v.briefs(true, "").unwrap().is_empty());
+    assert!(v.approve_review("brief", &id, &fresh.review_hash).is_err());
+    approve(&mut v, "brief", &id);
+    assert_eq!(v.briefs(true, "").unwrap().len(), 1);
+}
+
+fn synthetic_secrets() -> Vec<String> {
+    vec![
+        format!("sk-{}", "aB".repeat(24)),
+        format!("sk-proj-{}", "qZ_".repeat(16)),
+        format!("ghp_{}", "aB".repeat(20)),
+        format!("github_pat_{}", "aBc_".repeat(20)),
+        format!("AKIA{}", "Z".repeat(16)),
+        ["-----BEGIN ", "PRIVATE KEY-----"].concat(),
+        format!(
+            "eyJ{}.{}.{}",
+            "Abc".repeat(8),
+            "Def".repeat(8),
+            "Ghi".repeat(8)
+        ),
+        format!("xoxb-{}", "abc-".repeat(10)),
+        "aB3dE5gH7jK9mN2pQ4sT6vW8yZ0cF1iL".into(),
+    ]
+}
+
+#[test]
+fn credentials_are_blocked_across_all_sharing_layers() {
+    use pre_drink::privacy::contains_secret;
+    let mut v = Vault::memory().unwrap();
+    let client = v.create_client("Chat enabled", true).unwrap();
+    for (index, secret) in synthetic_secrets().into_iter().enumerate() {
+        assert!(
+            contains_secret(&secret),
+            "synthetic pattern {index} was missed"
+        );
+        let note = v
+            .save_memory(MemoryInput {
+                id: None,
+                kind: "fact".into(),
+                content: format!("Pre-Drink {secret}"),
+                source_message_id: None,
+                private: false,
+            })
+            .unwrap();
+        let review = v.approval_review("memory", &note).unwrap();
+        assert!(review.restricted);
+        assert!(v
+            .approve_review("memory", &note, &review.review_hash)
+            .is_err());
+        let brief = v
+            .save_brief(BriefInput {
+                id: None,
+                title: "Pre-Drink".into(),
+                content: secret.clone(),
+                private: false,
+                source_ids: vec![],
+            })
+            .unwrap();
+        let review = v.approval_review("brief", &brief).unwrap();
+        assert!(v
+            .approve_review("brief", &brief, &review.review_hash)
+            .is_err());
+        let chat = parse_conversation(&json!({"id":format!("secret-{index}"),"title":"Pre-Drink","mapping":{"m":{"message":{"author":{"role":"user"},"content":{"parts":[secret]}}}}}), &mut ImportReport::default()).unwrap();
+        v.import(&[chat], ImportReport::default()).unwrap();
+    }
+    assert!(v.list("Pre-Drink", false, 0).unwrap().is_empty());
+    assert!(v
+        .agent_call(&request(&client.client.id, &client.token, "get_facts"))
+        .unwrap()
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert!(v.briefs(true, "").unwrap().is_empty());
+    assert!(!contains_secret(
+        "A normal project description with a UUID 134c4edf-8321-4496-b80d-886ddab94cd3."
+    ));
+}
+
+#[test]
+fn old_vaults_are_rescanned_before_sharing_and_approvals_survive_later_reopens() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("vault");
+    let mut v = Vault::create(&path, PASSWORD).unwrap();
+    let clean = memory(&mut v, true, None);
+    let secret = synthetic_secrets().remove(0);
+    let note = v
+        .save_memory(MemoryInput {
+            id: None,
+            kind: "fact".into(),
+            content: secret,
+            source_message_id: None,
+            private: false,
+        })
+        .unwrap();
+    drop(v);
+    // Simulate a v2 database whose old detector missed a credential.
+    let c = rusqlite::Connection::open(&path).unwrap();
+    let key = pre_drink::crypto::key(PASSWORD, &pre_drink::crypto::salt(&path).unwrap()).unwrap();
+    pre_drink::crypto::configure(&c, &key).unwrap();
+    c.execute_batch("UPDATE memory SET sensitive=0,approved=1; PRAGMA user_version=2;")
+        .unwrap();
+    drop(c);
+    let mut v = Vault::open(&path, PASSWORD).unwrap();
+    let review = v.approval_review("memory", &note).unwrap();
+    assert!(review.restricted);
+    assert!(v.memories(None, "", true).unwrap().is_empty());
+    approve(&mut v, "memory", &clean);
+    drop(v);
+    let v = Vault::open(&path, PASSWORD).unwrap();
+    assert_eq!(v.memories(None, "", true).unwrap().len(), 1);
 }

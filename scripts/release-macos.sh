@@ -10,11 +10,20 @@ case "$APPLE_SIGNING_IDENTITY" in
   *) echo "Public releases require a Developer ID Application identity." >&2; exit 1 ;;
 esac
 
+if [[ -n "$(git status --porcelain)" ]]; then
+  echo "Release from a clean reviewed commit so SOURCE_COMMIT identifies the exact source." >&2
+  exit 1
+fi
+
 npm ci
+npm run format:check
 npm run build
-cargo test --manifest-path src-tauri/Cargo.toml
-cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets -- -D warnings
-npm run tauri -- build
+npm audit --audit-level=high
+cargo audit --file src-tauri/Cargo.lock
+python3 scripts/check_repository.py
+cargo test --manifest-path src-tauri/Cargo.toml --locked
+cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
+npm run tauri -- build -- --locked
 
 app_path="src-tauri/target/release/bundle/macos/Pre-Drink.app"
 release_dir="artifacts/release"
@@ -34,4 +43,6 @@ xcrun stapler staple "$app_path"
 xcrun stapler validate "$app_path"
 spctl --assess --type execute --verbose=2 "$app_path"
 ditto -c -k --keepParent "$app_path" "$release_dir/Pre-Drink.zip"
+(cd "$release_dir" && shasum -a 256 Pre-Drink.zip > SHA256SUMS)
+git rev-parse HEAD > "$release_dir/SOURCE_COMMIT"
 echo "Signed, notarized, and verified: $release_dir/Pre-Drink.zip"
