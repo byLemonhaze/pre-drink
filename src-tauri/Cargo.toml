@@ -1,0 +1,53 @@
+[package]
+name = "pre-drink"
+version = "0.2.0"
+description = "A local, private AI conversation vault"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/byLemonhaze/pre-drink"
+rust-version = "1.93"
+default-run = "pre-drink"
+
+[lib]
+name = "pre_drink"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "pre-drink"
+path = "src/main.rs"
+required-features = ["desktop"]
+
+[features]
+default = ["desktop"]
+desktop = ["dep:tauri", "dep:tauri-plugin-dialog", "dep:tauri-build", "dep:objc2-app-kit", "dep:objc2-foundation", "dep:block2"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [], optional = true }
+
+[dependencies]
+tauri = { version = "2", features = [], optional = true }
+tauri-plugin-dialog = { version = "2", optional = true }
+rusqlite = { version = "0.43", features = ["bundled-sqlcipher-vendored-openssl"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+zip = { version = "9.7", default-features = false, features = ["deflate"] }
+regex = "1"
+argon2 = { version = "0.5", features = ["zeroize"] }
+zeroize = { version = "1", features = ["derive"] }
+getrandom = "0.3"
+hex = "0.4"
+uuid = { version = "1", features = ["v4"] }
+sha2 = "0.10"
+subtle = "2"
+rmcp = { version = "3.11", default-features = false, features = ["server", "macros", "transport-io", "schemars"] }
+schemars = "1"
+tokio = { version = "1", features = ["rt-multi-thread", "io-std", "macros"] }
+fs2 = "0.4"
+
+[dev-dependencies]
+tempfile = "3"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWorkspace"], optional = true }
+objc2-foundation = { version = "0.3", default-features = false, features = ["NSNotification", "NSOperation", "NSString", "block2"], optional = true }
+block2 = { version = "0.6", optional = true }

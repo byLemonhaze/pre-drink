@@ -1,0 +1,95 @@
+# Pre-Drink
+
+**Your AI history, sober and ready.**
+
+A free, open-source macOS vault for official **ChatGPT exports**, built with Tauri 2, React, TypeScript, and SQLCipher/SQLite FTS5. No cloud account, API key, telemetry, live capture, or automatic extraction is required.
+
+## Three layers
+
+| Layer   | Purpose                                                                                                 | Sharing                                                                          |
+| ------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Archive | Original conversation JSON snapshots, searchable text, alternate branches: the story behind a decision. | Raw chat access requires an explicit additional client permission.               |
+| Memory  | Editable facts, decisions, and project notes linked to source messages.                                 | Explicit approval; private, sensitive, and restricted-source notes are excluded. |
+| Briefs  | Curated Markdown specifications and handoffs assembled from reviewed memories and your writing.         | Explicit approval; changed or restricted sources block sharing until reviewed.   |
+
+Select **Keep as memory** on a message, rewrite it into a useful note, choose its kind, and save. Editing leaves the original conversation intact. Open **Briefs** to assemble a specification from those notes. Approval makes content eligible for authorized clients; it does not turn sharing on.
+
+These are Pre-Drink's memories, independent of ChatGPT's own saved-memory feature. Manual editing, search, encryption, context packs, and MCP make no paid AI calls. Cloud-assisted editing is not implemented. If added later, it must be opt-in with explicit disclosure of data sent and usage charges.
+
+## Run on your Mac
+
+Requirements: macOS 12+, Xcode command-line tools, Node.js 22.12+ (or a compatible newer release), and Rust 1.93+. Native verification used Apple Silicon.
+
+```sh
+npm ci
+npm run tauri -- dev
+```
+
+Build an optimized local app:
+
+```sh
+npm run tauri -- build
+open "src-tauri/target/release/bundle/macos/Pre-Drink.app"
+```
+
+The local bundle is not a Developer ID signed and notarized public release. See [release signing](docs/RELEASING.md).
+
+Choose a separate vault password of at least 14 characters. Prefer a long, unique passphrase stored in your password manager. There is no password reset or hidden recovery key. Every launch starts locked. Existing plaintext v0.1 libraries have a verified encrypted migration flow.
+
+`npm run dev` runs an interface preview only; vault operations require the native app.
+
+## Import and search
+
+- Import official ChatGPT ZIPs using the native picker or file-drop handler. Claude and Grok are postponed.
+- Recognizes `conversations.json` and numbered `conversations-N.json`, including nested paths, without extracting files to disk.
+- Preserves JSON snapshots and text branches across repeat imports. The latest imported snapshot sets the active branch; manual privacy flags survive imports.
+- FTS5 searches titles and text across branches using literal words combined with AND within a title or message.
+- Markdown supports code, lists, and tables. HTML execution, remote images, and clickable external links are disabled.
+- Attachments, audio, images, tool results, and reasoning channels are not rendered or separately imported. Keep the original ZIP if you need those assets.
+- Imports are atomic per ZIP, limited to 256 MiB of uncompressed conversation JSON and 100,000 ZIP entries. Earlier successful ZIPs remain if a later ZIP in a batch fails.
+
+The basic sensitive-content detector checks emails, phone-like sequences, common English address patterns, and selected medical, financial, and credential keywords. It has false positives and false negatives. Review what you approve. A restricted source conversation also restricts derived memory and briefs.
+
+Official exports are the deliberate ingestion method, not a temporary shortcut. New chats require a newer export; existing curated notes persist. See [product rationale](docs/PRODUCT.md).
+
+## Encryption, backup, and agents
+
+Database: `~/Library/Application Support/com.predrink.vault/vault.enc.sqlite3`. SQLCipher 4.20 encrypts archive, memory, briefs, search index, and database journal pages. Password keys use Argon2id. Read [security design and limits](docs/SECURITY.md).
+
+The app locks manually, after 15 minutes without owner activity, on macOS sleep/display sleep/session deactivation, and after a detected watchdog pause. Locking closes the database, hides the library, and disables sharing. Agent requests do not keep it unlocked.
+
+**Settings → Save encrypted backup** creates a separately encrypted and verified copy. Restore is currently manual: follow [recovery instructions](docs/RECOVERY.md), preserving your current vault first.
+
+**Agent access** authorizes named clients with individual revocable credentials. Clients receive approved memory/briefs by default; raw-chat search requires additional permission. The app must remain open, unlocked, and sharing enabled. No network port is opened. An authorized cloud agent may send received context to its model provider. See [MCP setup and tools](docs/MCP.md).
+
+## Verification
+
+Run sequentially; do not build Tauri concurrently with Cargo tests in the same target directory.
+
+```sh
+npm run build
+npm run format:check
+cargo test --manifest-path src-tauri/Cargo.toml --locked
+cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
+```
+
+Suites cover imports, branches, rollback, encryption, tampering, wrong passwords, backup, migration, approval/provenance restrictions, client permissions, revocation, idle locking, and actual stdio MCP calls. Socket integration tests need an environment allowing local Unix sockets.
+
+Native synthetic-data verification: create password → import ZIP → create approved source-linked memory → assemble approved brief → preview context → lock and hide library. Import verification used the native picker; a physical file drag and representative real exports still need validation. This is not an independent security audit.
+
+Generate synthetic fixtures with `python3 scripts/create_sample_export.py`. Debug builds allow `PRE_DRINK_DATA_DIR=/tmp/pre-drink-check` for isolated verification. Release builds ignore this override.
+
+## Documentation
+
+- [Validation record](docs/VALIDATION.md)
+- [Product vision, requirements and ideas](docs/PRODUCT.md)
+- [Architecture and design decisions](docs/ARCHITECTURE.md)
+- [Security model](docs/SECURITY.md)
+- [MCP integration](docs/MCP.md)
+- [Backup and recovery](docs/RECOVERY.md)
+- [Release signing](docs/RELEASING.md)
+- [Roadmap and remaining gates](docs/ROADMAP.md)
+- [Agent review guide](docs/AGENT_REVIEW.md)
+- [Project provenance](docs/PROVENANCE.md)
+
+This is an **independent implementation, not a Loominary fork**. Loominary informed the export and branch model. No Loominary source, live userscript, extension code, or branding was copied. See provenance for references and reuse policy.

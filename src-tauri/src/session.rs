@@ -1,0 +1,147 @@
+use crate::db::Vault;
+use serde::Serialize;
+use std::{
+    path::PathBuf,
+    sync::{Arc, Mutex},
+    time::{Duration, SystemTime},
+};
+
+pub type Store = Arc<Mutex<Session>>;
+pub const IDLE_TIMEOUT: Duration = Duration::from_secs(15 * 60);
+
+#[derive(Serialize)]
+pub struct VaultStatus {
+    pub unlocked: bool,
+    pub exists: bool,
+    pub legacy_exists: bool,
+    pub sharing: bool,
+    pub database_path: String,
+}
+
+pub struct Session {
+    pub vault: Option<Vault>,
+    pub directory: PathBuf,
+    pub sharing: bool,
+    pub generation: u64,
+    pub last_activity: SystemTime,
+    pub on_lock: Option<Box<dyn Fn() + Send + Sync>>,
+}
+
+impl Session {
+    pub fn new(directory: PathBuf) -> Self {
+        Self {
+            vault: None,
+            directory,
+            sharing: false,
+            generation: 0,
+            last_activity: SystemTime::now(),
+            on_lock: None,
+        }
+    }
+    pub fn path(&self) -> PathBuf {
+        self.directory.join("vault.enc.sqlite3")
+    }
+    pub fn legacy_path(&self) -> PathBuf {
+        self.directory.join("vault.sqlite3")
+    }
+    pub fn status(&mut self) -> VaultStatus {
+        self.expire();
+        VaultStatus {
+            unlocked: self.vault.is_some(),
+            exists: self.path().exists(),
+            legacy_exists: self.legacy_path().exists(),
+            sharing: self.sharing,
+            database_path: self.path().to_string_lossy().into_owned(),
+        }
+    }
+    pub fn lock(&mut self) {
+        if self.vault.is_none() && !self.sharing {
+            return;
+        }
+        if let Some(callback) = &self.on_lock {
+            callback();
+        }
+        self.sharing = false;
+        self.generation = self.generation.wrapping_add(1);
+        self.vault.take();
+    }
+    pub fn expire(&mut self) {
+        if self.last_activity.elapsed().unwrap_or(IDLE_TIMEOUT) >= IDLE_TIMEOUT {
+            self.lock();
+        }
+    }
+    pub fn access(&mut self) -> Result<&mut Vault, String> {
+        self.expire();
+        self.vault
+            .as_mut()
+            .ok_or_else(|| "Your vault is locked. Unlock it in Pre-Drink.".into())
+    }
+    pub fn touch(&mut self) {
+        self.last_activity = SystemTime::now();
+    }
+    pub fn unlock(
+        &mut self,
+        password: &str,
+        create: bool,
+        remove_legacy: bool,
+    ) -> Result<(), String> {
+        if self.vault.is_some() {
+            return Err("The vault is already unlocked.".into());
+        }
+        if password.len() > 1024 {
+            return Err("Password is too long.".into());
+        }
+        let path = self.path();
+        let vault = if create {
+            if path.exists() {
+                return Err("A vault already exists. Unlock it with its password.".into());
+            }
+            if self.legacy_path().exists() {
+                Vault::migrate_plaintext(&self.legacy_path(), &path, password)?
+            } else {
+                Vault::create(&path, password)?
+            }
+        } else {
+            Vault::open(&path, password)?
+        };
+        vault.verify()?;
+        if remove_legacy && self.legacy_path().exists() {
+            // Migration verifies the encrypted copy before removing the old duplicate.
+            // SSD snapshots/backups may retain old plaintext; deletion is not secure erasure.
+            if !create {
+                return Err("Legacy cleanup must be completed as part of migration.".into());
+            }
+            std::fs::remove_file(self.legacy_path()).map_err(|_| "The encrypted vault is ready, but the old plaintext file couldn't be removed. Remove it manually after verifying your library.")?;
+            for suffix in ["-wal", "-shm"] {
+                let old = self.directory.join(format!("vault.sqlite3{suffix}"));
+                if old.exists() {
+                    std::fs::remove_file(old)
+                        .map_err(|_| "An old plaintext journal couldn't be removed.")?;
+                }
+            }
+        }
+        self.vault = Some(vault);
+        self.touch();
+        self.generation = self.generation.wrapping_add(1);
+        self.sharing = false;
+        Ok(())
+    }
+}
+
+pub fn watchdog(store: Store) {
+    std::thread::spawn(move || {
+        let mut last_tick = SystemTime::now();
+        loop {
+            std::thread::sleep(Duration::from_secs(3));
+            if let Ok(mut session) = store.lock() {
+                // A sleep/resume gap locks even if no frontend event runs while asleep.
+                if last_tick.elapsed().unwrap_or(Duration::MAX) > Duration::from_secs(30) {
+                    session.lock();
+                } else {
+                    session.expire();
+                }
+            }
+            last_tick = SystemTime::now();
+        }
+    });
+}
