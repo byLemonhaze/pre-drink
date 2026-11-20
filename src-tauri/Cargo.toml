@@ -48,6 +48,6 @@ fs2 = "0.4"
 tempfile = "3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWorkspace"], optional = true }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWorkspace", "NSPasteboard"], optional = true }
 objc2-foundation = { version = "0.3", default-features = false, features = ["NSNotification", "NSOperation", "NSString", "block2"], optional = true }
 block2 = { version = "0.6", optional = true }

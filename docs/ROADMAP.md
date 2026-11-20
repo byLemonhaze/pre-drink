@@ -4,19 +4,19 @@ The detailed agreed order and exit criteria are in [EXECUTION_PLAN](EXECUTION_PL
 
 ## Current implementation
 
-ChatGPT-only official ZIP import; branch/snapshot archive; FTS5; separate-password SQLCipher vault; editable memory and briefs; source-aware sharing rules; local authenticated MCP; encrypted backups; manual/idle/macOS lifecycle locking. Saves produce drafts and require a separate saved-version review before approval. The dark native interface and static landing assets exist.
+ChatGPT-only official ZIP import; branch/snapshot archive; FTS5; separate-password SQLCipher vault; editable memory and briefs; source-aware sharing rules; selected Markdown preview/copy/file export; local authenticated MCP; encrypted backups; manual/idle/macOS lifecycle locking. Saves produce drafts and require a separate saved-version review before approval. The dark native interface and static landing assets exist.
 
 This is a working private pre-release. The current review UI, representative real exports, real-client setup and distribution gates still need evidence. Claude and Grok are not yet supported.
 
 ## Agreed execution order
 
 1. **M1, in progress:** dependable ChatGPT workflow; contextual sensitivity detection and safe reclassification; build/vault identity; native approval, isolated upgrade, real export and MCP checks.
-2. **M2, planned:** make exact sharing preview the centerpiece; selective copy and Markdown export with privacy/staleness enforcement.
-3. **M3, planned:** in-app restore, password change, conversation deletion/snapshot retention; full disposable wipe-and-restore test.
+2. **M2, implemented; basic native flow verified:** make exact sharing preview the centerpiece; selective copy and Markdown export with privacy/staleness enforcement.
+3. **M3, early verification started:** in-app restore, password change, conversation deletion/snapshot retention; disposable wipe-and-restore test now passes; lifecycle UI remains planned.
 4. **M4, planned:** Claude first, then Grok; synthetic fixtures by provider and observed format; cross-provider provenance/privacy verification.
 5. **M5, planned:** signed/notarized release, clean installation test, fictional-data demo, strong README and owner-approved public launch.
 
-Apple enrollment starts as an owner-managed parallel track alongside M1, not after M4. Enrollment is not confirmed. No account/legal/payment action is automatic.
+Apple enrollment is deferred to the end at the owner’s request. Enrollment is not confirmed. No account/legal/payment action is automatic.
 
 ## Retained backlog
 

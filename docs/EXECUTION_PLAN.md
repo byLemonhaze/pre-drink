@@ -27,17 +27,17 @@ The implementation/evidence ledger is [WORK_LOG](WORK_LOG.md). [VALIDATION](VALI
 
 ## Sequence and planning estimate
 
-M1 → M2 → M3 → M4 → M5. Apple enrollment runs alongside M1, with no need to wait for M4. Work can prepare fixtures or release documentation early, but must not present unfinished milestones as delivered.
+M1 → M2 → M3 → M4 → M5. At the owner’s request, Apple enrollment is deferred to the final release stage. Development and all independent verification proceed now. Work can prepare fixtures or release documentation early, but must not present unfinished milestones as delivered.
 
 Planning allowance: roughly 3–5 focused working days for a dependable ChatGPT-only candidate, and 1–2 weeks for the broader release candidate, excluding Apple account processing and external review. These are effort estimates, not calendar commitments or a promise of unattended work between sessions. Re-estimate after M1 using real export sizes, native validation and remaining defects. Provider format changes and recovery failures can extend the work. A release candidate is not a public release until every release gate is met.
 
-| Milestone                              | State at plan creation                | Exit evidence                                                                                                                              |
-| -------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| M1: dependable ChatGPT workflow        | In progress                           | Current native approval flow, false-positive regressions, isolated upgrade verification, a real MCP client, and clear build/vault identity |
-| M2: deliberate sharing preview         | Planned                               | Preview/export equality, eligibility revalidation, no surprise source metadata, selective copy/file export                                 |
-| M3: vault lifecycle and recovery       | Planned                               | Tested restore UI, password change, deletion/retention, destructive synthetic recovery exercise                                            |
-| M4: Claude, then Grok                  | Planned                               | Provider/version fixtures, normalization and cross-provider privacy/import tests, local representative export checks                       |
-| M5: release and portfolio presentation | Planned; Apple prerequisites external | Signed/notarized artifact, clean-machine installation, release evidence, fictional-data demo and reviewed documentation                    |
+| Milestone                              | State at plan creation                  | Exit evidence                                                                                                                              |
+| -------------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| M1: dependable ChatGPT workflow        | In progress                             | Current native approval flow, false-positive regressions, isolated upgrade verification, a real MCP client, and clear build/vault identity |
+| M2: deliberate sharing preview         | Implemented; basic native flow verified | Preview/export equality, eligibility revalidation, no surprise source metadata, selective copy/file export                                 |
+| M3: vault lifecycle and recovery       | Recovery acceptance test implemented    | Tested restore UI, password change, deletion/retention, destructive synthetic recovery exercise                                            |
+| M4: Claude, then Grok                  | Planned                                 | Provider/version fixtures, normalization and cross-provider privacy/import tests, local representative export checks                       |
+| M5: release and portfolio presentation | Planned; Apple prerequisites external   | Signed/notarized artifact, clean-machine installation, release evidence, fictional-data demo and reviewed documentation                    |
 
 ## M1 — Dependable ChatGPT workflow
 
@@ -90,7 +90,7 @@ Exit per provider: synthetic fixtures pass, representative local exports are che
 
 ## M5 — Release and portfolio presentation
 
-Apple track, starting alongside M1: owner checks/enrolls in the appropriate Apple Developer account and completes identity, legal and payment steps. The agent can prepare signing instructions/build tooling, but must not choose a legal identity, accept agreements, purchase enrollment or put credentials in chat/repo. Do not claim enrollment has started or been approved without evidence.
+Apple track, deferred to this final stage at the owner’s request: owner checks/enrolls in the appropriate Apple Developer account and completes identity, legal and payment steps. The agent can prepare signing instructions/build tooling, but must not choose a legal identity, accept agreements, purchase enrollment or put credentials in chat/repo. Do not claim enrollment has started or been approved without evidence.
 
 Release work:
 
@@ -123,4 +123,4 @@ Record only sanitized product-level results. Private-data evidence stays local o
 
 ## Next execution batch
 
-Start M1 with contextual phone detection and its false-positive regressions, explicit sensitivity reclassification with approval invalidation, and build/vault identification. Then verify the current native workflow and isolated upgrade behavior. Prepare the sharing-preview design against those verified boundaries before implementing M2. Log incomplete checks rather than silently skipping them.
+The first M1 batch is committed at `b2ce46a` with passing remote CI. Continue its outstanding representative-data upgrade, physical-drop, installed-client and lifecycle checks without weakening their evidence requirements. The current batch implements selected sharing, improves the measured import bottleneck and adds a destructive synthetic recovery test. Validate native copy/save and failure behavior, then proceed with the in-app lifecycle design/implementation in M3. M4 follows; Apple enrollment stays at M5. Independent work may advance while unavailable real-data/client checks remain explicitly open.

@@ -45,3 +45,7 @@ The local server makes no AI calls and has no per-use charge. Your assistant may
 - No matches: check approval, privacy, source eligibility and literal topic text.
 - Connection unavailable: GUI must run and executable/socket paths must match. Regenerate after moving the app.
 - Result too large: narrow the topic. List tools do not yet paginate.
+
+## Selected exports versus live grants
+
+**Share context** is an owner-only selection → full Markdown preview → copy/save workflow. Its saved-version and session checks apply at delivery. It does not issue a client credential, call a provider or narrow existing MCP access. The six MCP tools remain unchanged; clients cannot invoke `prepare_share`, `copy_share` or `save_share`. Agent access's topic preview remains an illustration of a dynamic query, not an access-control boundary. See [SHARING](SHARING.md).

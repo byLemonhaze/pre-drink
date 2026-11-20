@@ -14,6 +14,7 @@ pub mod broker;
 #[cfg(unix)]
 pub mod mcp;
 pub mod session;
+pub mod sharing;
 
 #[cfg(feature = "desktop")]
 mod desktop;

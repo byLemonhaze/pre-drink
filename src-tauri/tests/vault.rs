@@ -240,6 +240,12 @@ fn transaction_failure_rolls_back_every_conversation() {
     assert!(v.import(&[good, bad], ImportReport::default()).is_err());
     assert_eq!(v.stats().unwrap().conversations, 0);
     assert!(v.list("walnut", true, 0).unwrap().is_empty());
+    import(&mut v, fixture());
+    assert_eq!(
+        v.list("walnut", false, 0).unwrap().len(),
+        1,
+        "A rolled-back import must not leave temporary index state"
+    );
 }
 
 #[test]
@@ -268,4 +274,23 @@ fn deep_message_trees_do_not_recurse() {
     }
     let data = json!({"id":"deep","current_node":"9999","mapping":mapping});
     assert!(parse_conversation(&data, &mut ImportReport::default()).is_ok());
+}
+
+#[test]
+fn batch_index_rebuild_keeps_unaffected_chats_and_last_duplicate_version() {
+    let mut v = vault();
+    let mut other = fixture();
+    other["id"] = json!("unaffected");
+    import(&mut v, other);
+    let first = parse_conversation(&fixture(), &mut ImportReport::default()).unwrap();
+    let mut changed = fixture();
+    changed["mapping"]["answer-2"]["message"]["content"]["parts"] = json!(["A pale birch shelf."]);
+    let last = parse_conversation(&changed, &mut ImportReport::default()).unwrap();
+    v.import(&[first, last], ImportReport::default()).unwrap();
+    assert_eq!(v.stats().unwrap().conversations, 2);
+    assert_eq!(v.stats().unwrap().messages, 6);
+    assert_eq!(v.list("walnut", false, 0).unwrap().len(), 1);
+    assert_eq!(v.list("birch", false, 0).unwrap().len(), 1);
+    assert_eq!(v.list("mahogany", false, 0).unwrap().len(), 2);
+    v.verify().unwrap();
 }

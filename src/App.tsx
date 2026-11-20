@@ -27,6 +27,7 @@ import {
   Brain,
   FileText,
   Plug,
+  Share2,
   X,
 } from "lucide-react";
 import type { Conversation, ImportReport, Message, Stats } from "./types";
@@ -37,6 +38,7 @@ import Agents from "./Agents";
 import Backup from "./Backup";
 import BuildInfo, { type VaultIdentity } from "./BuildInfo";
 import PrivacyRecheck from "./PrivacyRecheck";
+import Sharing from "./Sharing";
 const native = isTauri();
 const emptyStats: Stats = {
   conversations: 0,
@@ -65,7 +67,13 @@ function App({
   identity: VaultIdentity;
 }) {
   const [page, setPage] = useState<
-    "library" | "imports" | "settings" | "memory" | "briefs" | "agents"
+    | "library"
+    | "imports"
+    | "settings"
+    | "memory"
+    | "briefs"
+    | "agents"
+    | "sharing"
   >("library");
   const [memorySource, setMemorySource] = useState<Message | null>(null);
   const pendingSource = useRef<string | null>(null);
@@ -347,6 +355,13 @@ function App({
             Briefs
           </button>
           <button
+            className={page === "sharing" ? "nav-item active" : "nav-item"}
+            onClick={() => setPage("sharing")}
+          >
+            <Share2 size={18} />
+            Share context
+          </button>
+          <button
             className={page === "agents" ? "nav-item active" : "nav-item"}
             onClick={() => setPage("agents")}
           >
@@ -416,6 +431,7 @@ function App({
                   memory: "Memory",
                   briefs: "Briefs",
                   agents: "Agent access",
+                  sharing: "Share context",
                 }[page]
               }
             </span>
@@ -486,6 +502,7 @@ function App({
           />
         )}
         {page === "briefs" && <Briefs />}
+        {page === "sharing" && <Sharing />}
         {page === "agents" && <Agents sharing={sharing} />}
         {page === "library" && (
           <>

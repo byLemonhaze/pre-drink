@@ -62,3 +62,12 @@ CREATE TABLE IF NOT EXISTS brief_sources (
   UNIQUE(brief_id,memory_id)
 );
 -- Version is advanced only after migrations finish in db.rs.
+
+-- Changing imported evidence revokes derived approval, even if it stays non-sensitive.
+CREATE INDEX IF NOT EXISTS memory_source ON memory(source_message_id);
+CREATE TRIGGER IF NOT EXISTS message_evidence_changed AFTER UPDATE OF content,role ON messages
+WHEN OLD.content != NEW.content OR OLD.role != NEW.role
+BEGIN
+  UPDATE memory SET approved=0, updated_at=max(updated_at+0.000001,unixepoch('subsec'))
+  WHERE source_message_id=NEW.id;
+END;

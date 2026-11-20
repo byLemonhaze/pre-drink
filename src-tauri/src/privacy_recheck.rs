@@ -217,6 +217,12 @@ mod tests {
             .unwrap();
         assert!(v.apply_privacy_recheck(&preview.review_hash).is_err());
         assert_eq!(v.stats().unwrap().sensitive, 1);
+        assert!(!v.memories(None, "", false).unwrap()[0].approved);
+        // Recreate a legacy approval to check rollback independently of the
+        // evidence-change trigger, which already revoked it above.
+        v.connection
+            .execute("UPDATE memory SET approved=1", [])
+            .unwrap();
         let preview = v.privacy_recheck_preview().unwrap();
         v.connection.execute_batch("CREATE TRIGGER fail_recheck BEFORE UPDATE ON conversations BEGIN SELECT RAISE(ABORT,'synthetic failure'); END;").unwrap();
         assert!(v.apply_privacy_recheck(&preview.review_hash).is_err());

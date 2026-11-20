@@ -246,6 +246,23 @@ impl Vault {
         mut report: ImportReport,
     ) -> Result<ImportReport, String> {
         let tx = self.connection.transaction().map_err(|e| e.to_string())?;
+        // Scan the FTS table once per import, not once per conversation. Temp
+        // storage is memory-only and the transaction also covers index rebuilds.
+        tx.execute_batch("CREATE TEMP TABLE import_ids (id TEXT PRIMARY KEY);")
+            .map_err(|e| e.to_string())?;
+        {
+            let mut insert = tx
+                .prepare_cached("INSERT OR IGNORE INTO import_ids(id) VALUES (?1)")
+                .map_err(|e| e.to_string())?;
+            for c in conversations {
+                insert.execute([&c.id]).map_err(|e| e.to_string())?;
+            }
+        }
+        tx.execute(
+            "DELETE FROM search_index WHERE conversation_id IN (SELECT id FROM import_ids)",
+            [],
+        )
+        .map_err(|e| e.to_string())?;
         for c in conversations {
             let exists: bool = tx
                 .query_row(
@@ -298,15 +315,11 @@ impl Vault {
             }
             // Old retained branches must still protect the whole conversation.
             tx.execute("UPDATE conversations SET sensitive = sensitive OR EXISTS(SELECT 1 FROM messages WHERE conversation_id=?1 AND sensitive=1) WHERE id=?1", [&c.id]).map_err(|e| e.to_string())?;
-            tx.execute("DELETE FROM search_index WHERE conversation_id=?1", [&c.id])
-                .map_err(|e| e.to_string())?;
-            tx.execute(
-                "INSERT INTO search_index(conversation_id,content) VALUES (?1,?2)",
-                params![c.id, c.title],
-            )
-            .map_err(|e| e.to_string())?;
-            tx.execute("INSERT INTO search_index(conversation_id,content) SELECT conversation_id,content FROM messages WHERE conversation_id=?1", [&c.id]).map_err(|e| e.to_string())?;
         }
+        tx.execute("INSERT INTO search_index(conversation_id,content) SELECT c.id,c.title FROM conversations c JOIN import_ids i ON i.id=c.id", []).map_err(|e| e.to_string())?;
+        tx.execute("INSERT INTO search_index(conversation_id,content) SELECT m.conversation_id,m.content FROM messages m JOIN import_ids i ON i.id=m.conversation_id", []).map_err(|e| e.to_string())?;
+        tx.execute_batch("DROP TABLE import_ids;")
+            .map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
         Ok(report)
     }

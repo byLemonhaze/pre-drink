@@ -28,3 +28,7 @@ There is no reset, server-held key or backdoor. A backup requires its own passwo
 First-run migration detects v0.1 `vault.sqlite3`, excludes concurrent writers, creates and verifies an encrypted copy, then optionally removes old database/journal files. The cleanup checkbox is on by default; retaining old files leaves them plaintext.
 
 Deletion does not erase snapshots, Time Machine history, original ZIPs or earlier copies. If encryption succeeds but cleanup fails, preserve the encrypted file, verify its contents, quit, and remove only the known legacy files. Never delete the encrypted vault to retry migration without preserving it first.
+
+## Recovery evidence
+
+A destructive synthetic acceptance test now creates an encrypted vault containing branches, source-linked approved notes/briefs, private/sensitive records and a client registration. It verifies a separately passworded backup, closes and removes the entire disposable live directory, copies the backup into a fresh directory and unlocks a new session. It compares all logical tables including snapshots, tags and FTS; checks privacy/provenance filtering, correct password, file permissions, sharing-off and restored-client revocation. The backup remains intact. This verifies the documented manual restoration path with fictional data, not an in-app restore interface or recovery of a personal vault.

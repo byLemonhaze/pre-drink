@@ -29,7 +29,7 @@ These batches establish working code, not completion of the public-release gates
 4. M4: Claude then Grok, with synthetic fixtures per provider/observed export format.
 5. M5: signed release, clean installation, fictional-data demo, README and owner-approved publication.
 
-Apple enrollment is an owner action alongside M1; its status has not been confirmed. Do not report it as started.
+Apple enrollment is an owner action deferred until the final release stage; its status has not been confirmed. Do not report it as started.
 
 ## Open evidence / handoff
 
@@ -38,10 +38,10 @@ Apple enrollment is an owner action alongside M1; its status has not been confir
 - False-positive corrections applied to already flagged data without silently widening sharing.
 - Representative official exports and physical file drop.
 - One installed MCP client beyond the automated stdio harness.
-- Synthetic large-library benchmark and complete native lifecycle/lock checks.
-- Full recovery and credential-change failure paths; current backup verification is not yet a wipe-and-restore acceptance test.
+- Real-export/UI scale behavior and complete native lifecycle/lock checks; the normalized synthetic backend benchmark now passes.
+- Full recovery UI and credential-change failure paths; the destructive synthetic manual-restore acceptance test now passes.
 - Developer ID/notarization and clean-machine installation.
-- Remote CI passed at `589967e` ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44633362843)); the new M1 batch still needs its own remote result. Local pass counts are not evidence of remote success.
+- Remote CI passed at `b2ce46a` ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44645007179)); the new sharing/import/recovery batch needs its own remote result. Local pass counts are not evidence of remote success.
 
 ## Entry format for subsequent changes
 
@@ -55,3 +55,14 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Data handling:** automated tests use synthetic data. No real vault was migrated, wiped or uploaded in this batch.
 - **Native evidence:** synthetic memory approval, brief approval with source display, note edit resetting approval and blocking the brief, timestamp remaining unflagged, zero-change recheck application, build/test-storage identity and manual lock passed. Changed-classification and failure cases are covered by automated backend tests, not yet the native UI. The review build initially displayed a blank window after a slow start, then loaded; cold-start timing remains an investigation item.
 - **Remaining:** representative isolated-copy upgrade, real export/physical-drop/large-library and installed-client checks; broader native failure/keyboard/lifecycle cases. M1 remains in progress. M2–M5 remain planned.
+
+## Selected sharing, import performance and recovery acceptance batch
+
+- **M1:** measured the 5,000-conversation/100,000-message encrypted normalized import. Replaced one FTS scan per conversation with a single transactional batch rebuild using memory-only temporary IDs. Same local debug dataset: import 80.732 → 3.719 seconds; repeat 169.483 → 4.004 seconds. Search after the change: 0.106–0.198 seconds. Rollback/retry, unaffected conversations, retained branches and duplicate versions pass. This excludes ZIP parsing, native rendering and real-export complexity.
+- **Source review:** changed imported message text/role now resets its linked memories to draft and advances their version, blocking dependent briefs. Identical imports preserve approvals. A regression verifies both behaviors and stale sharing rejection. The existing recheck rollback test explicitly accounts for this earlier invalidation before testing its own rollback.
+- **M2 implemented:** Share context chooser, complete Markdown preview, included/excluded counts, local exclusion reasons, explicit reviewed-content consent, native clipboard and new-file `.md` export. The backend revalidates item/source snapshots and unlock generation under the same session mutex as delivery. Private/sensitive/draft/source-blocked material is excluded; no archive provenance or exclusion notices enter the payload. No change to live MCP grants. See SHARING/SECURITY.
+- **M2 native evidence:** isolated fictional vault; approved note plus blocked brief produces one included/one excluded; explanation visible only locally; copy succeeds and paste into an unsaved editor matches the preview; native file save succeeds and an independent byte comparison matches the complete 207-byte preview with mode 0600. Zero-eligible selection disables export; changing selection clears the preview; manual lock hides it. The paste-check editor was cancelled. Real clipboard-denial/disk-full/concurrent native interaction scenarios remain unverified; corresponding backend delivery-error/staleness checks pass.
+- **M3 early evidence:** destructive recovery acceptance test creates a synthetic encrypted vault with branches, source-linked notes/briefs, privacy/sensitive flags and client registration; verifies backup under a different password; deletes the entire synthetic live directory and journals; restores into a fresh directory; compares all logical tables and verifies restrictions, sharing-off, correct password, permissions and revocation. In-app restore, password change and deletion/retention remain planned.
+- **Checks:** 50 automated cases passed (9 unit, 15 importer/vault, 19 security, 5 sharing, 1 recovery, 1 actual stdio MCP), plus the separately invoked scale benchmark. Frontend build, formatting, Clippy with warnings denied and the separate native debug bundle passed. No dependency versions changed; only an existing macOS framework feature was enabled for clipboard support. Prior advisory results remain time-specific.
+- **Privacy/release:** only generated fictional data was used. No personal vault was opened, migrated or wiped. Repository visibility was confirmed PRIVATE. Apple enrollment is explicitly deferred to M5. No public download or distribution claim.
+- **Next:** complete outstanding M1 evidence when representative data/client setup is available; exercise remaining native sharing error paths; implement the M3 restore/password-change/deletion workflow without risking a live vault. M4 providers and M5 distribution follow the agreed order.

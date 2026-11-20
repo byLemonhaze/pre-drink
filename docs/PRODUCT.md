@@ -65,7 +65,7 @@ The repository contains source, generic product documents and synthetic fixtures
 
 ## Acceptance and release status
 
-Implemented: encrypted persistent storage, ChatGPT import/search, memory CRUD, curated briefs, source-aware privacy, encrypted backups, authenticated local MCP and lock lifecycle. Automated checks use synthetic fixtures; an earlier native curation flow was exercised. The current separate-review and flag-recheck screens have basic synthetic native-flow evidence; full failure, lifecycle, representative-export and installed-client checks remain open.
+Implemented: encrypted persistent storage, ChatGPT import/search, memory CRUD, curated briefs, selected Markdown preview/copy/file export, source-aware privacy, encrypted backups, authenticated local MCP and lock lifecycle. Automated checks use synthetic fixtures; an earlier native curation flow was exercised. The current separate-review and flag-recheck screens have basic synthetic native-flow evidence; full failure, lifecycle, representative-export and installed-client checks remain open.
 
 Public-release gates remain: representative real export validation, large-library behavior, physical drag-and-drop, individual client setup, independent security review, Developer ID signing and notarization. See the roadmap and review guide. “Real implementation” does not imply these gates have already passed.
 
@@ -75,7 +75,7 @@ The agreed work ahead, dependencies, evidence requirements and owner actions are
 
 - Claude/Grok adapters after representative official fixtures exist.
 - Tags, better topic matching, result pagination and branch visualization.
-- Per-brief/project client permissions and reviewed Markdown export.
+- Per-brief/project client permissions and reusable export presets.
 - Superseded decisions, revision history, contradictions and stale-memory review.
 - Local drafting assistance with approval, never silent extraction.
 - In-app restore, password rotation, and carefully specified recovery options.
@@ -85,3 +85,9 @@ No cloud sync, semantic/embedding search, automatic fact extraction, Gemini, mob
 ## Public distribution
 
 A simple landing page explains the three layers, privacy boundaries and supported platform. Its primary download becomes available only after a signed/notarized release is published. Source stays available under MIT. Users run independent local vaults; there is no shared hosted database, required account, or upload to the project repository.
+
+## Deliberate sharing
+
+The Share context screen assembles an explicit selection of memories and briefs, shows the entire outgoing Markdown and requires a review confirmation before copy or file save. Restricted/draft/source-blocked items are excluded and explained locally. Delivery uses the same backend assembly and revalidates the reviewed saved/source versions and unlock session. It exports no raw-chat metadata or automatic source excerpts. The owner chooses any subsequent destination app themselves. See [SHARING](SHARING.md).
+
+This creates plaintext outside the vault; clipboard history, synced folders and receiving products may retain it. A live MCP grant is broader than a selected export and is managed separately. Changing imported source text/role now returns derived memories to draft and blocks dependent briefs until reviewed again.

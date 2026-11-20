@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Plus, X } from "lucide-react";
 import type { MemoryItem } from "./Memory";
-interface Brief {
+export interface Brief {
   id: string;
   title: string;
   content: string;

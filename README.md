@@ -54,6 +54,14 @@ The sensitive-content detector checks emails, structured or explicitly labeled p
 
 Official exports are the deliberate ingestion method, not a temporary shortcut. New chats require a newer export; existing curated notes persist. See [product rationale](docs/PRODUCT.md).
 
+## Review and share selected context
+
+**Share context** lets you choose memories and briefs, inspect the complete outgoing Markdown and explicitly copy or save that exact text. Private, sensitive, unapproved or source-blocked items are excluded; explanations stay in the app. Every delivery rechecks the saved versions and current session. A changed item/source or lock requires a fresh preview. Existing files are never overwritten.
+
+The file and clipboard are plaintext outside vault encryption. Nothing is sent to an AI provider automatically, and this selection does not narrow existing live MCP grants. See [sharing workflow and limits](docs/SHARING.md).
+
+If a newer import changes a source message's text or role, its linked memories return to draft and dependent briefs require source review again. An unchanged reimport preserves approvals.
+
 ## Encryption, backup, and agents
 
 Database: `~/Library/Application Support/com.predrink.vault/vault.enc.sqlite3`. SQLCipher 4.20 encrypts archive, memory, briefs, search index, and database journal pages. Password keys use Argon2id. Read [security design and limits](docs/SECURITY.md).

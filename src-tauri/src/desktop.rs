@@ -180,6 +180,46 @@ async fn preview_context(topic: String, store: State<'_, Store>) -> Result<Strin
     .await
 }
 #[tauri::command]
+async fn prepare_share(
+    selection: crate::sharing::ShareSelection,
+    store: State<'_, Store>,
+) -> Result<crate::sharing::PreparedShare, String> {
+    session_op(store.inner().clone(), move |s| s.prepare_share(&selection)).await
+}
+#[tauri::command]
+async fn copy_share(
+    request: crate::sharing::ShareRequest,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| {
+        s.with_validated_share(&request, |markdown| {
+            #[cfg(target_os = "macos")]
+            {
+                crate::sharing::copy_markdown(markdown)
+            }
+            #[cfg(not(target_os = "macos"))]
+            {
+                let _ = markdown;
+                Err("Clipboard export is currently supported on macOS only.".into())
+            }
+        })
+    })
+    .await
+}
+#[tauri::command]
+async fn save_share(
+    request: crate::sharing::ShareRequest,
+    path: String,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| {
+        s.with_validated_share(&request, |markdown| {
+            crate::sharing::save_markdown(std::path::Path::new(&path), markdown)
+        })
+    })
+    .await
+}
+#[tauri::command]
 async fn list_clients(store: State<'_, Store>) -> Result<Vec<AgentClient>, String> {
     owner_op(store.inner().clone(), |v| v.clients()).await
 }
@@ -295,6 +335,9 @@ pub fn run() {
             apply_privacy_recheck,
             delete_memory,
             preview_context,
+            prepare_share,
+            copy_share,
+            save_share,
             list_clients,
             create_client,
             revoke_client,

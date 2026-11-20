@@ -47,7 +47,7 @@ The GUI is the only process owning an unlocked database connection. The MCP brid
 - **brief_sources:** brief FK, memory FK (SET NULL on deletion), reviewed memory timestamp. Null source or version mismatch blocks sharing.
 - **agent_clients:** ID, display name, SHA-256 bearer-token hash, optional chat scope, creation time.
 - **tags/conversation_tags:** schema reserved; no editing UI yet.
-- **search_index:** encrypted FTS5 text, rebuilt per affected conversation in the import transaction.
+- **search_index:** encrypted FTS5 text, rebuilt for the affected ID set once per import transaction; a memory-only temporary table avoids repeated full-table scans.
 
 Schema version 2 added the source marker and curated layers. Schema version 3 rescans existing content with current privacy rules and resets previous approvals once. Encrypted backups retain schema version 3 and current approvals. Reject newer unknown schema versions. Encryption format 1 is separately defined in `crypto.rs`; schema upgrades must not silently change key derivation.
 
@@ -72,6 +72,12 @@ A stand-alone agent opening the database would need a password, saved key or ano
 ### Reviewed source chains
 
 Raw history is evidence, not approved memory. Saves always clear approval. The owner-only review command returns persisted content, current supporting notes and a snapshot hash; a separate approval command rechecks that snapshot under the session mutex. MCP has access to neither command. Memory list tools serialize a dedicated response without archive provenance. Schema-v3 upgrade rescans stored content and clears old approvals once. Notes and briefs require approval and retain provenance. Eligibility is computed at query time to reflect later privacy/source changes. A brief is not silently rewritten by an agent or automatically approved after changing a source.
+
+### Selected plaintext sharing
+
+`src/Sharing.tsx` selects owner-visible notes/briefs and displays the complete payload. `sharing.rs` assembles at most 50 selected items and 128,000 UTF-8 bytes, excludes ineligible items and omits archive IDs/titles/source text. Exclusion metadata is separate from exported Markdown. A review hash binds item order, saved approval/provenance snapshots and final bytes; a session generation binds the unlock. Copy/save recompute before any side effect, while the session mutex remains held. Mac clipboard delivery uses NSPasteboard, not a separately queued frontend clipboard write. File creation requires a new `.md` path and mode 0600. The owner-only commands are not MCP tools.
+
+An idempotently installed SQLite trigger invalidates linked memory approvals and advances their version when imported message text/role changes. This also blocks briefs that reviewed the previous memory version. Same-content reimports preserve approval. The trigger/index add no columns and do not alter the schema version or encryption format; they are installed when opening existing supported vaults as well as new ones.
 
 ### Local transport with explicit sharing
 
