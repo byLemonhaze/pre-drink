@@ -47,6 +47,15 @@ fn snapshot(path: &Path, password: &str) -> Vec<Vec<Vec<Value>>> {
 
 #[test]
 fn wipe_synthetic_vault_restore_backup_and_verify_data_provenance_and_policy() {
+    wipe_and_restore(false);
+}
+
+#[test]
+fn wipe_synthetic_vault_restore_through_app_lifecycle_and_reset_client_access() {
+    wipe_and_restore(true);
+}
+
+fn wipe_and_restore(through_app: bool) {
     let root = tempfile::tempdir().unwrap();
     let live = root.path().join("disposable-live");
     std::fs::create_dir(&live).unwrap();
@@ -101,7 +110,8 @@ fn wipe_synthetic_vault_restore_backup_and_verify_data_provenance_and_policy() {
     v.encrypted_backup(&backup, BACKUP_PASSWORD).unwrap();
     v.checkpoint().unwrap();
     drop(v);
-    let expected = snapshot(&path, ORIGINAL_PASSWORD);
+    let mut expected = snapshot(&path, ORIGINAL_PASSWORD);
+    let backup_bytes = std::fs::read(&backup).unwrap();
     assert_eq!(snapshot(&backup, BACKUP_PASSWORD), expected);
     // Delete the entire synthetic live directory, including any journals.
     std::fs::remove_dir_all(&live).unwrap();
@@ -112,9 +122,33 @@ fn wipe_synthetic_vault_restore_backup_and_verify_data_provenance_and_policy() {
         use std::os::unix::fs::PermissionsExt;
         std::fs::set_permissions(&live, std::fs::Permissions::from_mode(0o700)).unwrap();
     }
-    std::fs::copy(&backup, &path).unwrap();
-    assert!(Vault::open(&path, ORIGINAL_PASSWORD).is_err());
-    let mut restored = Session::new(live);
+    let mut restored = Session::new(live.clone());
+    if through_app {
+        let preview = restored.prepare_restore(&backup, BACKUP_PASSWORD).unwrap();
+        assert_eq!(preview.conversations, 1);
+        assert_eq!(preview.messages, 3);
+        assert_eq!(preview.memories, 2);
+        assert_eq!(preview.briefs, 1);
+        assert_eq!(preview.clients_to_remove, 1);
+        assert!(preview.previous_vault.is_none());
+        assert!(!path.exists(), "Inspection must not publish a vault");
+        let result = restored
+            .apply_replacement(&preview.review_id, BACKUP_PASSWORD)
+            .unwrap();
+        assert!(!result.durability_warning);
+        assert!(result.previous_vault.is_none());
+        assert!(restored.vault.is_none());
+        // Recreate the session to use the persisted generation selector, not in-memory state.
+        drop(restored);
+        restored = Session::new(live);
+        // In-app restore intentionally discards old agent credentials; every other
+        // logical table, including approvals, provenance and FTS, must match.
+        expected[6].clear(); // agent_clients, in snapshot's explicit table order
+    } else {
+        std::fs::copy(&backup, &path).unwrap();
+    }
+    let active = restored.path().unwrap();
+    assert!(Vault::open(&active, ORIGINAL_PASSWORD).is_err());
     restored.unlock(BACKUP_PASSWORD, false, false).unwrap();
     assert!(
         !restored.sharing,
@@ -126,7 +160,7 @@ fn wipe_synthetic_vault_restore_backup_and_verify_data_provenance_and_policy() {
     assert_eq!(v.stats().unwrap().private, 1);
     assert!(v.memories(None, "", true).unwrap().is_empty());
     assert!(v.briefs(true, "").unwrap().is_empty());
-    assert_eq!(v.clients().unwrap().len(), 1);
+    assert_eq!(v.clients().unwrap().len(), usize::from(!through_app));
     let request = AgentRequest {
         client_id: client.client.id.clone(),
         token: client.token,
@@ -135,11 +169,21 @@ fn wipe_synthetic_vault_restore_backup_and_verify_data_provenance_and_policy() {
         limit: None,
         conversation_id: String::new(),
     };
-    assert_eq!(v.agent_call(&request).unwrap(), json!([]));
-    assert_eq!(snapshot(&path, BACKUP_PASSWORD), expected);
-    v.revoke_client(&client.client.id).unwrap();
+    if through_app {
+        assert!(
+            v.agent_call(&request).is_err(),
+            "Restored credentials must not regain access"
+        );
+    } else {
+        assert_eq!(v.agent_call(&request).unwrap(), json!([]));
+    }
+    assert_eq!(snapshot(&active, BACKUP_PASSWORD), expected);
+    if !through_app {
+        v.revoke_client(&client.client.id).unwrap();
+    }
     assert!(v.agent_call(&request).is_err());
     restored.lock();
+    assert_eq!(std::fs::read(&backup).unwrap(), backup_bytes);
     assert!(
         backup.exists(),
         "Original backup remains available after restore"
@@ -148,7 +192,7 @@ fn wipe_synthetic_vault_restore_backup_and_verify_data_provenance_and_policy() {
     {
         use std::os::unix::fs::PermissionsExt;
         assert_eq!(
-            std::fs::metadata(path).unwrap().permissions().mode() & 0o777,
+            std::fs::metadata(active).unwrap().permissions().mode() & 0o777,
             0o600
         );
     }

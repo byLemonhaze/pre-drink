@@ -121,3 +121,11 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Passed:** eight policy phases / ten actual MCP calls with independently asserted results, covering approved context, exclusions, scope, edits, private sources, lock/unlock and revocation after backend reopen. Four Grok tool-discovery calls also ran. The redundant-unlock error in the local test driver was corrected and the remaining case retried successfully.
 - **Privacy:** only invented fixtures were shared; no API key, public tunnel, persistent client registration, personal export or vault was used. Temporary vault/configuration storage was cleaned after revocation/lock. Logs stay outside Git.
 - **Verification and limits:** `fc495f0` passed GitHub checks. No product code/dependency changed in this documentation update. Native setup screens, native app restart, physical file drop and representative-data gates remain open; Claude is deferred.
+
+## Reviewed restore after complete vault loss
+
+- **Added:** a second destructive recovery path using the same reviewed replacement APIs as the app, with full data/provenance/policy comparison after a fresh backend session. Old client credentials are intentionally removed and denied.
+- **Added:** encrypted first/later-page damage and partial-page truncation checks, preserved original/input bytes, failed-stage cleanup and successful retry. A disconnected backup source after inspection does not change the private reviewed copy; applied reviews cannot be replayed after reopen.
+- **Passed:** all nine affected lifecycle/recovery cases, all-target Clippy, formatting and the repository guard; production frontend and isolated debug bundle build. `0b169f8` has passing remote checks.
+- **Native limit:** computer-control attachment stalled and returned an expired-continuation error. The isolated app reported ready in 1,262 ms, but no new native connection/recovery workflow was verified. The ordinary vault was not unlocked or modified; the isolated process was stopped. No personal content or raw logs enter Git.
+- **Next:** native client setup/restart, owner-entered password change, representative isolated export/upgrade evidence and physical file drop. Apple enrollment stays last.

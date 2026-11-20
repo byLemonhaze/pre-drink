@@ -229,3 +229,88 @@ fn invalid_backups_active_files_and_pointer_corruption_fail_closed() {
         "Corrupt selection must not overwrite or create a replacement"
     );
 }
+
+#[test]
+fn encrypted_page_damage_and_truncation_leave_live_vault_and_backup_usable() {
+    let root = tempfile::tempdir().unwrap();
+    let storage = root.path().join("live");
+    fs::create_dir(&storage).unwrap();
+    let mut s = live(&storage);
+    let original = s.path().unwrap();
+    let good = root.path().join("verified-backup");
+    backup(&good);
+    let bytes = fs::read(&good).unwrap();
+    assert!(bytes.len() > 8192);
+    let damaged = root.path().join("damaged-backup");
+    for failure in ["header-page", "later-page", "partial-page"] {
+        let mut broken = bytes.clone();
+        match failure {
+            "header-page" => broken[128] ^= 1,
+            "later-page" => broken[4096 + 128] ^= 1,
+            _ => {
+                broken.truncate(broken.len() - 17);
+            }
+        }
+        fs::write(&damaged, &broken).unwrap();
+        s.sharing = true;
+        assert!(s.prepare_restore(&damaged, NEW).is_err(), "{failure}");
+        assert!(!s.sharing);
+        assert_eq!(s.path().unwrap(), original);
+        assert_eq!(
+            fs::read(&damaged).unwrap(),
+            broken,
+            "Inspection must not repair or overwrite its input"
+        );
+        assert!(!storage.join("active-vault.json").exists());
+        assert_eq!(
+            fs::read_dir(&storage)
+                .unwrap()
+                .filter_map(Result::ok)
+                .filter(|entry| entry.file_type().unwrap().is_dir())
+                .count(),
+            0,
+            "Failed preparations must be discarded"
+        );
+        s.lock();
+        s.unlock(OLD, false, false).unwrap();
+        assert_eq!(
+            s.access().unwrap().memories(None, "", false).unwrap()[0].content,
+            "Original garden plan."
+        );
+    }
+    assert_eq!(fs::read(&good).unwrap(), bytes);
+    // A failed attempt must not poison the next valid restore.
+    let review = s.prepare_restore(&good, NEW).unwrap();
+    s.apply_replacement(&review.review_id, NEW).unwrap();
+    s.unlock(NEW, false, false).unwrap();
+    assert_eq!(
+        s.access().unwrap().memories(None, "", false).unwrap()[0].content,
+        "Backup garden plan."
+    );
+}
+
+#[test]
+fn reviewed_restore_uses_private_copy_even_if_original_backup_disappears() {
+    let root = tempfile::tempdir().unwrap();
+    let mut s = live(root.path());
+    let source = root.path().join("removable-backup");
+    backup(&source);
+    let review = s.prepare_restore(&source, NEW).unwrap();
+    // Models disconnecting the backup drive after inspection has completed.
+    fs::remove_file(&source).unwrap();
+    s.apply_replacement(&review.review_id, NEW).unwrap();
+    drop(s);
+    let mut reopened = Session::new(root.path().into());
+    reopened.unlock(NEW, false, false).unwrap();
+    assert!(!reopened.sharing);
+    let vault = reopened.access().unwrap();
+    assert_eq!(
+        vault.memories(None, "", false).unwrap()[0].content,
+        "Backup garden plan."
+    );
+    assert!(vault.clients().unwrap().is_empty());
+    assert!(
+        reopened.apply_replacement(&review.review_id, NEW).is_err(),
+        "An applied review cannot be replayed after reopening"
+    );
+}
