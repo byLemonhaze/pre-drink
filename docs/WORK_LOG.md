@@ -152,3 +152,9 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Reproducible:** added a generator that creates only fresh fictional temporary storage, plus NATIVE_WALKTHROUGH. All-target Clippy and formatting pass. No personal data, generated vaults, screenshots or credentials are committed.
 - **Remaining:** native password-change completion was not observed (existing phrase still unlocks the same generation). Two Finder drag attempts produced no import and did not establish a valid cross-window gesture. Both remain unverified, not diagnosed app failures.
 - **Finish:** revoked both fictional clients, locked and quit the separate app. Fictional temporary fixtures/backups stay outside Git; the personal vault was not used. Apple signing/public release stay deferred.
+
+## Owner-assisted password-change retry
+
+- **Passed:** owner submitted the native change; independent keyboard-based unlock checks reject the old fictional phrase and accept the new one. The active generation changed, prior recovery generation is listed, archive/memory/brief and sensitivity remain, and sharing is off.
+- **Limit:** clients were already revoked before rotation, so this run does not establish removal of populated registrations. Physical file drop and broader failure/representative-data checks remain open.
+- **Finish:** left the separate fictional app locked. Documentation only; no personal data or product-code change. Supersedes the earlier incomplete-handoff status.

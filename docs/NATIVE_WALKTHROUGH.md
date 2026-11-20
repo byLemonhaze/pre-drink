@@ -40,7 +40,9 @@ A visual inspection found the previous-copy acknowledgement and typed phrase run
 
 Computer-control rules require the owner to enter, confirm and submit a new credential. Use the fictional phrases only. After completion, verify the old phrase fails for the active vault, the new phrase opens it, data remains, registrations are removed, sharing is off and the previous encrypted generation is listed. This is distinct from automated replacement tests.
 
-**Result in this session: unverified.** The reported handoff completion could not be confirmed: the existing fictional password still unlocked the active vault and the selected generation had not changed. No completed native replacement was observed. The credential-entry handoff was not completed during the follow-up. This establishes neither a successful password change nor an application defect.
+**Result after owner retry on 2026-11-20: passed for the successful native path.** The owner entered and submitted the change, then reopened with the new fictional phrase. Independent native verification locked the vault, confirmed that the previous phrase is rejected, and confirmed that the new phrase opens it. The active generation changed; both conversations/messages, the approved memory, the draft brief and the sensitive restriction remain. Sharing is off, no clients are listed, and the previous active generation appears among retained recovery copies. The app was left locked.
+
+The first incomplete handoff did not establish a result; this later verification supersedes that status. The two fictional clients had already been revoked before this rotation, so an empty client list does not independently prove removal of populated registrations during this native run. That behavior retains its automated coverage. Native failure paths and physical interruption testing remain separate.
 
 ## Physical file drop
 
