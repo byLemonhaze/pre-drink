@@ -36,7 +36,7 @@ Export controls can change. Do not ask users to paste exports or passwords into 
 
 Codex registrations bind ChatGPT, Grok registrations bind Grok, and Claude local-MCP registrations bind Claude. Shared-only clients have no raw-source access. Curation is an additional explicit permission and does not enable automatic publication or sharing. Existing manual local features remain usable offline with no curator.
 
-Schema 5 extends the schema-4 provider constraints to Claude while retaining existing grants, policies, notes and child records. It creates a default-off Claude publication policy. Older v3 grants still undergo the v4 shared-only downgrade; no migration assigns broader access. The current backend has no cross-provider delegation override. The owner has approved that as a later advanced option, with explicit selected-source grants and independent publication consent; see AGENT_CURATION.
+Schema 5 extends the schema-4 provider constraints to Claude while retaining existing grants, policies, notes and child records. Schema 6 completes the saved-job constraint migration for both v4 and v5 vaults, so Claude can start resumable jobs after an upgrade. It creates a default-off Claude publication policy. Older v3 grants still undergo the v4 shared-only downgrade; no migration assigns broader access. The current backend has no cross-provider delegation override. The owner has approved that as a later advanced option, with explicit selected-source grants and independent publication consent; see AGENT_CURATION.
 
 ## Additional providers
 

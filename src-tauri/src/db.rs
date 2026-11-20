@@ -62,7 +62,7 @@ impl Vault {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .map_err(|e| e.to_string())?;
-        if version > 5 {
+        if version > 6 {
             return Err("This vault needs a newer Pre-Drink version.".into());
         }
         if version == 1 {
@@ -117,7 +117,7 @@ impl Vault {
         }
         // SQLite's supported table-rebuild pattern. No agent is connected during
         // initialization; FK enforcement is restored before returning the vault.
-        if version == 4 {
+        if matches!(version, 4 | 5) {
             connection
                 .execute_batch("PRAGMA foreign_keys=OFF;")
                 .map_err(|e| e.to_string())?;
@@ -125,7 +125,11 @@ impl Vault {
                 let tx = connection
                     .unchecked_transaction()
                     .map_err(|e| e.to_string())?;
-                tx.execute_batch(include_str!("provider_migration.sql"))
+                if version == 4 {
+                    tx.execute_batch(include_str!("provider_migration.sql"))
+                        .map_err(|e| e.to_string())?;
+                }
+                tx.execute_batch(include_str!("provider_jobs_migration.sql"))
                     .map_err(|e| e.to_string())?;
                 tx.execute_batch(include_str!("curation.sql"))
                     .map_err(|e| e.to_string())?;
@@ -139,7 +143,7 @@ impl Vault {
                         "Provider upgrade found invalid references; nothing was changed.".into(),
                     );
                 }
-                tx.execute_batch("PRAGMA user_version=5;")
+                tx.execute_batch("PRAGMA user_version=6;")
                     .map_err(|e| e.to_string())?;
                 tx.commit().map_err(|e| e.to_string())
             })();
@@ -159,7 +163,7 @@ impl Vault {
             tx.execute("UPDATE agent_clients SET allow_chats=0", [])
                 .map_err(|e| e.to_string())?;
         }
-        tx.execute_batch("PRAGMA user_version=5;")
+        tx.execute_batch("PRAGMA user_version=6;")
             .map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
         let mut vault = Self { connection, path };
@@ -204,7 +208,7 @@ impl Vault {
                 .map_err(|_| "Couldn't create encrypted backup.")?;
             let exported = self
                 .connection
-                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=5;");
+                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=6;");
             let detached = self.connection.execute_batch("DETACH DATABASE backup;");
             exported
                 .and(detached)
@@ -497,6 +501,13 @@ mod provider_upgrade_tests {
     use super::*;
     #[test]
     fn v4_provider_upgrade_preserves_grants_policy_and_all_child_records() {
+        check_provider_upgrade(4);
+    }
+    #[test]
+    fn v5_provider_upgrade_allows_claude_jobs_and_preserves_existing_state() {
+        check_provider_upgrade(5);
+    }
+    fn check_provider_upgrade(version: i64) {
         let c = Connection::open_in_memory().unwrap();
         c.execute_batch(include_str!("schema.sql")).unwrap();
         c.execute_batch(include_str!("../tests/fixtures/migrations/curation-v4.sql"))
@@ -514,12 +525,20 @@ mod provider_upgrade_tests {
           INSERT INTO curation_jobs VALUES ('job','grok','Garden',1,'0','running',1);
           INSERT INTO curation_job_sources VALUES ('job',1,'message',1);
           PRAGMA user_version=4;").unwrap();
+        if version == 5 {
+            c.execute_batch("PRAGMA foreign_keys=OFF;").unwrap();
+            c.execute_batch(include_str!("../tests/fixtures/migrations/provider-v5.sql"))
+                .unwrap();
+            c.execute_batch(include_str!("curation.sql")).unwrap();
+            c.execute_batch("PRAGMA user_version=5; PRAGMA foreign_keys=ON;")
+                .unwrap();
+        }
         let v = Vault::initialize(c, ":memory:".into()).unwrap();
         assert_eq!(
             v.connection
                 .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
-            5
+            6
         );
         assert_eq!(
             v.connection
@@ -567,8 +586,22 @@ mod provider_upgrade_tests {
             );
         }
         assert_eq!(v.memories(None, "", true).unwrap().len(), 1);
-        v.create_scoped_client("Fictional Claude", Some("claude"), true)
+        let claude = v
+            .create_scoped_client("Fictional Claude", Some("claude"), true)
             .unwrap();
+        let op = crate::curation::CurationOperation::SaveJob {
+            id: None,
+            expected_revision: 0,
+            label: "Garden review".into(),
+            checkpoint: 0,
+            status: "running".into(),
+            request_key: "claude-job".into(),
+        };
+        let job = v
+            .save_curation_job("claude", &claude.client.id, &op)
+            .unwrap();
+        assert_eq!(job["revision"], 1);
+        assert_eq!(job["source_count"], 0);
         assert_eq!(v.curation_policies().unwrap().as_array().unwrap().len(), 3);
         v.connection
             .execute_batch("DELETE FROM agent_clients WHERE id='client'")

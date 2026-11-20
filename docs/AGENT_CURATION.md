@@ -61,7 +61,7 @@ Cloud-backed curation can transmit permitted content to that provider. Even when
 
 Acceptance must cover denied cross-provider reads/writes, rejected policy changes by a curator, prompt-injection source text, fabricated source references, stale writers, interrupted jobs/retry without duplication, private-source propagation, source changes, meaningful undo and sharing-off on lock/revocation. Verify the specific chat/client connection before promising that it can update the vault; prior CLI retrieval tests do not establish this new write workflow.
 
-## Implemented contract (schemas 4–5)
+## Implemented contract (schemas 4–6)
 
 - Owner registration binds a credential to ChatGPT/Codex, Grok or Claude. This is a credential boundary, not model attestation: never reuse a credential in another provider's client. Generic clients stay shared-only. Multiple explicitly authorized clients of the same provider share that provider workspace; client attribution remains in revision history.
 - Upgrading from schema 3 preserves manual memories and approvals. Legacy broad chat grants become shared-only; the owner must issue new provider-specific registrations. The original archive, passwords and encrypted storage format are retained.

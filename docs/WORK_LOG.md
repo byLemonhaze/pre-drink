@@ -226,3 +226,7 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - The earlier curation/documentation commit `2ed7241` passed [GitHub verification](https://github.com/byLemonhaze/pre-drink/actions/runs/44830543395). This is evidence for that commit only; the provider expansion has its own checks recorded in VALIDATION.
 
 - **Expansion verification:** all 106 Rust checks, five startup checks, six reading checks, Clippy and builds passed locally. Native Grok/Claude picker imports, two-ZIP repeat import, provider labels/branches, Claude search and isolated workspace/client wording passed on fictional storage. The v4 preview upgraded with prior curation statuses/grants intact and was left locked. See VALIDATION and NATIVE_WALKTHROUGH for evidence boundaries.
+
+## Claude saved-job upgrade correction — 2026-11-20
+
+Final constraint review found that the schema-5 migration widened grants/policies/notes but left the old saved-job constraint unchanged. Fresh vaults worked; upgraded v4 vaults rejected new Claude jobs. Added checks for v4 and already-v5 fixtures, observed both fail specifically at Claude job creation, then implemented schema 6 to rebuild jobs transactionally and preserve manifest children. Existing provider grants and publication rules do not broaden. This supersedes schema-5 completion claims for resumable Claude curation; the earlier import/native evidence remains valid for its stated scope.

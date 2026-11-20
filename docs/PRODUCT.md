@@ -74,7 +74,7 @@ Agent sharing starts off and resets on lock/restart. A live client grant covers 
 
 SQLCipher encrypts archive, memory, drafts, revision history, job progress, search indexes and backups; Argon2id derives keys from a separate vault password. There is no reset or hidden recovery key. Use maintained cryptographic libraries and never promise absolute security.
 
-Schema 4 extends the existing store, preserves manual notes/approvals and downgrades broad legacy chat grants to shared-only. Schema 5 adds Claude to the provider constraints and retains existing v4 grants, policies and curation history; Claude’s automation starts off. New scoped registrations are required for source access/curation. In-app restore/password change preserves curated data/history, removes client registrations, resets automatic-publication rules and leaves sharing off. Old copies retain old passwords and may retain old grants/rules; see [RECOVERY](RECOVERY.md).
+Schema 4 extends the existing store, preserves manual notes/approvals and downgrades broad legacy chat grants to shared-only. Schema 5 adds Claude to the provider constraints and retains existing v4 grants, policies and curation history; Claude’s automation starts off. Schema 6 completes the saved-job constraint migration for both v4 and v5 vaults, so Claude can start resumable jobs after an upgrade. New scoped registrations are required for source access/curation. In-app restore/password change preserves curated data/history, removes client registrations, resets automatic-publication rules and leaves sharing off. Old copies retain old passwords and may retain old grants/rules; see [RECOVERY](RECOVERY.md).
 
 ## Acceptance and remaining work
 
