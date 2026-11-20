@@ -111,7 +111,7 @@ export default function RetainedVaults() {
             </div>
           ))}
           {selected && (
-            <div className="settings-card">
+            <div className="settings-card retained-confirmation">
               <h3>
                 Remove{" "}
                 {selected.id === "original"
@@ -126,7 +126,7 @@ export default function RetainedVaults() {
                 current vault may not include information that existed only in
                 this older copy.
               </p>
-              <label>
+              <label className="checkbox-row">
                 <input
                   type="checkbox"
                   checked={understood}
@@ -136,7 +136,7 @@ export default function RetainedVaults() {
                 I checked the current vault and do not need this older copy for
                 recovery.
               </label>
-              <label>
+              <label className="confirmation-field">
                 Type {phrase}
                 <input
                   value={confirmation}
@@ -145,20 +145,22 @@ export default function RetainedVaults() {
                   onChange={(e) => setConfirmation(e.target.value)}
                 />
               </label>
-              <button
-                className="button secondary"
-                disabled={busy}
-                onClick={() => setSelected(null)}
-              >
-                Cancel
-              </button>{" "}
-              <button
-                className="button primary"
-                disabled={busy || !understood || confirmation !== phrase}
-                onClick={() => void remove()}
-              >
-                Remove selected copy &amp; stop sharing
-              </button>
+              <div className="form-actions">
+                <button
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() => setSelected(null)}
+                >
+                  Cancel
+                </button>{" "}
+                <button
+                  className="button primary"
+                  disabled={busy || !understood || confirmation !== phrase}
+                  onClick={() => void remove()}
+                >
+                  Remove selected copy &amp; stop sharing
+                </button>
+              </div>
             </div>
           )}
         </div>

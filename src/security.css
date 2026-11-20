@@ -635,3 +635,25 @@ form textarea {
   height: 100vh;
   min-height: 0;
 }
+
+/* Keep the destructive acknowledgement and typed phrase on distinct rows. */
+.retained-confirmation .confirmation-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 18px 0 12px;
+  max-width: 420px;
+  font-size: 12px;
+}
+.retained-confirmation .confirmation-field input {
+  width: 100%;
+  padding: 11px;
+  background: var(--canvas);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  font: inherit;
+}
+.retained-confirmation .form-actions {
+  flex-wrap: wrap;
+}
