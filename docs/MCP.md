@@ -16,13 +16,13 @@ The generated configuration uses common `mcpServers` JSON: absolute executable p
 
 The stdio handshake, discovery and calls are integration tested. Codex CLI 0.169.1 has also passed eight fictional-data acceptance phases (ten actual MCP calls), including approval/source restrictions, memory-only scope, lock, unlock and persisted revocation. Individual desktop setup screens remain unverified. No client is automatically given access.
 
-See [installed-client acceptance](MCP_ACCEPTANCE.md) for setup, per-client status and privacy/lifecycle evidence. Claude Code remains untested; Grok Build testing is blocked at authentication.
+See [installed-client acceptance](MCP_ACCEPTANCE.md) for setup, per-client status and privacy/lifecycle evidence. Claude Code remains untested. Grok Build 1.0.41 also passed eight fictional-data phases and ten actual MCP calls after owner sign-in.
 
 ## Client configuration formats
 
 Codex supports the local stdio bridge, but uses TOML rather than the app's generated `mcpServers` JSON. Translate the executable, `--mcp` argument and three environment values into a private `[mcp_servers.pre_drink]` entry, or use `env_vars` to forward them from a controlled local launcher. Do not put token values in shell arguments, prompts or repository configuration. The acceptance run used per-invocation settings, the existing ChatGPT sign-in and ephemeral sessions; it did not add a persistent server to the owner's configuration. See [Codex MCP configuration](https://developers.openai.com/codex/mcp).
 
-Grok Build supports command-based local stdio servers, as described in its [MCP guide](https://docs.x.ai/build/features/mcp-servers). This is distinct from [Grok web custom connectors](https://docs.x.ai/grok/connectors), which require a publicly reachable server. Pre-Drink does not expose a public endpoint or create tunnels. Grok Build compatibility is not yet verified by model-driven calls, and it does not establish Grok Bot/web compatibility. Native client-specific configuration export remains a usability improvement; adding MCP clients does not add Claude or Grok chat-export import support.
+Grok Build supports command-based local stdio servers, as described in its [MCP guide](https://docs.x.ai/build/features/mcp-servers). This is distinct from [Grok web custom connectors](https://docs.x.ai/grok/connectors), which require a publicly reachable server. Pre-Drink does not expose a public endpoint or create tunnels. The Grok Build checks establish local stdio tool-result compatibility for the tested version; they do not establish Grok Bot/web compatibility. Native client-specific configuration export remains a usability improvement; adding MCP clients does not add Claude or Grok chat-export import support.
 
 ## Tools
 

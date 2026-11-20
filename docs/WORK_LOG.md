@@ -114,3 +114,10 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Grok:** installed Grok Build exposes local stdio support, but authenticated ACP session setup did not complete. No Grok model call ran. Owner sign-in is pending; no public tunnel was created. Claude remains deferred at the owner's request.
 - **Privacy:** only invented fixture content was supplied to Codex. Credentials and raw events were kept outside Git; disposable vault/config files were cleaned after revocation. Native connection-screen and physical-drop verification remain open.
 - **Verification:** baseline `01b472a` has passing GitHub checks. This evidence/documentation batch makes no production code or dependency change.
+
+## Grok installed-client acceptance
+
+- **Resolved:** owner browser OAuth sign-in completed; Grok Build 1.0.41 accepted cached authentication.
+- **Passed:** eight policy phases / ten actual MCP calls with independently asserted results, covering approved context, exclusions, scope, edits, private sources, lock/unlock and revocation after backend reopen. Four Grok tool-discovery calls also ran. The redundant-unlock error in the local test driver was corrected and the remaining case retried successfully.
+- **Privacy:** only invented fixtures were shared; no API key, public tunnel, persistent client registration, personal export or vault was used. Temporary vault/configuration storage was cleaned after revocation/lock. Logs stay outside Git.
+- **Verification and limits:** `fc495f0` passed GitHub checks. No product code/dependency changed in this documentation update. Native setup screens, native app restart, physical file drop and representative-data gates remain open; Claude is deferred.
