@@ -107,3 +107,10 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Passed:** local protocol-client matrix through the real MCP binary, fixture permissions/cleanup, targeted stdio regression, all-target Clippy and formatting. See VALIDATION for the exact scope.
 - **Pending:** Claude Code model calls require the owner's external-usage budget choice after automatic review blocked an unapproved spending limit. No model call or account configuration change was made. Native client-registration UI, native restart and physical file-drop remain separate gates.
 - **Product direction:** the owner confirmed a later UI overhaul; functionality and reliability remain the immediate priority. Existing styling is not a final design commitment.
+
+## Codex installed-client acceptance
+
+- **Passed:** eight Codex CLI phases / ten actual MCP calls, independently checked from tool events, covering approved context, exclusions, scope, edits, source privacy, lock/unlock and persisted revocation. Existing ChatGPT sign-in was used; no API key or persistent MCP registration was added.
+- **Grok:** installed Grok Build exposes local stdio support, but authenticated ACP session setup did not complete. No Grok model call ran. Owner sign-in is pending; no public tunnel was created. Claude remains deferred at the owner's request.
+- **Privacy:** only invented fixture content was supplied to Codex. Credentials and raw events were kept outside Git; disposable vault/config files were cleaned after revocation. Native connection-screen and physical-drop verification remain open.
+- **Verification:** baseline `01b472a` has passing GitHub checks. This evidence/documentation batch makes no production code or dependency change.

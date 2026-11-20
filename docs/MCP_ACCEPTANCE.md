@@ -1,6 +1,20 @@
 # Installed-client acceptance
 
-This is a pending hands-on acceptance procedure, not a passing test report. The automated stdio integration already checks negotiation, tool discovery, sharing-off, memory-only scope, revocation and lock. A real client's setup and tool-result handling still need separate evidence.
+This document separates the acceptance procedure from results for each client. Automated stdio checks do not by themselves establish third-party client compatibility. Native setup screens and native lifecycle events need evidence beyond the backend fixture.
+
+## Client results (2026-11-20)
+
+| Client            | Result                    | Scope and remaining limits                                                                                                                                                                                                    |
+| ----------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Codex CLI 0.169.1 | Passed                    | Eight phases, ten real MCP calls through the production stdio bridge and fictional encrypted fixture; actual tool events independently checked. Desktop configuration UI and native app restart remain open.                  |
+| Grok Build 1.0.41 | Blocked at authentication | ACP initialization works and advertises `grok.com`; explicit authentication timed out and a direct session attempt reported authentication required. No model prompt or vault retrieval completed. Retry after owner sign-in. |
+| Claude Code       | Deferred                  | Owner chose Codex/Grok instead. No Claude model calls made.                                                                                                                                                                   |
+
+The Codex phases were sharing-off denial; approved facts and brief retrieval plus memory-only chat denial; approval invalidation on edit; source privacy exclusion; lock with a still-valid credential; unlock retaining sharing-off; revocation with sharing enabled; and backend-session replacement retaining revocation. Draft/private/sensitive fictional markers never appeared in successful facts/context responses. All ten completed tool events belonged to Pre-Drink; no other tools executed.
+
+Codex used existing ChatGPT authentication, no API key, an empty working folder, `--ignore-user-config`, `--ephemeral`, read-only command restrictions, shell/apps/multi-agent tools disabled and a three-tool Pre-Drink allowlist. Runtime `env_vars` forwarded the temporary credentials without placing their values in process arguments. These were per-invocation settings, not persistent owner configuration changes.
+
+The Grok attempt used its documented ACP interface with an isolated temporary configuration, unrelated compatibility connectors disabled and no API key. A fresh fixture was cleaned after each attempt. Its sign-in problem is not evidence of an MCP protocol failure. The [Grok ACP guide](https://docs.x.ai/build/cli/headless-scripting) illustrates `cached_token`, but the installed version advertised only `grok.com`; use advertised capabilities rather than assuming the example is version-independent.
 
 ## Reproducible backend fixture
 
@@ -15,7 +29,7 @@ It creates fresh temporary storage and a random password that is never printed. 
 
 The fixture terminal accepts `sharing_on`, `sharing_off`, `edit`, `restrict`, `lock`, `unlock`, `revoke`, `restart` and `quit`. These are developer-process stdin commands, not MCP tools or app features. `edit` changes the approved standalone fact; `restrict` marks the invented source conversation private. `restart` replaces/reopens the backend session, not the native app or operating system. `quit` revokes access, locks and removes this fixture's temporary files on normal exit. Abrupt termination can leave temporary files; filesystem deletion is not secure erasure.
 
-This harness bypasses UI setup and therefore cannot verify the app's client-registration screens, clipboard configuration flow or native lifecycle events. The installed-client matrix remains pending until an actual client invokes the tools. Review any cloud-client cost before invocation; no model calls are part of starting the fixture.
+This harness bypasses UI setup and therefore cannot verify the app's client-registration screens, clipboard configuration flow or native lifecycle events. Results apply only to the actual client tested; see the status table above. Review any cloud-client cost before invocation; no model calls are part of starting the fixture.
 
 ## Safe setup
 
