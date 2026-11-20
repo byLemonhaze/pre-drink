@@ -17,6 +17,9 @@ fn main() {
     for path in [
         "src",
         "../src",
+        "../public",
+        "../index.html",
+        "../dist",
         "Cargo.toml",
         "Cargo.lock",
         "tauri.conf.json",

@@ -1,11 +1,9 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import VaultGate from "./VaultGate";
-import "./styles.css";
-import "./security.css";
+// Keep startup independent of the React/application module graph.
+import { invoke, isTauri } from "@tauri-apps/api/core";
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <VaultGate />
-  </React.StrictMode>,
-);
+if (isTauri())
+  void invoke("startup_stage", { stage: "module-ready" }).catch(() => {});
+
+void import("./render").catch(() => {
+  window.dispatchEvent(new Event("pre-drink-startup-failed"));
+});

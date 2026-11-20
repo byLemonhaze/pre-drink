@@ -23,6 +23,15 @@ export default function VaultGate() {
   const [notice, setNotice] = useState("");
   const generation = useRef(0);
   const lastTouch = useRef(0);
+  const reportedReady = useRef(false);
+  useEffect(() => {
+    if (status && !reportedReady.current) {
+      reportedReady.current = true;
+      void invoke("startup_stage", { stage: "interface-ready" }).catch(
+        () => {},
+      );
+    }
+  }, [status]);
   const refresh = useCallback(async () => {
     if (!isTauri()) return;
     const current = generation.current;

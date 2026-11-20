@@ -344,10 +344,95 @@ async fn apply_removal(
     .await
 }
 
+// Opt-in local debug timing only. Never record paths, errors, credentials or content.
+fn startup_mark(stage: &'static str) {
+    #[cfg(debug_assertions)]
+    if std::env::var_os("PRE_DRINK_STARTUP_TRACE").is_some() {
+        static START: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
+        let elapsed = START.get_or_init(std::time::Instant::now).elapsed();
+        eprintln!("startup {}ms {stage}", elapsed.as_millis());
+    }
+    #[cfg(not(debug_assertions))]
+    let _ = stage;
+}
+
+#[derive(serde::Deserialize)]
+#[serde(rename_all = "kebab-case")]
+enum StartupStage {
+    ModuleReady,
+    InterfaceReady,
+}
+
+#[tauri::command]
+fn startup_stage(stage: StartupStage, startup: State<'_, StartupState>) {
+    startup.0.store(true, std::sync::atomic::Ordering::Release);
+    startup_mark(match stage {
+        StartupStage::ModuleReady => "module-ready",
+        StartupStage::InterfaceReady => "interface-ready",
+    });
+}
+
+#[derive(Default)]
+struct StartupState(std::sync::atomic::AtomicBool);
+
+fn startup_watchdog(app: tauri::AppHandle) {
+    // A page-level fallback cannot run if WebKit never loads the document.
+    // Only monitor initial startup, and never interrupt a working interface.
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_secs(15));
+        let handle = app.clone();
+        let _ = app.run_on_main_thread(move || {
+            if handle.state::<StartupState>().0.load(std::sync::atomic::Ordering::Acquire) {
+                return;
+            }
+            use tauri_plugin_dialog::{DialogExt, MessageDialogButtons};
+            let Some(window) = handle.get_webview_window("main") else {
+                return;
+            };
+            let recovery = handle.clone();
+            handle.dialog()
+                .message("Pre-Drink’s interface has not finished loading. Try again, or close and reopen the app.")
+                .parent(&window)
+                .title("Pre-Drink could not finish starting")
+                .buttons(MessageDialogButtons::OkCancelCustom("Try again".into(), "Close app".into()))
+                .show(move |retry| {
+                    if recovery.state::<StartupState>().0.load(std::sync::atomic::Ordering::Acquire) {
+                        return;
+                    }
+                    if retry {
+                        if let Some(window) = recovery.get_webview_window("main") {
+                            let _ = window.reload();
+                            startup_watchdog(recovery.clone());
+                        }
+                    } else {
+                        recovery.exit(0);
+                    }
+                });
+        });
+    });
+}
+
 pub fn run() {
+    startup_mark("process-start");
     tauri::Builder::default()
+        .manage(StartupState::default())
         .plugin(tauri_plugin_dialog::init())
+        .on_page_load(|webview, payload| {
+            if matches!(payload.event(), tauri::webview::PageLoadEvent::Started) {
+                // Reloading must not leave a previously unlocked session sharing.
+                if let Some(store) = webview.try_state::<Store>() {
+                    if let Ok(mut session) = store.lock() {
+                        session.lock();
+                    }
+                }
+            }
+            startup_mark(match payload.event() {
+                tauri::webview::PageLoadEvent::Started => "page-start",
+                tauri::webview::PageLoadEvent::Finished => "page-finish",
+            });
+        })
         .setup(|app| {
+            startup_mark("setup-start");
             let data = app.path().app_data_dir()?;
             #[cfg(debug_assertions)]
             let data = std::env::var_os("PRE_DRINK_DATA_DIR")
@@ -381,9 +466,12 @@ pub fn run() {
                 .map_err(std::io::Error::other)?;
             crate::session::watchdog(store.clone());
             app.manage(store);
+            startup_watchdog(app.handle().clone());
+            startup_mark("setup-finish");
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            startup_stage,
             vault_status,
             unlock_vault,
             lock_vault,

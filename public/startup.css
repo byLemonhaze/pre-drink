@@ -1,0 +1,50 @@
+/* Available before the application bundle, with no remote fonts or assets. */
+html {
+  color-scheme: dark;
+  background: #111316;
+}
+body {
+  margin: 0;
+}
+[hidden] {
+  display: none !important;
+}
+.startup-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #111316;
+  color: #e4e6e9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.startup-card {
+  width: min(420px, calc(100vw - 80px));
+  padding: 32px;
+  border: 1px solid #41464f;
+  border-radius: 8px;
+  background: #191c21;
+}
+.startup-brand {
+  font-weight: 700;
+  font-size: 26px;
+}
+.startup-card h1 {
+  font-size: 22px;
+}
+.startup-card p {
+  line-height: 1.6;
+}
+.startup-card button {
+  padding: 12px 18px;
+  border: 1px solid #dfb77b;
+  border-radius: 5px;
+  background: #dfb77b;
+  color: #191c21;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.startup-card button:focus-visible {
+  outline: 2px solid #dfb77b;
+  outline-offset: 4px;
+}

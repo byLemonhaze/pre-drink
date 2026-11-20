@@ -41,7 +41,7 @@ Apple enrollment is an owner action deferred until the final release stage; its 
 - Real-export/UI scale behavior and complete native lifecycle/lock checks; the normalized synthetic backend benchmark now passes.
 - Full recovery UI and credential-change failure paths; the destructive synthetic manual-restore acceptance test now passes.
 - Developer ID/notarization and clean-machine installation.
-- Remote CI passed at `b2ce46a` ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44645007179)); the sharing/import/recovery batch at `be16955` also passed ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44652417525)); the lifecycle batch needs its own remote result. Local pass counts are not evidence of remote success.
+- Remote CI passed at `b2ce46a` ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44645007179)); the sharing/import/recovery batch at `be16955` also passed ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44652417525)); the lifecycle commit `f48a7f6` passed ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44661395645)). Local pass counts are not evidence of remote success.
 
 ## Entry format for subsequent changes
 
@@ -78,3 +78,11 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Remaining:** broader native lifecycle coverage, full disk-full/power-loss fault matrix, full owner-entered password-change flow and retained-generation cleanup UX. Intermittent blank/slow debug startup remains an unresolved release issue. M3 is implemented but its complete release evidence is still in progress. M1/M2 representative-data, installed-client, physical-drop and broader lifecycle checks remain open. Apple enrollment stays at the end.
 
 - **Repository metadata:** removed the unused project Website URL while keeping the repository private. The Pages endpoint returned 404 and no configured Pages site was found; the personal profile website was unchanged. This does not publish or deploy anything.
+
+## Startup recovery batch
+
+- **Prior CI:** verified `f48a7f6` passed all remote checks ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44661395645)). Repository remains private.
+- **Diagnosis:** three instrumented baseline launches reached usable UI in 0.568–1.358 seconds. A fresh-profile CUA attachment took 217 seconds while the app had already reported ready at 0.599 seconds. The original intermittent stall was not reproduced, so no root-cause cure is claimed.
+- **Changes:** independent local loading/retry screen; caught application-module failures; render-error boundary that locks before reload; native app-attached timeout prompt when no bootstrap signal arrives; navigation/reload locks the backend; opt-in content-free debug phase timings; startup assets explicitly included in rebuild tracking. The four new bootstrap tests run in CI.
+- **Evidence:** 62 Rust cases and four bootstrap cases pass; frontend build and formatting pass. Normal native startup, intentionally missing renderer chunk with retry, and a script-free native timeout/retry/close path are exercised in separate fictional/empty storage. See VALIDATION for timing, exact checks and limits. The app-attached prompt replaced an initial unparented system dialog during verification. The final normal build reached its lock screen in 590 ms and reloading an unlocked fictional library returned to the locked screen.
+- **Privacy:** no personal vault, export or password used. Fault builds and diagnostic samples stay outside Git. No dependency updates, public publication or Apple enrollment.

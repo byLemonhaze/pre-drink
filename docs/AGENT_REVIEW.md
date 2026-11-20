@@ -13,6 +13,7 @@ Use synthetic fixtures and a new temporary data directory. Never use a live pers
 ```sh
 npm ci
 npm run build
+npm run test:startup
 npm run format:check
 cargo test --manifest-path src-tauri/Cargo.toml --locked
 cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
@@ -55,3 +56,7 @@ Review `sharing.rs` and `Sharing.tsx`: exact byte equality between preview and c
 Review `lifecycle.rs`, `Session::path/lock`, and `VaultMaintenance.tsx`: supported-schema and standalone-backup validation, no mutation of chosen backups, current-password authentication, prepared digest/session/change-counter binding, reset of restored credentials, strict selector resolution, old-vault/journal preservation, publication/flush error distinctions and cancellation cleanup. Verify recovery from both locked and empty storage and repeated rotations. The selector is a new storage-layout boundary; older builds must not be used after switching. Inspect retained-copy disclosure and manual recovery instructions.
 
 Review `retention.rs` and `ArchiveRemoval.tsx`: typed owner confirmation, transaction rollback, FTS/snapshot deletion, missing-source markers after reimport, and distinction between older raw snapshots and retained message branches. Tests model unwritable publication and unpublished preparations, not every disk-full or physical power-loss point. Native password change should be entered/submitted by the owner, using a disposable fictional vault for review. No personal passwords should be requested in repository issues or chat.
+
+## Startup review focus
+
+A static local loading/retry screen starts independently of React. Application-module rejection and a 10-second bootstrap timeout produce a recoverable message; a render-error boundary hides the failed UI and locks the vault before offering reload. A native 15-second watchdog offers retry/close if even the bootstrap never reports ready, and ignores a delayed response once the interface has started. Every main-page navigation locks the session and stops sharing. Verify failure recovery as well as ordinary launches; do not equate automation attachment time with app startup latency. Debug builds accept `PRE_DRINK_STARTUP_TRACE=1` for fixed phase names and elapsed milliseconds only, with no paths, errors, credentials or vault contents. Do not enable broader private-content logs.

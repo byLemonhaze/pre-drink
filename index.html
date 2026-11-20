@@ -3,12 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="stylesheet" href="/startup.css" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Pre-Drink — Your AI history, sober and ready.</title>
   </head>
   <body>
-    <div id="root"></div>
+    <section
+      id="startup"
+      class="startup-screen"
+      aria-label="Starting Pre-Drink"
+    >
+      <div class="startup-card">
+        <p class="startup-brand">pre-drink.</p>
+        <h1 id="startup-title">Starting your private vault…</h1>
+        <p id="startup-detail" role="status">Loading the app on this Mac.</p>
+        <button id="startup-retry" type="button" hidden>Try again</button>
+        <noscript
+          >Pre-Drink needs its local interface to load. Quit and reopen the
+          app.</noscript
+        >
+      </div>
+    </section>
+    <div id="root" hidden></div>
+    <script src="/startup.js"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
