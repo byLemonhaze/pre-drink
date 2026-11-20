@@ -1,0 +1,53 @@
+{
+  "provider": "chatgpt",
+  "contract": "mapping-v1",
+  "contract_revision": 1,
+  "official_format_version": null,
+  "introduced": "2026-11-19",
+  "provenance": "Hand-authored fictional examples of the existing parser contract. Not a captured user export or proof of the latest provider format.",
+  "archive_layouts": [
+    "conversations.json",
+    "nested/conversations.json",
+    "conversations-<digits>.json"
+  ],
+  "cases": [
+    {
+      "name": "branched",
+      "input": "branched.input.json",
+      "expected": "branched.expected.json"
+    },
+    {
+      "name": "mixed-content",
+      "input": "mixed-content.input.json",
+      "expected": "mixed-content.expected.json"
+    },
+    {
+      "name": "fallback",
+      "input": "fallback.input.json",
+      "expected": "fallback.expected.json"
+    }
+  ],
+  "preserved": [
+    "original JSON values including unknown fields",
+    "provider-qualified UTF-8 IDs",
+    "user/assistant text",
+    "fractional numeric Unix timestamps",
+    "active and alternative branches",
+    "nearest retained message parent"
+  ],
+  "omitted_from_reader": [
+    "system/tool messages",
+    "hidden messages",
+    "analysis/commentary channels",
+    "messages addressed to tools",
+    "non-text-only messages",
+    "attachment binaries"
+  ],
+  "limits": [
+    "JSON array with mapping objects only",
+    "numeric timestamps only",
+    "attachments not decoded or rendered",
+    "256 MiB total selected JSON; 100000 ZIP entries",
+    "synthetic compatibility evidence only; representative official export verification remains open"
+  ]
+}

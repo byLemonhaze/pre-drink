@@ -1,0 +1,54 @@
+{
+  "conversations": [
+    {
+      "id": "chatgpt:16:fixture-fallback",
+      "title": "Untitled conversation",
+      "created_at": null,
+      "updated_at": null,
+      "sensitive": false,
+      "messages": [
+        {
+          "id": "chatgpt:16:fixture-fallback:q",
+          "conversation_id": "chatgpt:16:fixture-fallback",
+          "role": "user",
+          "content": "Fictional epoch: 1700000000.",
+          "timestamp": 10.0,
+          "parent_id": null,
+          "branch_id": null,
+          "is_active": true,
+          "position": 0,
+          "sensitive": false
+        },
+        {
+          "id": "chatgpt:16:fixture-fallback:a",
+          "conversation_id": "chatgpt:16:fixture-fallback",
+          "role": "assistant",
+          "content": "An earlier tied choice.",
+          "timestamp": 11.0,
+          "parent_id": "chatgpt:16:fixture-fallback:q",
+          "branch_id": "chatgpt:16:fixture-fallback:a",
+          "is_active": false,
+          "position": 1,
+          "sensitive": false
+        },
+        {
+          "id": "chatgpt:16:fixture-fallback:z",
+          "conversation_id": "chatgpt:16:fixture-fallback",
+          "role": "assistant",
+          "content": "The later tied choice.",
+          "timestamp": 11.0,
+          "parent_id": "chatgpt:16:fixture-fallback:q",
+          "branch_id": null,
+          "is_active": true,
+          "position": 2,
+          "sensitive": false
+        }
+      ]
+    }
+  ],
+  "messages": 3,
+  "skipped_messages": 0,
+  "warnings": [
+    "A conversation has no valid current branch; the latest leaf is shown as its main branch."
+  ]
+}

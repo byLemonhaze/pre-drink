@@ -1,0 +1,64 @@
+{
+  "conversations": [
+    {
+      "id": "chatgpt:16:fixture:branches",
+      "title": "Fictional reading nook",
+      "created_at": 1700000000.125,
+      "updated_at": 1700000010.75,
+      "sensitive": false,
+      "messages": [
+        {
+          "id": "chatgpt:16:fixture:branches:q",
+          "conversation_id": "chatgpt:16:fixture:branches",
+          "role": "user",
+          "content": "Plan a quiet reading nook.",
+          "timestamp": 1700000001.25,
+          "parent_id": null,
+          "branch_id": null,
+          "is_active": true,
+          "position": 0,
+          "sensitive": false
+        },
+        {
+          "id": "chatgpt:16:fixture:branches:old",
+          "conversation_id": "chatgpt:16:fixture:branches",
+          "role": "assistant",
+          "content": "Choose a mahogany shelf.",
+          "timestamp": 1700000002.5,
+          "parent_id": "chatgpt:16:fixture:branches:q",
+          "branch_id": "chatgpt:16:fixture:branches:old",
+          "is_active": false,
+          "position": 1,
+          "sensitive": false
+        },
+        {
+          "id": "chatgpt:16:fixture:branches:old-followup",
+          "conversation_id": "chatgpt:16:fixture:branches",
+          "role": "user",
+          "content": "Keep the old lamp.",
+          "timestamp": 1700000003.0,
+          "parent_id": "chatgpt:16:fixture:branches:old",
+          "branch_id": "chatgpt:16:fixture:branches:old",
+          "is_active": false,
+          "position": 2,
+          "sensitive": false
+        },
+        {
+          "id": "chatgpt:16:fixture:branches:new",
+          "conversation_id": "chatgpt:16:fixture:branches",
+          "role": "assistant",
+          "content": "Choose a walnut shelf.",
+          "timestamp": 1700000004.5,
+          "parent_id": "chatgpt:16:fixture:branches:q",
+          "branch_id": null,
+          "is_active": true,
+          "position": 3,
+          "sensitive": false
+        }
+      ]
+    }
+  ],
+  "messages": 4,
+  "skipped_messages": 0,
+  "warnings": []
+}

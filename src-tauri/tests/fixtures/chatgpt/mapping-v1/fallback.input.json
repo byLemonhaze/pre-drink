@@ -1,0 +1,57 @@
+[
+  {
+    "id": "fixture-fallback",
+    "title": "",
+    "current_node": "missing-node",
+    "create_time": "not-a-number",
+    "update_time": null,
+    "mapping": {
+      "root": {
+        "parent": null,
+        "message": null
+      },
+      "q": {
+        "parent": "root",
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Fictional epoch: 1700000000."
+            ]
+          },
+          "create_time": 10
+        }
+      },
+      "a": {
+        "parent": "q",
+        "message": {
+          "author": {
+            "role": "assistant"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "An earlier tied choice."
+            ]
+          },
+          "create_time": 11
+        }
+      },
+      "z": {
+        "parent": "q",
+        "message": {
+          "author": {
+            "role": "assistant"
+          },
+          "content": {
+            "content": "The later tied choice."
+          },
+          "create_time": 11
+        }
+      }
+    }
+  }
+]

@@ -60,3 +60,7 @@ Review `retention.rs` and `ArchiveRemoval.tsx`: typed owner confirmation, transa
 ## Startup review focus
 
 A static local loading/retry screen starts independently of React. Application-module rejection and a 10-second bootstrap timeout produce a recoverable message; a render-error boundary hides the failed UI and locks the vault before offering reload. A native 15-second watchdog offers retry/close if even the bootstrap never reports ready, and ignores a delayed response once the interface has started. Every main-page navigation locks the session and stops sharing. Verify failure recovery as well as ordinary launches; do not equate automation attachment time with app startup latency. Debug builds accept `PRE_DRINK_STARTUP_TRACE=1` for fixed phase names and elapsed milliseconds only, with no paths, errors, credentials or vault contents. Do not enable broader private-content logs.
+
+## Import contract review focus
+
+Read `src-tauri/tests/fixtures/README.md` and the ChatGPT manifest. The golden examples are fictional contracts, not claims about an officially versioned export format. Review expected normalization separately from parser output, including branch IDs/nearest parents and omitted messages. Run `--test import_contract`; use `scripts/create_import_fixtures.py` only in fresh local output folders for native acceptance. Real file-drop, representative-export and installed MCP-client checks remain distinct from the successful picker and automated protocol evidence.

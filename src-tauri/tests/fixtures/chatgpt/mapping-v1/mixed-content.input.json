@@ -1,0 +1,160 @@
+[
+  {
+    "id": "fiction-é",
+    "title": "Fictional multimodal garden",
+    "current_node": "answer",
+    "mapping": {
+      "root": {
+        "parent": null,
+        "message": null
+      },
+      "system": {
+        "parent": "root",
+        "message": {
+          "author": {
+            "role": "system"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Fictional system instructions."
+            ]
+          },
+          "create_time": 1
+        }
+      },
+      "q": {
+        "parent": "system",
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "content_type": "multimodal_text",
+            "parts": [
+              "Describe this garden.",
+              {
+                "asset_pointer": "file-service://fictional-image"
+              },
+              {
+                "text": "A fictional seedling."
+              }
+            ]
+          },
+          "create_time": 2
+        }
+      },
+      "hidden": {
+        "parent": "q",
+        "message": {
+          "author": {
+            "role": "assistant"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Hidden fixture text."
+            ]
+          },
+          "create_time": 3,
+          "metadata": {
+            "is_visually_hidden_from_conversation": true
+          }
+        }
+      },
+      "analysis": {
+        "parent": "hidden",
+        "message": {
+          "author": {
+            "role": "assistant"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Fictional intermediate text."
+            ]
+          },
+          "create_time": 4,
+          "channel": "analysis"
+        }
+      },
+      "commentary": {
+        "parent": "analysis",
+        "message": {
+          "author": {
+            "role": "assistant"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Fictional tool preface."
+            ]
+          },
+          "create_time": 5,
+          "channel": "commentary"
+        }
+      },
+      "call": {
+        "parent": "commentary",
+        "message": {
+          "author": {
+            "role": "assistant"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Fictional tool request."
+            ]
+          },
+          "create_time": 6,
+          "recipient": "fictional-tool"
+        }
+      },
+      "tool": {
+        "parent": "call",
+        "message": {
+          "author": {
+            "role": "tool"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Fictional tool response."
+            ]
+          },
+          "create_time": 7
+        }
+      },
+      "image": {
+        "parent": "tool",
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "parts": [
+              {
+                "asset_pointer": "file-service://another-fictional-image"
+              }
+            ]
+          },
+          "create_time": 8
+        }
+      },
+      "answer": {
+        "parent": "image",
+        "message": {
+          "author": {
+            "role": "assistant"
+          },
+          "content": {
+            "text": "## Garden plan\n\nKeep the seedling in daylight."
+          },
+          "create_time": 9.75,
+          "channel": "final",
+          "recipient": "all"
+        }
+      }
+    }
+  }
+]

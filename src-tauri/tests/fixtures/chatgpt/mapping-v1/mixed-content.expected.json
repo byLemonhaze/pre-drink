@@ -1,0 +1,42 @@
+{
+  "conversations": [
+    {
+      "id": "chatgpt:10:fiction-é",
+      "title": "Fictional multimodal garden",
+      "created_at": null,
+      "updated_at": null,
+      "sensitive": false,
+      "messages": [
+        {
+          "id": "chatgpt:10:fiction-é:q",
+          "conversation_id": "chatgpt:10:fiction-é",
+          "role": "user",
+          "content": "Describe this garden.\nA fictional seedling.",
+          "timestamp": 2.0,
+          "parent_id": null,
+          "branch_id": null,
+          "is_active": true,
+          "position": 0,
+          "sensitive": false
+        },
+        {
+          "id": "chatgpt:10:fiction-é:answer",
+          "conversation_id": "chatgpt:10:fiction-é",
+          "role": "assistant",
+          "content": "## Garden plan\n\nKeep the seedling in daylight.",
+          "timestamp": 9.75,
+          "parent_id": "chatgpt:10:fiction-é:q",
+          "branch_id": null,
+          "is_active": true,
+          "position": 1,
+          "sensitive": false
+        }
+      ]
+    }
+  ],
+  "messages": 2,
+  "skipped_messages": 7,
+  "warnings": [
+    "7 hidden, tool, system, or non-text messages were not added to the reader. Original JSON is retained locally; attachments are not imported."
+  ]
+}

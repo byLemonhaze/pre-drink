@@ -1,0 +1,79 @@
+[
+  {
+    "conversation_id": "fixture:branches",
+    "id": "ignored-alias",
+    "title": "Fictional reading nook",
+    "create_time": 1700000000.125,
+    "update_time": 1700000010.75,
+    "current_node": "new",
+    "mapping": {
+      "root": {
+        "parent": null,
+        "message": null
+      },
+      "q": {
+        "parent": "root",
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Plan a quiet reading nook."
+            ]
+          },
+          "create_time": 1700000001.25
+        }
+      },
+      "old": {
+        "parent": "q",
+        "message": {
+          "author": {
+            "role": "assistant"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Choose a mahogany shelf."
+            ]
+          },
+          "create_time": 1700000002.5
+        }
+      },
+      "old-followup": {
+        "parent": "old",
+        "message": {
+          "author": {
+            "role": "user"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Keep the old lamp."
+            ]
+          },
+          "create_time": 1700000003
+        }
+      },
+      "new": {
+        "parent": "q",
+        "message": {
+          "author": {
+            "role": "assistant"
+          },
+          "content": {
+            "content_type": "text",
+            "parts": [
+              "Choose a walnut shelf."
+            ]
+          },
+          "create_time": 1700000004.5
+        }
+      }
+    },
+    "future_field": {
+      "keep_in_archive": true
+    }
+  }
+]
