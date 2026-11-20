@@ -44,6 +44,20 @@ fn actual_stdio_client_negotiates_lists_tools_and_obeys_lock_and_revocation() {
     let review = v.approval_review("memory", &note).unwrap();
     v.approve_review("memory", &note, &review.review_hash)
         .unwrap();
+    for (content, private) in [
+        ("Pre-Drink fictional draft marker", false),
+        ("Pre-Drink fictional private marker", true),
+        ("Pre-Drink fictional sensitive person@example.org", false),
+    ] {
+        v.save_memory(MemoryInput {
+            id: None,
+            kind: "fact".into(),
+            content: content.into(),
+            source_message_id: None,
+            private,
+        })
+        .unwrap();
+    }
     let client = v.create_client("Isolated MCP check", false).unwrap();
     let store: Store = Arc::new(Mutex::new(session));
     let socket = dir.path().join("agents.sock");
@@ -100,10 +114,55 @@ fn actual_stdio_client_negotiates_lists_tools_and_obeys_lock_and_revocation() {
     let facts = receive();
     assert_ne!(facts["result"]["isError"], true);
     assert!(facts.to_string().contains("Pre-Drink is local"));
+    assert!(!facts.to_string().contains("fictional"));
     send(
         json!({"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"search_conversations","arguments":{"query":"Pre-Drink"}}}),
     );
     assert_eq!(receive()["result"]["isError"], true);
+    // Lock while the credential is still valid: revocation must not mask a lock failure.
+    store.lock().unwrap().lock();
+    send(
+        json!({"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
+    );
+    assert_eq!(receive()["result"]["isError"], true);
+    store
+        .lock()
+        .unwrap()
+        .unlock("a unique temporary password", false, false)
+        .unwrap();
+    send(
+        json!({"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
+    );
+    assert_eq!(receive()["result"]["isError"], true);
+    store.lock().unwrap().sharing = true;
+    send(
+        json!({"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"get_context_pack","arguments":{"topic":"Pre-Drink"}}}),
+    );
+    let pack = receive();
+    assert_ne!(pack["result"]["isError"], true);
+    assert!(pack.to_string().contains("Pre-Drink is local"));
+    assert!(!pack.to_string().contains("fictional"));
+    store
+        .lock()
+        .unwrap()
+        .access()
+        .unwrap()
+        .save_memory(MemoryInput {
+            id: Some(note),
+            kind: "fact".into(),
+            content: "Pre-Drink fictional edited marker".into(),
+            source_message_id: None,
+            private: false,
+        })
+        .unwrap();
+    send(
+        json!({"jsonrpc":"2.0","id":9,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
+    );
+    let edited = receive();
+    assert_ne!(edited["result"]["isError"], true);
+    let payload: Value =
+        serde_json::from_str(edited["result"]["content"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(payload, json!([]));
     store
         .lock()
         .unwrap()
@@ -112,12 +171,19 @@ fn actual_stdio_client_negotiates_lists_tools_and_obeys_lock_and_revocation() {
         .revoke_client(&client.client.id)
         .unwrap();
     send(
-        json!({"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
+        json!({"jsonrpc":"2.0","id":10,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
     );
     assert_eq!(receive()["result"]["isError"], true);
     store.lock().unwrap().lock();
+    store
+        .lock()
+        .unwrap()
+        .unlock("a unique temporary password", false, false)
+        .unwrap();
+    // Re-enable sharing deliberately so this denial proves persisted revocation.
+    store.lock().unwrap().sharing = true;
     send(
-        json!({"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
+        json!({"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
     );
     assert_eq!(receive()["result"]["isError"], true);
 }

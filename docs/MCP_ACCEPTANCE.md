@@ -2,6 +2,21 @@
 
 This is a pending hands-on acceptance procedure, not a passing test report. The automated stdio integration already checks negotiation, tool discovery, sharing-off, memory-only scope, revocation and lock. A real client's setup and tool-result handling still need separate evidence.
 
+## Reproducible backend fixture
+
+When desktop automation is unavailable, a developer-only example can host the actual encrypted vault, broker and policy code with invented content:
+
+```sh
+cargo build --manifest-path src-tauri/Cargo.toml --locked --example mcp_acceptance_fixture --bin pre-drink
+./src-tauri/target/debug/examples/mcp_acceptance_fixture ./src-tauri/target/debug/pre-drink
+```
+
+It creates fresh temporary storage and a random password that is never printed. It accepts no existing vault or export. Its first output gives a configuration-file path and an empty client working folder; the folder is owner-only (0700) and configuration file owner read/write (0600). Start the client in that working folder using the file path. Do not put the generated file in Git or display its token.
+
+The fixture terminal accepts `sharing_on`, `sharing_off`, `edit`, `restrict`, `lock`, `unlock`, `revoke`, `restart` and `quit`. These are developer-process stdin commands, not MCP tools or app features. `edit` changes the approved standalone fact; `restrict` marks the invented source conversation private. `restart` replaces/reopens the backend session, not the native app or operating system. `quit` revokes access, locks and removes this fixture's temporary files on normal exit. Abrupt termination can leave temporary files; filesystem deletion is not secure erasure.
+
+This harness bypasses UI setup and therefore cannot verify the app's client-registration screens, clipboard configuration flow or native lifecycle events. The installed-client matrix remains pending until an actual client invokes the tools. Review any cloud-client cost before invocation; no model calls are part of starting the fixture.
+
 ## Safe setup
 
 - Use a debug build with separate disposable fictional storage. Confirm **Separate test storage** before unlocking. Never connect a personal vault for this check.
@@ -13,6 +28,8 @@ This is a pending hands-on acceptance procedure, not a passing test report. The 
 ## Claude Code launch
 
 The installed Claude Code 2.1.112 help was inspected for these flags. This verifies available syntax only; it does not verify a connection or successful tool use.
+
+Reference: [Claude Code MCP documentation](https://code.claude.com/docs/en/mcp). Recheck the installed CLI help if its version changes.
 
 From the empty working folder, launch an interactive session with the configuration file's absolute path:
 

@@ -100,3 +100,10 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Prepared:** a fictional-data Claude Code acceptance matrix covering actual tool results, approval/edit/source restrictions, memory-only scope, sharing defaults, lock, revocation and restart. Installed CLI help was checked; no client connection or matrix pass is claimed.
 - **Native follow-up:** the owner enabled Screen Recording, but cross-window drag remains unverified after desktop automation stalled. Earlier picker evidence remains valid; the permission change is not an import-test result.
 - **Environment:** a pending Xcode license initially blocked local Apple Git/build tools. After owner setup on 2026-11-20, Git and the first-launch status check pass, and the macOS SDK resolves. iOS simulator downloads are not required for this Mac app. Paid Developer Program enrollment remains deferred. This documentation-only follow-up does not change application behavior.
+
+## MCP fixture and lifecycle regression batch
+
+- **Delivered:** developer-only disposable encrypted fixture for installed-client acceptance; independent lock/revocation and approval-invalidating edit checks in the existing stdio regression. No production code/dependency changes.
+- **Passed:** local protocol-client matrix through the real MCP binary, fixture permissions/cleanup, targeted stdio regression, all-target Clippy and formatting. See VALIDATION for the exact scope.
+- **Pending:** Claude Code model calls require the owner's external-usage budget choice after automatic review blocked an unapproved spending limit. No model call or account configuration change was made. Native client-registration UI, native restart and physical file-drop remain separate gates.
+- **Product direction:** the owner confirmed a later UI overhaul; functionality and reliability remain the immediate priority. Existing styling is not a final design commitment.
