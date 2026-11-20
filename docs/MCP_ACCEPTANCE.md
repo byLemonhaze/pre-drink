@@ -1,0 +1,51 @@
+# Installed-client acceptance
+
+This is a pending hands-on acceptance procedure, not a passing test report. The automated stdio integration already checks negotiation, tool discovery, sharing-off, memory-only scope, revocation and lock. A real client's setup and tool-result handling still need separate evidence.
+
+## Safe setup
+
+- Use a debug build with separate disposable fictional storage. Confirm **Separate test storage** before unlocking. Never connect a personal vault for this check.
+- Create fictional notes containing distinct markers: `garden-approved`, `garden-draft` and `garden-private`. Approve only the first; leave the second unapproved and the third private. Create and approve a fictional brief containing `garden-brief`.
+- Register a dedicated memory-only client through **Agent access** after reviewing the disclosure. Leave chat access off. Sharing starts off.
+- Save the generated JSON in a private local folder outside every repository. Restrict the folder to the owner and the file to owner read/write. The token is a credential: never paste it into a prompt, command-line argument, screenshot, report or Git. Do not use a project `.mcp.json`.
+- Use a separate empty working folder for the client. Do not load the product source tree, personal files or existing agent sessions. A cloud-backed client may send the fictional tool results to its provider and consume its normal allowance.
+
+## Claude Code launch
+
+The installed Claude Code 2.1.112 help was inspected for these flags. This verifies available syntax only; it does not verify a connection or successful tool use.
+
+From the empty working folder, launch an interactive session with the configuration file's absolute path:
+
+```sh
+claude --mcp-config /absolute/local/path/pre-drink-client.json \
+  --strict-mcp-config --tools "" --disable-slash-commands --no-chrome
+```
+
+Replace the example path locally; it is not a real configuration. `--strict-mcp-config` limits MCP servers to the supplied configuration. `--tools ""` disables built-in tools; it does not narrow the Pre-Drink credential's permissions. Keep ordinary permission prompts enabled. Do not use a permission-bypass mode. Review local client settings/hooks before launch; these flags alone are not a general-purpose isolation boundary.
+
+Do not place the JSON itself in `--mcp-config`: use its file path to keep the token out of process arguments. No persistent client registration in Claude Code is required for this procedure.
+
+## Acceptance matrix
+
+Use the actual tool result as evidence, not just the model's paraphrase. Ask the client to call the named tool and report the returned result without filling gaps from prior messages. Discovery may succeed while the vault is locked: authorization is enforced when a tool is called.
+
+| Check              | Action                                                                                          | Required result                                             |
+| ------------------ | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Discovery          | Inspect the connected server's tools                                                            | Six documented Pre-Drink tools; no vault password requested |
+| Sharing off        | Call `get_facts` before enabling sharing                                                        | Tool error; no note content                                 |
+| Approved content   | Enable sharing, then call `get_facts` and `get_context_pack` with topic `garden`                | Approved note/brief present; draft/private markers absent   |
+| Memory-only scope  | Call `search_conversations` with query `garden`                                                 | Permission denial, even though discovery lists the tool     |
+| Edit invalidation  | Edit the approved note in Pre-Drink without approving its new version; call `get_facts` again   | Edited note absent until separately reviewed and approved   |
+| Source restriction | With a separate approved source-derived note, mark its source conversation private; query again | Derived note excluded                                       |
+| Lock               | Lock Pre-Drink, then call `get_facts`                                                           | Tool error; no content                                      |
+| Unlock default     | Unlock, then call again without enabling sharing                                                | Still denied                                                |
+| Revocation         | Enable sharing, revoke this test client, then call again                                        | Denied with the old configuration                           |
+| Restart            | Quit/reopen/unlock Pre-Drink                                                                    | Sharing remains off; revoked credential remains invalid     |
+
+Changes only stop future retrieval. A client's earlier responses or chat history may still contain previously returned fictional content. Seeing that old text in the client is not evidence that a new request succeeded.
+
+## Close and record
+
+Revoke the dedicated test credential, disable sharing, lock the fictional vault and exit the client. Remove its temporary configuration according to the local test-data cleanup policy; revocation is the access-control step. Do not change or remove existing client configurations.
+
+Record the source commit, native build identity, macOS/client versions, each pass/fail and any sanitized error. Keep raw client transcripts, configuration, local paths and screenshots out of Git. A discovered server or successful handshake alone does not close this matrix. Report unresolved cases explicitly.

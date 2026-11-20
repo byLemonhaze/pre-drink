@@ -16,6 +16,8 @@ The generated configuration uses common `mcpServers` JSON: absolute executable p
 
 The stdio handshake, discovery and calls are integration tested. Individual third-party client setup screens have not yet been verified here. No client is automatically given access.
 
+See [installed-client acceptance](MCP_ACCEPTANCE.md) for the fictional-data setup, Claude Code launch and required privacy/lifecycle checks. The procedure is prepared; its results remain pending.
+
 ## Tools
 
 | Tool                                 | Permission             | Result                                                                                         |

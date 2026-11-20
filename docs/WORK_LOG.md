@@ -94,3 +94,9 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Checks:** 20 targeted importer/vault cases, formatting, Clippy and the tracked-file guard pass. No production code or dependency version changed; the full CI result remains commit-specific.
 - **Native evidence:** picker import and omission notes, repeat import without duplicates, inactive-branch search and keyboard toggle, malformed later-entry rejection without partial writes, private search exclusion, cancellation and lock all passed against fictional storage.
 - **Open:** real Finder-to-app drop was not completed after an optional screen-permission preflight was blocked; no access expansion occurred. Representative real exports, broader keyboard coverage, real-client MCP setup and remaining lifecycle checks stay open. Apple enrollment remains last.
+
+## Installed-client acceptance preparation
+
+- **Prepared:** a fictional-data Claude Code acceptance matrix covering actual tool results, approval/edit/source restrictions, memory-only scope, sharing defaults, lock, revocation and restart. Installed CLI help was checked; no client connection or matrix pass is claimed.
+- **Native follow-up:** the owner enabled Screen Recording, but cross-window drag remains unverified after desktop automation stalled. Earlier picker evidence remains valid; the permission change is not an import-test result.
+- **Environment:** a pending Xcode license initially blocked local Apple Git/build tools. After owner setup on 2026-11-20, Git and the first-launch status check pass, and the macOS SDK resolves. iOS simulator downloads are not required for this Mac app. Paid Developer Program enrollment remains deferred. This documentation-only follow-up does not change application behavior.
