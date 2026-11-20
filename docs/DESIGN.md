@@ -36,3 +36,7 @@ The repository remains private until the owner explicitly makes it public. GitHu
 ## Visual verification
 
 Native unlock, archive, source-linked memory editor and manual lock were inspected using an isolated synthetic vault. No personal chat content was used or added to the repository. Check the landing page at desktop and narrow mobile sizes before publishing.
+
+## Next visual pass
+
+The owner still wants the current appearance overhauled. Move toward a quieter desktop utility: neutral charcoal surfaces, less amber, compact navigation, fewer repeated explanatory labels and more room for conversation and memory content. Keep the sharing preview and clear Draft/Approved/Restricted states prominent. Use local system fonts, visible keyboard focus and plain controls. Treat this as the next visual direction, not an approved final design or a completed overhaul. Verify Archive, Memory, Briefs and Share context at standard and minimum window sizes using fictional data.

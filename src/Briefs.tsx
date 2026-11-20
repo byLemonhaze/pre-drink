@@ -1,4 +1,5 @@
 import Modal from "./Modal";
+import PagedList from "./PagedList";
 import ReviewDialog from "./Review";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -23,6 +24,14 @@ export default function Briefs() {
   const [deleting, setDeleting] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [restricted, setRestricted] = useState(false);
+  const [query, setQuery] = useState("");
+  const shown = items.filter(
+    (b) =>
+      (restricted || (!b.private && !b.sensitive && !b.blocked)) &&
+      `${b.title} ${b.content}`
+        .toLocaleLowerCase()
+        .includes(query.trim().toLocaleLowerCase()),
+  );
   const refresh = () =>
     Promise.all([
       invoke<Brief[]>("list_briefs").then(setItems),
@@ -56,18 +65,37 @@ export default function Briefs() {
           New brief
         </button>
       </div>
-      <label className="checkbox-row">
+      <div className="memory-filters">
         <input
-          type="checkbox"
-          checked={restricted}
-          onChange={(e) => setRestricted(e.target.checked)}
+          type="search"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          aria-label="Search briefs"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Find a brief…"
         />
-        Review private, sensitive, or blocked briefs
-      </label>
-      {error && <p className="form-error">{error}</p>}
-      {items
-        .filter((b) => restricted || (!b.private && !b.sensitive && !b.blocked))
-        .map((b) => (
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={restricted}
+            onChange={(e) => setRestricted(e.target.checked)}
+          />
+          Review private, sensitive, or blocked briefs
+        </label>
+      </div>
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      <PagedList
+        items={shown}
+        scope={JSON.stringify([query, restricted])}
+        label="briefs"
+      >
+        {(b) => (
           <article className="settings-card" key={b.id}>
             <div className="memory-meta">
               <h2>{b.title}</h2>
@@ -103,13 +131,19 @@ export default function Briefs() {
               )}
             </div>
           </article>
-        ))}
-      {items.length === 0 && (
+        )}
+      </PagedList>
+      {shown.length === 0 && (
         <div className="empty-layer">
-          <h3>The whole history isn’t the handoff.</h3>
+          <h3>
+            {items.length
+              ? "No matching briefs."
+              : "The whole history isn’t the handoff."}
+          </h3>
           <p>
-            Choose what a new agent needs to know. Keep the source material in
-            your vault.
+            {items.length
+              ? "Try a different search or privacy filter."
+              : "Choose what a new agent needs to know. Keep the source material in your vault."}
           </p>
         </div>
       )}
@@ -149,8 +183,16 @@ function BriefEditor({
   const [privateBrief, setPrivate] = useState(brief?.private || false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sourceQuery, setSourceQuery] = useState("");
   const available = notes.filter(
     (m) => m.approved && !m.private && !m.sensitive && !m.source_restricted,
+  );
+  const sourceMatches = available.filter(
+    (m) =>
+      !sources.includes(m.id) &&
+      m.content
+        .toLocaleLowerCase()
+        .includes(sourceQuery.trim().toLocaleLowerCase()),
   );
   function addSource(m: MemoryItem) {
     if (sources.includes(m.id)) return;
@@ -207,6 +249,18 @@ function BriefEditor({
           />
         </label>
         <label>
+          Find an approved memory
+          <input
+            type="search"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            value={sourceQuery}
+            onChange={(e) => setSourceQuery(e.target.value)}
+            placeholder="Search all approved source memories…"
+          />
+        </label>
+        <label>
           Add an approved memory
           <select
             value=""
@@ -216,16 +270,16 @@ function BriefEditor({
             }}
           >
             <option value="">Choose a source to include…</option>
-            {available
-              .filter((m) => !sources.includes(m.id))
-              .map((m) => (
-                <option value={m.id} key={m.id}>
-                  {m.kind}: {m.content.slice(0, 100)}
-                </option>
-              ))}
+            {sourceMatches.slice(0, 50).map((m) => (
+              <option value={m.id} key={m.id}>
+                {m.kind}: {m.content.slice(0, 100)}
+              </option>
+            ))}
           </select>
         </label>
         <p className="fine-print">
+          {sourceMatches.length > 50 &&
+            "Showing the first 50 matching sources. Refine your search to find another. "}
           {sources.length} linked memories. Source links are retained so privacy
           decisions continue to apply.
         </p>

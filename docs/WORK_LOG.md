@@ -179,3 +179,11 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - Fixed a reproduced modal defect: Tab could reach archive controls behind the memory editor and Escape did not dismiss it. Memory, brief, approval and archive-deletion dialogs now share native WebView modality, explicit focus wrapping and cancellation; pending actions cannot be dismissed.
 - Final native checks pass: forward/reverse Tab wrapping, Escape cancellation, 980 × 640 memory/brief dialog scrolling and accessible action buttons, and empty-brief validation without a new saved item. Both fictional sessions were locked and quit.
 - Frontend/native builds, four startup checks, formatting, all-target Clippy and the source-only guard pass. No production Rust or dependency changes; remote verification is tracked separately. Representative official exports remain outstanding; personal content and authentication details never belong in this log.
+
+## 2026-11-20 — Long-chat and curation browsing
+
+- Added 20-message reader pages, 25-card memory/brief pages, full-loaded-collection conversation/brief search, explicit long-message expansion and searchable approved source selection. Stored originals, provenance and sharing policy are unchanged.
+- Native fictional 2,000-message/3,000-memory/500-brief checks passed; fixed two issues found in that walkthrough: search autocorrection on blur and keyboard focus loss at a disabled final-page button.
+- Added five component-render regressions to local checks and CI. Frontend/native builds, reading/startup tests, formatting and all-target Clippy pass. Remote verification is recorded separately. No new local full-Rust-suite pass is claimed for this frontend-only behavior change.
+- Documented remaining full-collection IPC and maximum-size limits. Official export is being prepared; representative-data verification stays pending. No private content or generated artifacts are committed.
+- Next independent batch: failure/interruption checks and a quieter, more compact dark system/retro UI pass; keep exact sharing preview central. Apple signing stays last and publication requires the owner's launch decision.

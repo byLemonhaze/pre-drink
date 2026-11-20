@@ -1,4 +1,5 @@
 import Modal from "./Modal";
+import PagedList from "./PagedList";
 import ReviewDialog from "./Review";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -199,6 +200,9 @@ export function MemoryView({
         </select>
         <input
           aria-label="Search memory"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find a note…"
@@ -217,8 +221,13 @@ export function MemoryView({
           {error}
         </p>
       )}
-      <div className="memory-grid">
-        {shown.map((m) => (
+      <PagedList
+        items={shown}
+        scope={JSON.stringify([filter, query, restricted])}
+        label="memories"
+        className="memory-grid"
+      >
+        {(m) => (
           <article className="settings-card memory-card" key={m.id}>
             <div className="memory-meta">
               <span>{m.kind.toUpperCase()}</span>
@@ -262,15 +271,20 @@ export function MemoryView({
               )}
             </div>
           </article>
-        ))}
-      </div>
+        )}
+      </PagedList>
       {shown.length === 0 && (
         <div className="empty-layer">
           <ShieldCheck size={28} />
-          <h3>A smaller, clearer version of your history.</h3>
+          <h3>
+            {items.length
+              ? "No matching memories."
+              : "A smaller, clearer version of your history."}
+          </h3>
           <p>
-            Save a note from any message in your archive, or write one here. New
-            notes start as drafts.
+            {items.length
+              ? "Try a different search, type, or privacy filter."
+              : "Save a note from any message in your archive, or write one here. New notes start as drafts."}
           </p>
         </div>
       )}

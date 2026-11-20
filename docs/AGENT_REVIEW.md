@@ -14,6 +14,7 @@ Use synthetic fixtures and a new temporary data directory. Never use a live pers
 npm ci
 npm run build
 npm run test:startup
+npm run test:reading
 npm run format:check
 cargo test --manifest-path src-tauri/Cargo.toml --locked
 cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
@@ -92,3 +93,7 @@ Owner-assisted testing reproduced CW-2: Control–Command–Q did not close the 
 `examples/native_scale_fixture.rs` generates only fresh temporary fictional storage for native pagination/search checks. See the latest NATIVE_WALKTHROUGH and VALIDATION entries. Do not treat 5,000 short conversations as long-chat, large-memory-list or real-export coverage.
 
 Review `Modal.tsx` and its four callers: native modal background inertness, initial/return focus, forward/reverse Tab boundaries, Escape cancellation and pending-action dismissal guards. Approval and deletion confirmations still use their existing backend review checks; opening or cancelling a modal must not approve, delete or save anything.
+
+## Long-chat and curation browsing review
+
+Review `PagedList.tsx`, `ConversationMessages.tsx`, `Memory.tsx` and `Briefs.tsx` for filter-before-page behavior, page reset/clamping, keyboard focus, hidden branches/restricted notes and full-source preservation. `npm run test:reading` renders real components to verify bounded output, retained-branch filtering, inert Markdown resources and explicit long-message previews. It does not simulate interactive WebView focus or replace native acceptance. Use `examples/native_reading_fixture.rs` for a separate fictional 2,000-message conversation, 3,000 memories and 500 briefs. Desktop IPC still loads full result collections; render paging is not a claim of bounded database/IPC memory.

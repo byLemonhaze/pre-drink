@@ -121,3 +121,11 @@ The HTML document includes a local loading card and a small standalone recovery 
 The native process separately watches for the first bootstrap-ready signal. After fifteen seconds without one, it offers a native retry/close dialog, covering failure to load the document itself. It checks readiness again before acting on a delayed dialog response. A retry starts another bounded wait; successful startup disables this initial-load watchdog. Main-page navigation locks the session, revokes the current sharing session and discards prepared operations, so an interface reload does not preserve unlocked access. No database is decrypted during normal startup.
 
 Optional debug startup tracing prints only fixed phase labels and monotonic elapsed milliseconds to the local process output. Release builds do not emit these diagnostics. Timing of external UI automation attachment is recorded separately from native startup.
+
+## Bounded reader and curation rendering
+
+The native reader mounts at most 20 matching messages per page. Memory and brief views mount 25 matching cards. Filters run before slicing, and changing a filter resets the page; shrinking a collection clamps the current page. Navigation keeps a readable result range and keyboard focus at the page controls. Very long messages (over 12,000 UTF-16 code units) initially show a 2,000-unit plain-text preview, with explicit full Markdown expansion. Original stored text and the memory editor input remain complete. Images, links and raw HTML remain inert in Markdown.
+
+Conversation search covers all loaded messages in the selected branches, including collapsed text. Brief search covers titles and bodies. The brief editor searches all eligible approved source memories, displaying up to 50 matching options and explaining how to refine the search. Search inputs disable spelling correction/capitalization so macOS does not silently rewrite technical identifiers.
+
+These are render limits, not database paging or a memory-use guarantee. Existing desktop commands still return all messages for the selected conversation and all memory/brief rows. SQL paging, indexed note search, maximum-size individual Markdown expansion and much larger collections require separate profiling. Agent policy, returned tool limits and approval checks are unchanged.

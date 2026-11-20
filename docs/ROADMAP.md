@@ -20,7 +20,7 @@ Apple enrollment is deferred to the end at the owner’s request. Enrollment is 
 
 ## Retained backlog
 
-Per-project/brief agent grants; direct brief retrieval; note/brief FTS and pagination; tagging/branch views; encrypted access metadata and revoke-all; signed-app Keychain client integration; broader backup-filesystem support; superseded decisions and suggested-memory inbox. These require explicit scheduling and must not silently expand a milestone.
+Per-project/brief agent grants; direct brief retrieval; note/brief FTS and database pagination (bounded UI pages implemented); tagging/branch views; encrypted access metadata and revoke-all; signed-app Keychain client integration; broader backup-filesystem support; superseded decisions and suggested-memory inbox. These require explicit scheduling and must not silently expand a milestone.
 
 No cloud sync, live capture, automatic extraction, paid model dependency, semantic embeddings, Gemini, mobile, teams, monetization or demand-testing work in this plan.
 

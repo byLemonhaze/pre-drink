@@ -2,8 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import ConversationMessages from "./ConversationMessages";
 import {
   ArrowDownToLine,
   Check,
@@ -526,6 +525,9 @@ function App({
                 <Search size={18} />
                 <input
                   aria-label="Search conversations"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
                   placeholder="Search your conversations…"
                   value={query}
                   maxLength={1000}
@@ -773,64 +775,12 @@ function App({
                             JSON is stored in your vault.
                           </div>
                         ) : (
-                          messages
-                            .filter((m) => allBranches || m.is_active)
-                            .map((m) => (
-                              <article
-                                className={`message ${m.role}`}
-                                key={m.id}
-                              >
-                                <div className="message-heading">
-                                  <span className={`avatar ${m.role}`}>
-                                    {m.role === "user" ? "Y" : "✳"}
-                                  </span>
-                                  <strong>
-                                    {m.role === "user" ? "You" : "ChatGPT"}
-                                  </strong>
-                                  {!m.is_active && (
-                                    <span className="branch-label">
-                                      Alternate / retained branch
-                                    </span>
-                                  )}
-                                  {m.sensitive && (
-                                    <ShieldCheck
-                                      size={14}
-                                      aria-label="Potentially sensitive message"
-                                    />
-                                  )}
-                                </div>
-                                <div className="markdown">
-                                  <ReactMarkdown
-                                    remarkPlugins={[remarkGfm]}
-                                    skipHtml
-                                    components={{
-                                      img: ({ alt }) => (
-                                        <span className="blocked-image">
-                                          [Image: {alt || "not loaded"}]
-                                        </span>
-                                      ),
-                                      a: ({ children }) => (
-                                        <span
-                                          className="inert-link"
-                                          title="External links stay inactive to keep this vault offline"
-                                        >
-                                          {children}
-                                        </span>
-                                      ),
-                                    }}
-                                  >
-                                    {m.content}
-                                  </ReactMarkdown>
-                                </div>
-                                <button
-                                  className="save-memory-button"
-                                  onClick={() => setMemorySource(m)}
-                                >
-                                  <Brain size={13} />
-                                  Keep as memory
-                                </button>
-                              </article>
-                            ))
+                          <ConversationMessages
+                            key={selected}
+                            messages={messages}
+                            allBranches={allBranches}
+                            onMemory={setMemorySource}
+                          />
                         )}
                       </div>
                     </>

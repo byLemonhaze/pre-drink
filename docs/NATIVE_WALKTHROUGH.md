@@ -83,3 +83,20 @@ Native observations: the library opens with the expected totals and sharing off,
 The baseline memory editor left keyboard focus on archive search; Tab reached the background Clear search control and Escape did not dismiss the editor. Replaced the four simulated modal overlays with a shared WebView modal dialog. Background controls become inert, focus starts inside, Escape cancels, and closing restores prior focus where it still exists. Dismissal is disabled during a pending save, approval or deletion. An explicit Tab boundary handles WebKit's document-focus stop.
 
 Initial native retest: all four dialogs hide the background from the accessible dialog tree. Memory and brief editors focus their content/title, deletion review focuses its confirmation field, and approval review focuses Close. Escape leaves a draft unapproved, a new brief unsaved, and archive totals unchanged after cancelling deletion. A keyboard-opened memory editor returns focus to its originating Keep as memory control. **Final native retest passed:** forward Tab wraps from Save memory to Close memory editor; Shift-Tab wraps back to Save memory. Escape cancels without changing the saved draft. A temporary build configured at the supported minimum 980 × 640 window size was inspected using the earlier small fictional fixture: both memory and wide brief dialogs stay within the viewport, scroll internally, and keyboard navigation brings their action buttons into view. Submitting an empty brief focuses Title with “Fill out this field”; Escape closes it without adding a brief. A preceding border-drag gesture did not resize the window and is not counted as resize evidence. Both fictional sessions were locked and quit; no personal storage was used.
+
+## Long-chat and large curation library — 2026-11-20
+
+`examples/native_reading_fixture.rs` creates a new private temporary directory containing an encrypted fictional vault: one 2,000-message conversation (1,999 active and one alternate), 3,000 memories (one private; 100 approved), and 500 briefs (one private). It never opens default app storage or reads exports. Launch the separately named debug app with its printed data-directory override.
+
+Native checks passed at 1280 × 840:
+
+- Reader begins at 1–20 of 1,999 active messages. Last reaches 1981–1999; searching the late message finds it without traversing preceding pages.
+- Alternate-branch search gives zero results until all branches are explicitly enabled. A search term beyond a long message's preview still finds the full source. The 20,845-character fixture expands to rendered Markdown including its final marker, then collapses again.
+- Memory begins at 1–25 of 2,999 visible notes. Last reaches 2976–2999; searching finds the oldest approved note. The private note gives zero results until restricted review is enabled, then remains visibly Restricted.
+- Briefs shows 1–25 of 499 visible items, and search finds the oldest brief. The editor explains its 50-source option limit; searching finds an approved note outside that initial set, and selecting it inserts the complete note with one retained source link. Cancelling leaves the draft unsaved.
+- The first walkthrough reproduced macOS autocorrect changing an exact search token when focus left the field. Search inputs now disable correction/capitalization/spelling; the rebuilt app preserves the same token after clicking the branch toggle and finds the intended alternate message.
+- Last-page navigation initially lost focus when its button became disabled. The rebuilt controls focus the result range; Tab then reaches First.
+
+Both native sessions were locked and quit, with agent sharing off. No personal vault, export, client configuration or password was used. No screenshots or generated vault data are committed.
+
+These observations establish interactive behavior at this fictional size, not a latency/RAM benchmark or a maximum-size guarantee. Paging bounds mounted cards/Markdown trees; desktop commands still load full result collections. Larger IPC payloads, maximum-size Markdown, minimum-window layout for these new controls and representative official exports remain separate checks.

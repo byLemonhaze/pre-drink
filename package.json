@@ -9,8 +9,9 @@
     "preview": "vite preview --host 127.0.0.1",
     "tauri": "tauri",
     "test:core": "cargo test --manifest-path src-tauri/Cargo.toml --no-default-features",
+    "test:reading": "node --test tests/reading.test.mjs",
     "test:startup": "node --test tests/startup.test.mjs",
-    "check": "npm run build && npm run test:startup && npm run test:core",
+    "check": "npm run build && npm run test:startup && npm run test:reading && npm run test:core",
     "format": "prettier --write src public/startup.js public/startup.css tests vite.config.ts index.html package.json tsconfig.json src-tauri/tauri.conf.json src-tauri/capabilities README.md docs && cargo fmt --manifest-path src-tauri/Cargo.toml",
     "format:check": "prettier --check src public/startup.js public/startup.css tests vite.config.ts index.html package.json tsconfig.json src-tauri/tauri.conf.json src-tauri/capabilities README.md docs && cargo fmt --manifest-path src-tauri/Cargo.toml --check"
   },
