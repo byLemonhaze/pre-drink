@@ -11,6 +11,7 @@ fn encrypted_library_5000_conversations() {
     let data: Vec<_> = (0..5000).map(|i| {
         let id = format!("synthetic-{i}");
         ParsedConversation {
+            platform: "chatgpt".into(),
             id: id.clone(), title: format!("Synthetic project {i} garden planning"),
             created_at: Some(1_700_000_000.0), updated_at: Some(1_700_000_000.0 + i as f64),
             sensitive: false, raw_json: format!("{{\"synthetic\":true,\"id\":{i}}}"),

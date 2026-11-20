@@ -46,6 +46,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
     v.import(
         &[ParsedConversation {
+            platform: "chatgpt".into(),
             id: id.into(),
             title: "Fictional long garden conversation".into(),
             created_at: None,

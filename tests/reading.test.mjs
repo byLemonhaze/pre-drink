@@ -108,3 +108,28 @@ test("large curation libraries bound mounted cards and describe empty results", 
   assert.match(empty, /0 of 0 memories/);
   assert.doesNotMatch(empty, /<article>/);
 });
+
+test("assistant labels follow the imported provider", () => {
+  for (const [provider, label] of [
+    ["chatgpt", "ChatGPT"],
+    ["grok", "Grok"],
+    ["claude", "Claude"],
+  ]) {
+    const html = renderToStaticMarkup(
+      React.createElement(Reader, {
+        messages: [
+          {
+            ...message("answer", "Fictional garden answer."),
+            role: "assistant",
+          },
+        ],
+        provider,
+        allBranches: false,
+        onMemory() {},
+      }),
+    );
+    assert.ok(html.includes(`<strong>${label}</strong>`));
+    if (provider !== "chatgpt")
+      assert.ok(!html.includes("<strong>ChatGPT</strong>"));
+  }
+});

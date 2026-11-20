@@ -55,10 +55,12 @@ function MessageBody({ content }: { content: string }) {
 export default function ConversationMessages({
   messages,
   allBranches,
+  provider = "chatgpt",
   onMemory,
 }: {
   messages: Message[];
   allBranches: boolean;
+  provider?: string;
   onMemory: (message: Message) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -96,7 +98,15 @@ export default function ConversationMessages({
               <span className={`avatar ${m.role}`}>
                 {m.role === "user" ? "Y" : "✳"}
               </span>
-              <strong>{m.role === "user" ? "You" : "ChatGPT"}</strong>
+              <strong>
+                {m.role === "user"
+                  ? "You"
+                  : provider === "grok"
+                    ? "Grok"
+                    : provider === "claude"
+                      ? "Claude"
+                      : "ChatGPT"}
+              </strong>
               {!m.is_active && (
                 <span className="branch-label">
                   Alternate / retained branch

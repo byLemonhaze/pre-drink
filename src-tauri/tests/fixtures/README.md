@@ -4,7 +4,7 @@ These files contain invented conversations, not redacted personal exports. Do no
 
 ## Contract layout
 
-`<provider>/<contract-id>/manifest.json` identifies the supported shape, revision, provenance, cases, preserved fields and known omissions. A contract ID is an internal test label. It is not an official provider format version unless the manifest explicitly cites one. The current `chatgpt/mapping-v1` examples describe the existing parser; they do not prove compatibility with every current ChatGPT account/export variant. Claude and Grok remain unsupported.
+`<provider>/<contract-id>/manifest.json` identifies the supported shape, revision, provenance, cases, preserved fields and known omissions. A contract ID is an internal test label. It is not an official provider format version unless the manifest explicitly cites one. The current `chatgpt/mapping-v1` examples describe the existing parser; they do not prove compatibility with every current ChatGPT account/export variant. Claude and Grok now have separate synthetic observed-format contracts. None substitutes for representative owner-local export acceptance.
 
 Each case has an input JSON array and a separately reviewed expected normalization. Compare IDs, roles, content, parent/branch links, active flags, numeric timestamps, sensitivity, order and omission warnings. The test also checks that original JSON values, including unknown fields and reader omissions, remain in the archive. JSON whitespace/key order is not preserved byte-for-byte. Timestamp fields in expected files use floating-point notation to match the normalized numeric type.
 

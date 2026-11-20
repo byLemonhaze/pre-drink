@@ -14,12 +14,12 @@ use std::{
 const MAX_JSON_BYTES: u64 = 256 * 1024 * 1024;
 const MAX_ENTRIES: usize = 100_000;
 
-pub fn read_chatgpt_zip(path: &Path) -> Result<(Vec<ParsedConversation>, ImportReport), String> {
+pub fn read_export_zip(path: &Path) -> Result<(Vec<ParsedConversation>, ImportReport), String> {
     if !path
         .extension()
         .is_some_and(|s| s.eq_ignore_ascii_case("zip"))
     {
-        return Err("Choose an official ChatGPT export ZIP.".into());
+        return Err("Choose an official ChatGPT, Claude or Grok export ZIP.".into());
     }
     let file = File::open(path)
         .map_err(|_| "Couldn't open the selected ZIP. Check its location and permissions.")?;
@@ -49,22 +49,22 @@ pub fn read_archive<R: Read + Seek>(
             .strip_prefix("conversations-")
             .and_then(|s| s.strip_suffix(".json"))
             .is_some_and(|s| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit()));
-        if base == "conversations.json" || numbered {
+        if base == "conversations.json" || numbered || base == "prod-grok-backend.json" {
             total = total.saturating_add(entry.size());
             if total > MAX_JSON_BYTES {
                 return Err("The conversation JSON exceeds the 256 MB import limit.".into());
             }
-            entries.push(index);
+            entries.push((index, base == "prod-grok-backend.json"));
         }
     }
     if entries.is_empty() {
-        return Err("No conversations.json found. Import the original ChatGPT export ZIP. Claude and Grok imports are coming next.".into());
+        return Err("No supported conversation file found. Choose an official ChatGPT, Claude or Grok export ZIP.".into());
     }
     let mut result = Vec::new();
     let mut report = ImportReport::default();
     let mut seen = HashSet::new();
     let mut read_bytes = 0;
-    for index in entries {
+    for (index, grok) in entries {
         let mut bytes = Vec::new();
         archive
             .by_index(index)
@@ -78,11 +78,30 @@ pub fn read_archive<R: Read + Seek>(
         }
         let data: Value = serde_json::from_slice(&bytes)
             .map_err(|_| "The export contains invalid conversation JSON. Nothing was imported.")?;
-        let conversations = data
-            .as_array()
-            .ok_or("Expected the ChatGPT conversations array. Nothing was imported.")?;
+        let conversations = if grok {
+            data.get("conversations")
+                .and_then(Value::as_array)
+                .ok_or("Expected Grok's account conversations array. Nothing was imported.")?
+        } else {
+            data.as_array()
+                .ok_or("Expected a ChatGPT or Claude conversations array. Nothing was imported.")?
+        };
         for conversation in conversations {
-            let parsed = parse_conversation(conversation, &mut report)?;
+            let parsed = if grok {
+                crate::provider_import::parse_grok(conversation, &mut report)?
+            } else if conversation.get("mapping").is_some()
+                && conversation.get("chat_messages").is_none()
+            {
+                parse_conversation(conversation, &mut report)?
+            } else if conversation.get("chat_messages").is_some()
+                && conversation.get("mapping").is_none()
+            {
+                crate::provider_import::parse_claude(conversation, &mut report)?
+            } else {
+                return Err(
+                    "Unknown or ambiguous conversation format. Nothing was imported.".into(),
+                );
+            };
             if !seen.insert(parsed.id.clone()) {
                 return Err(
                     "The ZIP contains duplicate conversation IDs. Nothing was imported.".into(),
@@ -132,11 +151,19 @@ pub fn parse_conversation(
     value: &Value,
     report: &mut ImportReport,
 ) -> Result<ParsedConversation, String> {
+    parse_tree(value, report, "chatgpt")
+}
+
+pub(crate) fn parse_tree(
+    value: &Value,
+    report: &mut ImportReport,
+    platform: &str,
+) -> Result<ParsedConversation, String> {
     let source_id = str_field(value, "conversation_id")
         .or_else(|| str_field(value, "id"))
         .ok_or("A conversation is missing its ID. Nothing was imported.")?;
     // Length prefixes keep provider IDs containing punctuation unambiguous.
-    let id = format!("chatgpt:{}:{}", source_id.len(), source_id);
+    let id = format!("{}:{}:{}", platform, source_id.len(), source_id);
     let node_id = |node: &str| format!("{}:{}", id, node);
     let mapping: &Map<String, Value> = value.get("mapping").and_then(Value::as_object).ok_or(
         "This isn't a supported ChatGPT export: missing message mapping. Nothing was imported.",
@@ -256,6 +283,7 @@ pub fn parse_conversation(
         .unwrap_or("Untitled conversation")
         .to_owned();
     Ok(ParsedConversation {
+        platform: platform.into(),
         sensitive: is_sensitive(&title) || messages.iter().any(|m| m.sensitive),
         id,
         title,

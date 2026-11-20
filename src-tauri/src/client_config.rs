@@ -10,6 +10,7 @@ pub enum ClientFormat {
     Generic,
     Codex,
     Grok,
+    Claude,
 }
 
 #[derive(Serialize)]
@@ -54,7 +55,7 @@ fn render(
         },
     )]);
     match format {
-        ClientFormat::Generic => {
+        ClientFormat::Generic | ClientFormat::Claude => {
             serde_json::to_string_pretty(&BTreeMap::from([("mcpServers", servers)]))
                 .map_err(|_| "Could not format client settings.".into())
         }
@@ -91,8 +92,9 @@ pub fn create_scoped_configuration(
         match format {
             ClientFormat::Codex => Some("chatgpt"),
             ClientFormat::Grok => Some("grok"),
+            ClientFormat::Claude => Some("claude"),
             ClientFormat::Generic => {
-                return Err("Choose Codex or Grok for provider-specific access.".into())
+                return Err("Choose Codex, Grok or Claude for provider-specific access.".into())
             }
         }
     } else {
@@ -119,7 +121,7 @@ mod tests {
 
     fn decode(format: ClientFormat, text: &str) -> Value {
         match format {
-            ClientFormat::Generic => {
+            ClientFormat::Generic | ClientFormat::Claude => {
                 serde_json::from_str::<Value>(text).unwrap()["mcpServers"].clone()
             }
             _ => serde_json::to_value(toml::from_str::<toml::Value>(text).unwrap()).unwrap()
@@ -137,6 +139,7 @@ mod tests {
             ClientFormat::Generic,
             ClientFormat::Codex,
             ClientFormat::Grok,
+            ClientFormat::Claude,
         ] {
             let config =
                 render(format, command, socket, "fictional-id", "fictional-token").unwrap();
@@ -160,6 +163,7 @@ mod tests {
             ClientFormat::Generic,
             ClientFormat::Codex,
             ClientFormat::Grok,
+            ClientFormat::Claude,
         ] {
             for allow_chats in [false, true] {
                 if matches!(format, ClientFormat::Generic) && allow_chats {
@@ -197,6 +201,7 @@ mod tests {
                     if allow_chats {
                         Some(match format {
                             ClientFormat::Grok => "grok",
+                            ClientFormat::Claude => "claude",
                             _ => "chatgpt",
                         })
                     } else {

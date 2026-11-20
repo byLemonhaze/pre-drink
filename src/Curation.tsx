@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Modal from "./Modal";
 
-type Provider = "chatgpt" | "grok";
+type Provider = "chatgpt" | "grok" | "claude";
 interface Note {
   id: string;
   provider: Provider;
@@ -146,14 +146,9 @@ export default function Curation() {
         >
           <option value="chatgpt">ChatGPT / Codex</option>
           <option value="grok">Grok</option>
+          <option value="claude">Claude</option>
         </select>
       </label>
-      {provider === "grok" && (
-        <p className="fine-print">
-          Grok can save session summaries. Official Grok archive import is still
-          planned.
-        </p>
-      )}
       {jobs.length > 0 && (
         <details>
           <summary>Saved curation progress ({jobs.length})</summary>

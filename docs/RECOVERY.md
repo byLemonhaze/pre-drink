@@ -72,3 +72,5 @@ Automated coverage includes complete disposable wipe-and-restore exercises throu
 ## Schema-4 upgrade
 
 Make a verified backup before upgrading. Schema 4 preserves manual notes/approvals and the vault password, adds encrypted provider workspaces/history/jobs and downgrades broad legacy chat grants to shared-only. Create fresh provider-specific registrations if raw access or writing is wanted. The schema-v3 one-time approval reset remains relevant only to older v2 upgrades. Do not run an older app against a schema-4 vault. Encrypted backup tests include the new tables; preservation of curation history and resets during password rotation have dedicated regressions.
+
+Schema 5 adds Claude without changing encryption or existing passwords. The v4 → v5 regression verifies retained scopes, policies, drafts, history, evidence and publication/job records and active foreign-key enforcement. New Claude policy defaults off. All backups now record schema 5; keep a pre-upgrade backup and never downgrade an upgraded vault. Additional export providers cannot recreate lost session notes or curated revisions.

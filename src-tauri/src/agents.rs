@@ -46,7 +46,7 @@ impl Vault {
         provider: Option<&str>,
         can_curate: bool,
     ) -> Result<NewClient, String> {
-        if provider.is_some_and(|p| !matches!(p, "chatgpt" | "grok"))
+        if provider.is_some_and(|p| !matches!(p, "chatgpt" | "grok" | "claude"))
             || (can_curate && provider.is_none())
         {
             return Err("Choose a supported provider scope.".into());

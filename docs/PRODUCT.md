@@ -14,7 +14,7 @@ This extends the existing app. The encrypted archive, search, manual notes, brie
 
 The first release serves an individual who wants durable context across AI tools and control over what they share. Large archives make agent-assisted curation a core optional workflow: using it must not require reading the entire archive or approving thousands of individual notes.
 
-Official ZIP import currently supports **ChatGPT only**. Codex/ChatGPT-provider and Grok curator roles are implemented separately from import support. A Grok curator can save explicit session summaries now; it cannot import a Grok archive until that parser is added. Claude/Grok export adapters remain later work. A compatible local MCP client must be configured; this does not connect an arbitrary ChatGPT or Grok web chat automatically.
+Official ZIP import now supports recognized **ChatGPT, Claude and Grok** formats, with versioned synthetic contracts and remaining representative-export acceptance. Each has a matching curator role and session-summary writing. Gemini, Copilot and others are requested next candidates, contingent on validated official formats; see [PROVIDERS](PROVIDERS.md). A compatible local MCP client must be configured; this does not connect an arbitrary ChatGPT or Grok web chat automatically.
 
 Official exports are the deliberate historical input. No scraping, userscripts, browser credentials or live capture. Explicit end-of-session notes are a second input to memory, not a captured transcript. User exports and vault contents never belong in GitHub, even while the repository is private.
 
@@ -74,7 +74,7 @@ Agent sharing starts off and resets on lock/restart. A live client grant covers 
 
 SQLCipher encrypts archive, memory, drafts, revision history, job progress, search indexes and backups; Argon2id derives keys from a separate vault password. There is no reset or hidden recovery key. Use maintained cryptographic libraries and never promise absolute security.
 
-Schema 4 extends the existing store, preserves manual notes/approvals and downgrades broad legacy chat grants to shared-only. New scoped registrations are required for source access/curation. In-app restore/password change preserves curated data/history, removes client registrations, resets automatic-publication rules and leaves sharing off. Old copies retain old passwords and may retain old grants/rules; see [RECOVERY](RECOVERY.md).
+Schema 4 extends the existing store, preserves manual notes/approvals and downgrades broad legacy chat grants to shared-only. Schema 5 adds Claude to the provider constraints and retains existing v4 grants, policies and curation history; Claude’s automation starts off. New scoped registrations are required for source access/curation. In-app restore/password change preserves curated data/history, removes client registrations, resets automatic-publication rules and leaves sharing off. Old copies retain old passwords and may retain old grants/rules; see [RECOVERY](RECOVERY.md).
 
 ## Acceptance and remaining work
 
@@ -84,10 +84,16 @@ Still open: a fresh fictional model-led write/resume/quality run; representative
 
 ## Future ideas and exclusions
 
-Later candidates: Grok/Claude export adapters with observed-format fixtures and explicit provider roles; an on-device curator; per-project grants; note/brief full-text search and database pagination; tagging and branch visualization; richer supersession/conflict handling; reusable export presets. A future local agent must not become an implicit cross-provider bypass.
+Later candidates: Gemini/Copilot and other validated official export adapters; explicitly scoped cross-provider delegation; an on-device curator; per-project grants; note/brief full-text search and database pagination; tagging and branch visualization; richer supersession/conflict handling; reusable export presets. Neither a local nor cloud agent receives broader access implicitly. The owner may deliberately choose an advanced cross-provider delegate; this is a planned option, not implemented permission today.
 
-No cloud sync, mandatory model subscription, live capture, semantic embeddings, Gemini, mobile, teams, monetization or demand-testing work is in the current plan. Automatic drafting through an explicitly authorized external agent is now in scope; an always-running background extraction service is not.
+No cloud sync, mandatory model subscription, live capture, semantic embeddings, mobile, teams, monetization or demand-testing work is in the current plan. Automatic drafting through an explicitly authorized external agent is now in scope; an always-running background extraction service is not.
 
 ## Distribution and portfolio
 
 A simple landing page will explain provider-private histories, optional curation, controlled shared memory and offline use. Download remains disabled until a verified Developer ID signed/notarized artifact exists and the owner chooses publication. Apple enrollment stays at the end. Users run independent local vaults; no hosted vault or account is required. The demo uses fictional data and shows exact outgoing context, a curator revision returning to private state and a denied foreign-source request. Source/docs remain MIT-licensed and private until launch; no public-ready or independent-audit claim is implied by passing tests.
+
+## Optional cross-provider delegation — approved future direction
+
+The default remains provider-separated curation. The owner may optionally choose one curator, such as Claude, to process selected histories from several providers. This is independent of whether the model runs locally or in the cloud. Cloud use is never mandatory.
+
+This advanced mode is not implemented yet. It requires a dedicated owner-issued grant listing the permitted archives, an explicit destination/provider disclosure, revocation and a separate publication choice. Default to private drafts. Preserve source origin and curator identity as different fields; Claude curating Grok evidence must never relabel it as Claude history. Do not let the delegate overwrite foreign contributions under the current provider-ownership rule: define a dedicated delegated workspace and revision authority before implementation. Existing clients, upgrades and imports never acquire this permission automatically.

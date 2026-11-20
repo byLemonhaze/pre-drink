@@ -100,3 +100,9 @@ Automatic publication is off by default, separately scoped to provider and archi
 Jobs snapshot source IDs/versions, not raw transcripts. Checkpoints are bounded ordinal acknowledgements, never arbitrary text blobs. Interrupted jobs survive in encrypted storage. New manifests select new/changed/unacknowledged evidence; a cursor cannot silently skip a new earlier-sorting ID. A checkpoint is the curator's acknowledgement, not proof of complete or correct extraction. There is no app-run scheduler, model API integration or automatic charge. Cloud-backed curators transmit authorized inputs to their provider; setup explicitly discloses this. A local curator is not implemented and has no cross-provider exception.
 
 Restoration/password rotation resets publication automation as well as client registrations and sharing. Existing backups and retained generations still contain historical encrypted data and are subject to the documented retention limits.
+
+## Schema-5 provider expansion and optional delegation boundary
+
+Claude joins ChatGPT/Grok as a separately bound provider; the same denial rules apply to every raw read, write, manifest and private-history route. ZIP normalization persists the actual recognized provider instead of hard-coding ChatGPT. Cross-provider source IDs do not collide. The provider-table migration checks references and restores FK enforcement before opening a session; it grants no existing client additional access.
+
+The owner approved an optional future delegate allowed to read explicitly selected multiple-provider sources. That is a product direction, not an implemented bypass. It needs independent source grants, destination consent and delegated provenance/ownership tests. Current tools cannot opt into it. Cloud curation remains optional, with offline manual use unchanged.

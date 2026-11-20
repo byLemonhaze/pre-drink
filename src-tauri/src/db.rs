@@ -62,7 +62,7 @@ impl Vault {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .map_err(|e| e.to_string())?;
-        if version > 4 {
+        if version > 5 {
             return Err("This vault needs a newer Pre-Drink version.".into());
         }
         if version == 1 {
@@ -115,6 +115,39 @@ impl Vault {
                 .execute_batch("COMMIT;")
                 .map_err(|e| e.to_string())?;
         }
+        // SQLite's supported table-rebuild pattern. No agent is connected during
+        // initialization; FK enforcement is restored before returning the vault.
+        if version == 4 {
+            connection
+                .execute_batch("PRAGMA foreign_keys=OFF;")
+                .map_err(|e| e.to_string())?;
+            let result = (|| -> Result<(), String> {
+                let tx = connection
+                    .unchecked_transaction()
+                    .map_err(|e| e.to_string())?;
+                tx.execute_batch(include_str!("provider_migration.sql"))
+                    .map_err(|e| e.to_string())?;
+                tx.execute_batch(include_str!("curation.sql"))
+                    .map_err(|e| e.to_string())?;
+                let violations: i64 = tx
+                    .query_row("SELECT count(*) FROM pragma_foreign_key_check", [], |r| {
+                        r.get(0)
+                    })
+                    .map_err(|e| e.to_string())?;
+                if violations != 0 {
+                    return Err(
+                        "Provider upgrade found invalid references; nothing was changed.".into(),
+                    );
+                }
+                tx.execute_batch("PRAGMA user_version=5;")
+                    .map_err(|e| e.to_string())?;
+                tx.commit().map_err(|e| e.to_string())
+            })();
+            connection
+                .execute_batch("PRAGMA foreign_keys=ON;")
+                .map_err(|e| e.to_string())?;
+            result?;
+        }
         // Additive migration: preserve all manual notes and saved-version approvals.
         // Broad legacy chat grants are deliberately downgraded, never guessed from names.
         let tx = connection
@@ -125,9 +158,9 @@ impl Vault {
         if version < 4 {
             tx.execute("UPDATE agent_clients SET allow_chats=0", [])
                 .map_err(|e| e.to_string())?;
-            tx.execute_batch("PRAGMA user_version=4;")
-                .map_err(|e| e.to_string())?;
         }
+        tx.execute_batch("PRAGMA user_version=5;")
+            .map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
         let mut vault = Self { connection, path };
         vault.enforce_sensitive_rules()?;
@@ -171,7 +204,7 @@ impl Vault {
                 .map_err(|_| "Couldn't create encrypted backup.")?;
             let exported = self
                 .connection
-                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=4;");
+                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=5;");
             let detached = self.connection.execute_batch("DETACH DATABASE backup;");
             exported
                 .and(detached)
@@ -304,10 +337,10 @@ impl Vault {
                 report.new_conversations += 1;
             }
             tx.execute("INSERT INTO conversations(id,platform,title,created_at,updated_at,sensitive,raw_json)
-                VALUES (?1,'chatgpt',?2,?3,?4,?5,?6) ON CONFLICT(id) DO UPDATE SET
+                VALUES (?1,?7,?2,?3,?4,?5,?6) ON CONFLICT(id) DO UPDATE SET
                 title=excluded.title, created_at=excluded.created_at, updated_at=excluded.updated_at,
                 sensitive=conversations.sensitive OR excluded.sensitive, raw_json=excluded.raw_json",
-                params![c.id,c.title,c.created_at,c.updated_at,c.sensitive,c.raw_json]).map_err(|e| e.to_string())?;
+                params![c.id,c.title,c.created_at,c.updated_at,c.sensitive,c.raw_json,c.platform]).map_err(|e| e.to_string())?;
             use sha2::{Digest, Sha256};
             let snapshot_id = hex::encode(Sha256::digest(c.raw_json.as_bytes()));
             tx.execute("INSERT OR IGNORE INTO archive_snapshots(id,conversation_id,raw_json,imported_at) VALUES (?1,?2,?3,unixepoch())", params![snapshot_id,c.id,c.raw_json]).map_err(|e|e.to_string())?;
@@ -456,5 +489,99 @@ impl Vault {
         self.connection.query_row("SELECT count(*),COALESCE(sum(private),0),COALESCE(sum(sensitive),0),(SELECT count(*) FROM messages) FROM conversations", [], |r| Ok(Stats {
             conversations:r.get(0)?,private:r.get(1)?,sensitive:r.get(2)?,messages:r.get(3)?,database_path:self.path.clone(),
         })).map_err(|e| e.to_string())
+    }
+}
+
+#[cfg(test)]
+mod provider_upgrade_tests {
+    use super::*;
+    #[test]
+    fn v4_provider_upgrade_preserves_grants_policy_and_all_child_records() {
+        let c = Connection::open_in_memory().unwrap();
+        c.execute_batch(include_str!("schema.sql")).unwrap();
+        c.execute_batch(include_str!("../tests/fixtures/migrations/curation-v4.sql"))
+            .unwrap();
+        c.execute_batch("INSERT INTO agent_clients VALUES ('client','Fictional curator','hash',1,0);
+          INSERT INTO agent_scopes VALUES ('client','grok',1);
+          UPDATE curation_policy SET publish_session=1 WHERE provider='grok';
+          INSERT INTO conversations(id,platform,title,raw_json) VALUES ('source','grok','Fictional garden','{}');
+          INSERT INTO messages(id,conversation_id,role,content,position) VALUES ('message','source','user','Garden uses clay.',0);
+          INSERT INTO curation_notes VALUES ('note','grok','project','Garden uses clay.','archive','',1,0,0,0,1);
+          INSERT INTO curation_sources VALUES ('note','message',1);
+          INSERT INTO curation_revisions VALUES ('note',1,'client','fictional preserved snapshot',1);
+          INSERT INTO curation_publications VALUES ('note',1,'owner_review');
+          INSERT INTO memory(id,type,content,approved,created_at,updated_at) VALUES ('note','project','Garden uses clay.',1,1,1);
+          INSERT INTO curation_jobs VALUES ('job','grok','Garden',1,'0','running',1);
+          INSERT INTO curation_job_sources VALUES ('job',1,'message',1);
+          PRAGMA user_version=4;").unwrap();
+        let v = Vault::initialize(c, ":memory:".into()).unwrap();
+        assert_eq!(
+            v.connection
+                .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
+                .unwrap(),
+            5
+        );
+        assert_eq!(
+            v.connection
+                .query_row("PRAGMA foreign_keys", [], |r| r.get::<_, i64>(0))
+                .unwrap(),
+            1
+        );
+        v.verify().unwrap();
+        assert_eq!(v.clients().unwrap()[0].provider.as_deref(), Some("grok"));
+        assert!(v.clients().unwrap()[0].can_curate);
+        assert_eq!(
+            v.connection
+                .query_row(
+                    "SELECT snapshot FROM curation_revisions WHERE note_id='note'",
+                    [],
+                    |r| r.get::<_, String>(0)
+                )
+                .unwrap(),
+            "fictional preserved snapshot"
+        );
+        assert_eq!(
+            v.connection
+                .query_row(
+                    "SELECT publish_session FROM curation_policy WHERE provider='grok'",
+                    [],
+                    |r| r.get::<_, i64>(0)
+                )
+                .unwrap(),
+            1
+        );
+        for table in [
+            "curation_notes",
+            "curation_sources",
+            "curation_revisions",
+            "curation_publications",
+            "curation_jobs",
+            "curation_job_sources",
+        ] {
+            assert_eq!(
+                v.connection
+                    .query_row(&format!("SELECT count(*) FROM {table}"), [], |r| r
+                        .get::<_, i64>(0))
+                    .unwrap(),
+                1
+            );
+        }
+        assert_eq!(v.memories(None, "", true).unwrap().len(), 1);
+        v.create_scoped_client("Fictional Claude", Some("claude"), true)
+            .unwrap();
+        assert_eq!(v.curation_policies().unwrap().as_array().unwrap().len(), 3);
+        v.connection
+            .execute_batch("DELETE FROM agent_clients WHERE id='client'")
+            .unwrap();
+        assert_eq!(
+            v.connection
+                .query_row(
+                    "SELECT count(*) FROM agent_scopes WHERE client_id='client'",
+                    [],
+                    |r| r.get::<_, i64>(0)
+                )
+                .unwrap(),
+            0
+        );
     }
 }

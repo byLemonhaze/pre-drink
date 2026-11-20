@@ -1,0 +1,22 @@
+{
+  "provider": "claude",
+  "contract_id": "messages-v1",
+  "contract_revision": 1,
+  "official_format_version": null,
+  "provenance": "Fictional data authored from public export-format references, not a personal export.",
+  "reference": "https://github.com/Laumss/loominary/blob/main/src/utils/fileParser/claudeParser.js",
+  "input": "garden.input.json",
+  "preserves": [
+    "provider-qualified IDs",
+    "text",
+    "source timestamps",
+    "available parent links",
+    "original conversation JSON"
+  ],
+  "omits": [
+    "media assets",
+    "tool messages",
+    "reasoning blocks"
+  ],
+  "acceptance": "Synthetic contract; representative official owner export still pending."
+}

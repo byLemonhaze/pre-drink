@@ -6,7 +6,7 @@ Initial direction: 2026-11-19; revised for the owner-approved provider curation 
 
 Pre-Drink should be a useful daily macOS app and a credible portfolio project: import official AI exports into a private encrypted archive, curate facts/decisions/projects, assemble briefs, preview exactly what will be exported, and deliberately provide context to another product. Manual local features are free and require no model API. The main demonstration is the sharing preview and the control it gives the owner.
 
-Official export import currently supports ChatGPT only. Provider-bound ChatGPT/Codex and Grok writing roles are implemented; Grok session summaries do not imply Grok ZIP support. Claude/Grok import remains later work. Source is independently implemented, informed by Loominary; it is not a Loominary fork.
+The owner expanded this batch to Grok and Claude imports and matching curator roles. Their recognized-format adapters are implemented with fictional tests; representative exports remain a gate. Gemini/Copilot and other official formats are requested next where their contracts can be validated. Optional cross-provider delegation is an approved later mode, while current enforcement stays single-provider. Source is independently implemented, informed by Loominary; it is not a Loominary fork.
 
 ## Non-negotiable boundaries
 
@@ -14,7 +14,7 @@ Official export import currently supports ChatGPT only. Provider-bound ChatGPT/C
 - Never commit real exports, vaults, personal chat text, screenshots of personal data, credentials, passwords, signing material or raw private test logs. A private repository is not an exception.
 - Use official exports only. No live capture, scraping, browser credentials or userscripts.
 - Keep the encrypted archive as the source of truth. Sharing, plaintext exports and cloud-backed agents cross separate boundaries.
-- Optional external same-provider curation is in scope; mandatory cloud inference and an app-run background model service are not. Offline manual use must remain complete. No cloud sync, monetization, demand tests, semantic search, Gemini, mobile or team features.
+- Optional external same-provider curation is in scope; mandatory cloud inference and an app-run background model service are not. Offline manual use must remain complete. No cloud sync, monetization, demand tests, semantic search, mobile or team features.
 - Approval cannot override private sources or detected credentials. Every changed contribution revokes its prior release. Owner/manual edits require review; agent revisions can be released only by separate review or an already enabled narrow owner policy, with the basis recorded.
 - Test personal data only in isolated encrypted copies after a verified backup. Destructive recovery tests use disposable synthetic vaults exclusively.
 - A passing test suite does not establish a formal security audit or a signed public release.
@@ -37,7 +37,7 @@ The initial 3–5-day / 1–2-week estimate predates the expanded autonomous-cur
 | M2: deliberate sharing preview         | Implemented; basic native flow verified                     | Preview/export equality, eligibility revalidation, no surprise source metadata, selective copy/file export                                 |
 | M3: vault lifecycle and recovery       | Implemented; lifecycle validation in progress               | Tested restore UI, password change, deletion/retention, destructive synthetic recovery exercise                                            |
 | Provider curation                      | Implemented; deterministic/native fictional checks recorded | Fresh model-led write/resume, shared retrieval, source isolation and quality acceptance                                                    |
-| M4: Claude, then Grok                  | Planned                                                     | Provider/version fixtures, normalization and cross-provider privacy/import tests, local representative export checks                       |
+| M4: Grok and Claude adapters           | Implemented; acceptance in progress                         | Provider/version fixtures, normalization and cross-provider privacy/import tests, local representative export checks                       |
 | M5: release and portfolio presentation | Planned; Apple prerequisites external                       | Signed/notarized artifact, clean-machine installation, release evidence, fictional-data demo and reviewed documentation                    |
 
 ## M1 — Dependable ChatGPT workflow
@@ -79,7 +79,7 @@ Exit: automated destructive recovery and native restoration both pass, password-
 
 ## M4 — Multi-provider ingestion
 
-Implement Claude first, then Grok, retaining the same archive/memory/brief/sharing model.
+The owner brought Grok and Claude forward into this batch. Both adapters retain the existing archive/memory/brief/sharing model and have fictional contract/scope tests. Finish native and representative-format acceptance, then evaluate Gemini/Copilot and other official formats. See PROVIDERS for the support matrix and reference evidence.
 
 - Establish fixture folders such as `src-tauri/tests/fixtures/<provider>/<observed-format>/`. Each has synthetic input, expected normalization and a manifest describing observed export structure/date, parser contract and supported/omitted fields. Use an official format version only if the provider supplies one; otherwise label an internal observed-format identifier explicitly.
 - Obtain/inspect representative official export structures locally. Do not infer that another provider uses ChatGPT's mapping. Do not put sanitized personal chats in fixtures; generate fictional data matching the observed structure.
@@ -135,7 +135,7 @@ Remaining order before Apple signing:
 1. Exercise the new writing workflow with a configured real local MCP client against fictional storage: session save, retry, revision, source manifest resume, reviewed release and fresh shared retrieval. Earlier Codex/Grok retrieval acceptance does not close this gate. Use explicit bounded external-model usage; never send a personal archive as a test shortcut.
 2. Complete representative owner-local export/upgrade checks in isolated encrypted copies when the already requested official ZIP arrives. Verify useful consolidation and omitted/uncertain information separately from parser and transport success. No further export request is needed now.
 3. Profile larger IPC/maximum-message behavior, exercise additional filesystem publication/interruption boundaries, and finish broader keyboard/resize/error-state coverage. SQLite-capacity and pre-commit killed-writer tests already have evidence. Never use personal storage for destructive tests.
-4. Obtain a fresh review of schema 4 and source/publication boundaries, reconcile release evidence and prepare the fictional demo. New provider parsers remain a later milestone; define their scopes explicitly before advertising them.
+4. Obtain a fresh review of schemas 4–5 and source/publication boundaries, reconcile release evidence and prepare the fictional demo. Finish representative Grok/Claude acceptance before broad compatibility claims; define any additional provider’s contract and scope before advertising it.
 5. Apple enrollment/signing/notarization and clean-install verification come at the final distribution stage. Public repository/download publication still requires the owner’s explicit launch decision.
 
 Do not treat successful native paths as proof of all crash, hardware, lock-screen or clipboard-manager behavior. Keep open cases in VALIDATION and the next reviewer brief; queued GitHub checks are not passes.

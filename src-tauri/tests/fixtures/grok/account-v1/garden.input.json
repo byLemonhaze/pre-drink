@@ -1,0 +1,69 @@
+{
+  "conversations": [
+    {
+      "conversation": {
+        "id": "fictional-shared-id",
+        "title": "Grok garden",
+        "create_time": {
+          "$date": {
+            "$numberLong": "1704067200000"
+          }
+        },
+        "modify_time": "2024-01-02T03:04:05+02:00"
+      },
+      "responses": [
+        {
+          "response": {
+            "_id": "q",
+            "sender": "human",
+            "message": "Garden needs a shaded corner.",
+            "create_time": {
+              "$date": 1704067200000
+            },
+            "parent_response_id": null
+          }
+        },
+        {
+          "response": {
+            "_id": "old",
+            "sender": "assistant",
+            "message": "Use limestone for the garden.",
+            "create_time": "2024-01-01T00:01:00Z",
+            "parent_response_id": "q"
+          }
+        },
+        {
+          "response": {
+            "_id": "new",
+            "sender": "ASSISTANT",
+            "message": "Use sandstone for the garden.",
+            "create_time": "2024-01-01T00:02:00Z",
+            "parent_response_id": "q",
+            "agent_thinking_traces": [
+              {
+                "thinking_trace": "fictional-hidden-thought"
+              }
+            ],
+            "web_search_results": [
+              {
+                "url": "https://example.test/garden"
+              }
+            ]
+          }
+        },
+        {
+          "response": {
+            "_id": "tool",
+            "sender": "tool",
+            "message": "fictional-tool-only",
+            "parent_response_id": "new",
+            "create_time": "2024-01-01T00:03:00Z"
+          }
+        }
+      ],
+      "future_field": {
+        "retained": true
+      }
+    }
+  ]
+}

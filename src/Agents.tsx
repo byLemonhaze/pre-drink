@@ -6,10 +6,10 @@ interface Client {
   id: string;
   name: string;
   allow_chats: boolean;
-  provider: "chatgpt" | "grok" | null;
+  provider: "chatgpt" | "grok" | "claude" | null;
   can_curate: boolean;
 }
-type ClientFormat = "codex" | "grok" | "generic";
+type ClientFormat = "codex" | "grok" | "claude" | "generic";
 const destinations: Record<
   ClientFormat,
   { label: string; instructions: string }
@@ -23,6 +23,11 @@ const destinations: Record<
     label: "Grok Build",
     instructions:
       "Add these Pre-Drink sections to your private ~/.grok/config.toml (or your custom GROK_HOME/config.toml). Keep your other settings and replace any existing Pre-Drink sections. Restart Grok Build to load the change. This is for the local coding client, not Grok web or Grok Bot.",
+  },
+  claude: {
+    label: "Claude (local MCP)",
+    instructions:
+      "Merge this pre-drink entry into your Claude desktop client's private mcpServers configuration. Keep unrelated servers and reload the client. This config does not connect Claude web automatically; follow your local client's setup instructions.",
   },
   generic: {
     label: "Other client (JSON)",
@@ -178,7 +183,12 @@ export default function Agents({ sharing }: { sharing: boolean }) {
                 setConsent(false);
               }}
             />
-            Allow access to safe {format === "grok" ? "Grok" : "ChatGPT"}{" "}
+            Allow access to safe{" "}
+            {format === "grok"
+              ? "Grok"
+              : format === "claude"
+                ? "Claude"
+                : "ChatGPT"}{" "}
             history only
           </label>
           <label className="checkbox-row">
@@ -250,7 +260,7 @@ export default function Agents({ sharing }: { sharing: boolean }) {
             <strong>{client.name}</strong>
             <p>
               {client.allow_chats
-                ? `${client.provider === "grok" ? "Grok" : "ChatGPT"} history only${client.can_curate ? " + private curation" : ""}; eligible shared memory`
+                ? `${client.provider === "grok" ? "Grok" : client.provider === "claude" ? "Claude" : "ChatGPT"} history only${client.can_curate ? " + private curation" : ""}; eligible shared memory`
                 : "Approved memory and briefs only"}
             </p>
           </div>

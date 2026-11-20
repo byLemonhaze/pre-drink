@@ -151,7 +151,7 @@ pub(crate) fn hash(value: &impl Serialize) -> Result<String, String> {
     )))
 }
 fn provider_ok(provider: &str) -> Result<(), String> {
-    if matches!(provider, "chatgpt" | "grok") {
+    if matches!(provider, "chatgpt" | "grok" | "claude") {
         Ok(())
     } else {
         Err("Unknown provider scope.".into())

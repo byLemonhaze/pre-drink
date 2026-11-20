@@ -1,0 +1,49 @@
+[
+  {
+    "uuid": "fictional-shared-id",
+    "name": "Claude garden",
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-02T01:04:05Z",
+    "chat_messages": [
+      {
+        "uuid": "q",
+        "sender": "human",
+        "text": "Garden needs a shaded corner.",
+        "created_at": "2024-01-01T00:00:00Z"
+      },
+      {
+        "uuid": "a",
+        "sender": "assistant",
+        "text": "outdated duplicate text",
+        "content": [
+          {
+            "type": "thinking",
+            "thinking": "fictional-hidden-thought"
+          },
+          {
+            "type": "text",
+            "text": "Use cedar for the garden."
+          },
+          {
+            "type": "tool_use",
+            "name": "fictional-tool-only"
+          },
+          {
+            "type": "text",
+            "text": "Keep a reading bench."
+          }
+        ],
+        "created_at": "2024-01-01T00:01:00Z"
+      },
+      {
+        "uuid": "tool",
+        "sender": "tool",
+        "text": "fictional-tool-only",
+        "created_at": "2024-01-01T00:02:00Z"
+      }
+    ],
+    "future_field": {
+      "retained": true
+    }
+  }
+]

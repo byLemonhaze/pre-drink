@@ -1,15 +1,15 @@
 -- Provider grants are owner-created. Legacy clients get no grant automatically.
 CREATE TABLE IF NOT EXISTS agent_scopes (
   client_id TEXT PRIMARY KEY REFERENCES agent_clients(id) ON DELETE CASCADE,
-  provider TEXT NOT NULL CHECK(provider IN ('chatgpt','grok')),
+  provider TEXT NOT NULL CHECK(provider IN ('chatgpt','grok','claude')),
   can_curate INTEGER NOT NULL DEFAULT 0 CHECK(can_curate IN (0,1))
 );
 CREATE TABLE IF NOT EXISTS curation_policy (
-  provider TEXT PRIMARY KEY CHECK(provider IN ('chatgpt','grok')),
+  provider TEXT PRIMARY KEY CHECK(provider IN ('chatgpt','grok','claude')),
   publish_archive INTEGER NOT NULL DEFAULT 0,
   publish_session INTEGER NOT NULL DEFAULT 0
 );
-INSERT OR IGNORE INTO curation_policy(provider) VALUES ('chatgpt'),('grok');
+INSERT OR IGNORE INTO curation_policy(provider) VALUES ('chatgpt'),('grok'),('claude');
 CREATE TABLE IF NOT EXISTS source_versions (
   message_id TEXT PRIMARY KEY,
   version INTEGER NOT NULL
@@ -25,7 +25,7 @@ BEGIN
 END;
 CREATE TABLE IF NOT EXISTS curation_notes (
   id TEXT PRIMARY KEY,
-  provider TEXT NOT NULL CHECK(provider IN ('chatgpt','grok')),
+  provider TEXT NOT NULL CHECK(provider IN ('chatgpt','grok','claude')),
   kind TEXT NOT NULL CHECK(kind IN ('fact','decision','project')),
   content TEXT NOT NULL,
   origin TEXT NOT NULL CHECK(origin IN ('archive','session')),
@@ -59,7 +59,7 @@ CREATE TABLE IF NOT EXISTS curation_requests (
 );
 CREATE TABLE IF NOT EXISTS curation_jobs (
   id TEXT PRIMARY KEY,
-  provider TEXT NOT NULL CHECK(provider IN ('chatgpt','grok')),
+  provider TEXT NOT NULL CHECK(provider IN ('chatgpt','grok','claude')),
   label TEXT NOT NULL,
   revision INTEGER NOT NULL DEFAULT 1,
   checkpoint TEXT NOT NULL DEFAULT '',

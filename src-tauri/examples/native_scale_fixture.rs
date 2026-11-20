@@ -22,6 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|i| {
             let id = format!("fictional-scale-{i}");
             ParsedConversation {
+                platform: "chatgpt".into(),
                 id: id.clone(),
                 title: format!("Fictional garden project {i:04}"),
                 created_at: Some(1_700_000_000.0),

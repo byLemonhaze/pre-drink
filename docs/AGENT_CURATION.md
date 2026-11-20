@@ -1,6 +1,6 @@
 # Provider-isolated curation and session memory
 
-Status: the first provider-isolated curation implementation is present in this branch: authenticated scoped writes, source manifests/checkpoints, revisions, private drafts, owner batch review, narrow opt-in automatic publication, and app controls. This extends the existing encrypted vault and manual memory system. Deterministic backend/transport and fictional native workflow checks have evidence; a fresh model-driven write/resume and curation-quality run remains open. See VALIDATION. Grok ZIP import, local inference and Apple distribution remain separate milestones.
+Status: the first provider-isolated curation implementation is present in this branch: authenticated scoped writes, source manifests/checkpoints, revisions, private drafts, owner batch review, narrow opt-in automatic publication, and app controls. This extends the existing encrypted vault and manual memory system. Deterministic backend/transport and fictional native workflow checks have evidence; a fresh model-driven write/resume and curation-quality run remains open. See VALIDATION. ChatGPT, Grok and Claude ZIP adapters and matching roles are implemented with fictional contract coverage; representative exports, local inference and Apple distribution remain separate acceptance work.
 
 ## Outcome
 
@@ -13,17 +13,18 @@ Two entry points serve this outcome:
 
 Official exports remain the source of imported historical conversations. Explicit agent-authored notes are a second input to the curated layer, not live scraping or an assertion that the full source transcript was imported. Always distinguish imported evidence from a session summary authored by an agent.
 
-## Strict provider boundaries
+## Default provider boundaries and current enforcement
 
 | Source                                 | Allowed curator                                                                                | Other authorized agents                                                              |
 | -------------------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
 | ChatGPT history and its working memory | Explicitly registered OpenAI/ChatGPT/Codex curator                                             | Read only eligible shared contributions                                              |
 | Grok history and its working memory    | Explicitly registered Grok curator                                                             | Read only eligible shared contributions                                              |
+| Claude history and its working memory  | Explicitly registered Claude curator                                                           | Read only eligible shared contributions                                              |
 | Shared memory                          | Each originating curator updates its own contributions through the permitted revision workflow | Retrieve permitted shared context; cannot overwrite another provider's contributions |
 
 These are required backend access boundaries, not a suggested routing preference. Do not trust a caller-supplied provider/model name. The owner binds a registered client to its allowed curator role and source scope. Provider origin does not prove a session already remembers the export, grant access or bypass sensitive-content rules. Private/sensitive sources remain excluded with no agent-access override in this implementation; inclusion in a curation job never implies shared publication.
 
-A future local-AI curator is desired, but its role and permitted sources need an explicit owner-defined rule. No exception to same-provider curation is currently authorized. Claude import/curation policy is not specified by the ChatGPT/Grok example and must not be inferred.
+A future local-AI curator is desired, but its role and permitted sources need an explicit owner-defined rule. The owner subsequently approved a future explicit cross-provider delegation option; it is not implemented by today’s grants. Claude now has the same own-provider rule as ChatGPT and Grok. A local runner and delegated source scopes require separate implementation, never a silent exception.
 
 ## Curation behavior
 
@@ -56,13 +57,13 @@ Cloud-backed curation can transmit permitted content to that provider. Even when
 3. Implement idempotent session handoff as the smallest end-to-end path: explicitly save useful context, inspect the resulting revision, retrieve it in a fresh authorized session and undo it.
 4. Add resumable bulk ChatGPT curation, incremental reimport handling and concise change/exception review.
 5. Add collection-level publication and any explicitly selected automation policy, with source restrictions and staleness enforced at delivery.
-6. Verify with fictional data and the actual connected client, then perform separately authorized owner-local export acceptance. Grok session-summary writing can be checked now; bulk Grok history acceptance follows only after its parser has equivalent coverage.
+6. Verify with fictional data and the actual connected client, then perform separately authorized owner-local export acceptance. Grok and Claude parser/scope contracts now have fictional tests; actual model-led and representative-export acceptance still need their own evidence.
 
 Acceptance must cover denied cross-provider reads/writes, rejected policy changes by a curator, prompt-injection source text, fabricated source references, stale writers, interrupted jobs/retry without duplication, private-source propagation, source changes, meaningful undo and sharing-off on lock/revocation. Verify the specific chat/client connection before promising that it can update the vault; prior CLI retrieval tests do not establish this new write workflow.
 
-## Implemented contract (schema 4)
+## Implemented contract (schemas 4–5)
 
-- Owner registration binds a credential to ChatGPT/Codex or Grok. This is a credential boundary, not model attestation: never reuse a credential in another provider's client. Generic clients stay shared-only. Multiple explicitly authorized clients of the same provider share that provider workspace; client attribution remains in revision history.
+- Owner registration binds a credential to ChatGPT/Codex, Grok or Claude. This is a credential boundary, not model attestation: never reuse a credential in another provider's client. Generic clients stay shared-only. Multiple explicitly authorized clients of the same provider share that provider workspace; client attribution remains in revision history.
 - Upgrading from schema 3 preserves manual memories and approvals. Legacy broad chat grants become shared-only; the owner must issue new provider-specific registrations. The original archive, passwords and encrypted storage format are retained.
 - `curate_memory` is one typed MCP tool with `status`, `list_sources`, `read_source`, `list_notes`, `write`, `history`, `undo`, `jobs`, `job_sources` and `save_job` actions. No action accepts a provider override or changes owner policy.
 - Write uses an idempotency key and expected revision. Retries return the original receipt (not a claim about current publication). Changed payloads with the same key, stale writers and foreign IDs fail. Source references include current evidence versions and cannot be dropped. Each update revokes the old shared revision before any newly permitted release.
@@ -77,6 +78,12 @@ Acceptance must cover denied cross-provider reads/writes, rejected policy change
 
 The phrase/URL detector is deliberately conservative and incomplete. It does not prove prompt-injection safety. All shared content remains untrusted reference data, and a receiving model must not treat it as permission to execute commands or change access. Conflict detection and factual consolidation depend on the curator; setting a conflict flag is enforced, identifying every contradiction is not guaranteed. Even project/decision prose can be personal: automatic sharing requires explicit owner opt-in and should remain off for cautious use.
 
-Private/sensitive raw content has no override in this implementation. Local AI has no implemented curator role; adding one must preserve the owner's strict isolation policy. The existing facts/decisions/projects taxonomy is retained; general knowledge can be represented in these notes or manually curated briefs. Per-project access grants, automatic cross-note conflict discovery, background scheduling and a dedicated knowledge type remain future work.
+Private/sensitive raw content has no override in this implementation. Local AI has no implemented curator role; adding one must enforce explicit source scopes and the provider-separated default. The existing facts/decisions/projects taxonomy is retained; general knowledge can be represented in these notes or manually curated briefs. Per-project access grants, automatic cross-note conflict discovery, background scheduling and a dedicated knowledge type remain future work.
 
 This implementation does not prove that a particular ChatGPT web chat can reach the local app. A compatible local MCP client must be configured. Earlier Codex/Grok retrieval acceptance does not count as a new model-driven writing acceptance run. The already-requested real ChatGPT export is still awaited; no personal archive was used to implement this feature.
+
+## Planned advanced delegate option
+
+The owner approved an optional mode in which one chosen agent can curate selected providers’ histories, including all supported histories if explicitly selected. This supersedes “never under any configuration” as a future product restriction; the current backend remains strictly provider-bound. Cloud processing and source scope are independent choices.
+
+Before implementing it: store source providers separately from the curator identity; issue a dedicated revocable grant with explicit source selection; disclose the cloud destination and potential usage; write into an attributable delegated workspace; keep publication separately controlled and off initially; enforce privacy/staleness across every source; test denied unselected sources and migration with no automatic scope expansion. Reading several archives does not authorize rewriting existing foreign-owned contributions. No current credential can activate this mode through a tool argument.

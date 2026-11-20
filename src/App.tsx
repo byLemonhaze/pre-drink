@@ -253,7 +253,7 @@ function App({
       const paths = await open({
         multiple: true,
         directory: false,
-        title: "Import ChatGPT exports",
+        title: "Import official chat exports",
         filters: [{ name: "Official export ZIP", extensions: ["zip"] }],
       });
       if (paths) await importFiles(Array.isArray(paths) ? paths : [paths]);
@@ -549,8 +549,8 @@ function App({
                     ideas, answers, and rabbit holes you want to come back to.
                   </p>
                   <div className="hero-action">
-                    {importButton("Import ChatGPT export")}
-                    <span>Start with a ChatGPT ZIP</span>
+                    {importButton("Import chat export")}
+                    <span>ChatGPT · Claude · Grok ZIPs</span>
                   </div>
                   <div className="privacy-note">
                     <LockKeyhole size={14} />
@@ -561,7 +561,7 @@ function App({
                   className="drop-card"
                   onClick={pickZip}
                   disabled={!native || busy}
-                  aria-label="Choose a ChatGPT export ZIP"
+                  aria-label="Choose an official chat export ZIP"
                 >
                   <div className="archive-illustration">
                     <div className="back-sheet sheet-two" />
@@ -586,7 +586,7 @@ function App({
                   <strong>Drop your export here</strong>
                   <span>or choose a file from your Mac</span>
                   <div className="file-chip">
-                    <FileArchive size={13} /> ChatGPT export · .zip
+                    <FileArchive size={13} /> Official export · .zip
                   </div>
                 </button>
                 <div className="how-it-works">
@@ -594,7 +594,7 @@ function App({
                     <span className="step-number">01</span>
                     <div>
                       <strong>Export your history</strong>
-                      <p>Use ChatGPT’s official data export.</p>
+                      <p>Use an official ChatGPT, Claude or Grok export.</p>
                     </div>
                   </div>
                   <div>
@@ -652,7 +652,13 @@ function App({
                           onClick={() => setSelected(c.id)}
                         >
                           <div className="conversation-meta">
-                            <span>✳ ChatGPT</span>
+                            <span>
+                              {c.platform === "grok"
+                                ? "Grok"
+                                : c.platform === "claude"
+                                  ? "Claude"
+                                  : "ChatGPT"}
+                            </span>
                             <time>{date(c.updated_at)}</time>
                           </div>
                           <h3>{c.title}</h3>
@@ -689,7 +695,8 @@ function App({
                       <div className="reader-header">
                         <div>
                           <span className="eyebrow">
-                            CHATGPT · {date(selectedConversation.created_at)}
+                            {selectedConversation.platform.toUpperCase()} ·{" "}
+                            {date(selectedConversation.created_at)}
                           </span>
                           <h2>{selectedConversation.title}</h2>
                         </div>
@@ -757,6 +764,7 @@ function App({
                           </div>
                         ) : (
                           <ConversationMessages
+                            provider={selectedConversation.platform}
                             key={selected}
                             messages={messages}
                             allBranches={allBranches}
@@ -795,8 +803,8 @@ function App({
             <div className="eyebrow">IMPORT / OFFICIAL EXPORTS</div>
             <h1>Import history</h1>
             <p className="page-intro">
-              Import an official ChatGPT export. Everything is read and stored
-              on this Mac.
+              Import an official ChatGPT, Claude or Grok export. Everything is
+              read and stored on this Mac.
             </p>
             <section className="settings-card import-guide">
               <div className="section-icon">
@@ -805,16 +813,18 @@ function App({
               <h2>Your first import, in three steps</h2>
               <ol>
                 <li>
-                  <strong>Request your ChatGPT export</strong>
+                  <strong>Request your account export</strong>
                   <p>
-                    In ChatGPT, open Settings → Data Controls → Export data.
+                    ChatGPT: Settings → Data Controls → Export data. Claude:
+                    Settings → Privacy → Export data. Grok: Settings → Data
+                    Controls → download your data.
                   </p>
                 </li>
                 <li>
                   <strong>Download the official ZIP</strong>
                   <p>
-                    Keep the ZIP intact. Pre-Drink reads conversations.json
-                    directly.
+                    Keep the ZIP intact. Pre-Drink identifies the supported
+                    conversation files inside it; no extraction is needed.
                   </p>
                 </li>
                 <li>
@@ -824,7 +834,7 @@ function App({
                   </p>
                 </li>
               </ol>
-              {importButton("Choose a ChatGPT ZIP")}
+              {importButton("Choose an export ZIP")}
             </section>
             <div className="info-grid">
               <section className="settings-card">
@@ -845,9 +855,10 @@ function App({
               </section>
             </div>
             <p className="fine-print">
-              Pre-Drink supports official ChatGPT ZIPs, including numbered
-              conversations JSON files, up to 256 MB of conversation JSON. Other
-              providers are outside the current scope.
+              Supports ChatGPT/Claude conversations JSON and Grok account
+              exports containing prod-grok-backend.json, up to 256 MB of
+              conversation JSON. Media and reasoning are not separately
+              imported. Unknown formats fail without a partial import.
             </p>
           </div>
         )}
@@ -963,8 +974,8 @@ function App({
       {dragging && (
         <div className="drop-overlay">
           <FileArchive size={48} />
-          <h2>Drop ChatGPT export</h2>
-          <p>Drop your official ChatGPT export ZIP.</p>
+          <h2>Drop official export</h2>
+          <p>Drop your official ChatGPT, Claude or Grok export ZIP.</p>
         </div>
       )}
       {busy && (

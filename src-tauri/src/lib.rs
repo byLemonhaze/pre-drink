@@ -38,3 +38,5 @@ mod storage_failure;
 
 #[cfg(test)]
 mod curation_tests;
+
+mod provider_import;

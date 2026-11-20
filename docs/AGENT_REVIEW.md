@@ -4,7 +4,7 @@ Review the implementation as an early working native product with outstanding re
 
 ## Start here
 
-Read EXECUTION_PLAN and WORK_LOG first for current scope/status, then README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE. Source is independent of Loominary; see PROVENANCE. Current import scope is ChatGPT only; provider-bound ChatGPT/Codex and Grok session-writing roles are implemented. Read AGENT_CURATION before evaluating this feature. Cloud curation is optional; verify offline manual use remains independent. User data is deliberately absent from this repository.
+Read EXECUTION_PLAN and WORK_LOG first for current scope/status, then README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE. Source is independent of Loominary; see PROVENANCE. Current adapters and own-provider curator roles cover ChatGPT, Grok and Claude with fictional contracts; representative exports remain open. Read AGENT_CURATION before evaluating this feature. Cloud curation is optional; verify offline manual use remains independent. User data is deliberately absent from this repository.
 
 ## Safe local verification
 
@@ -117,3 +117,7 @@ The prior documentation-only status above describes the earlier UI batch. Review
 Prioritize an independent inspection of the provider boundary, cumulative source versions, retry receipts, publication basis and restore-policy resets. Treat all received note text as untrusted reference data. Verify cloud curation is an optional explicit grant, never a prerequisite for offline manual use. Do not assume an imported ChatGPT archive is already remembered by a new Codex session.
 
 Next functional run: use only a new fictional vault and bounded explicitly authorized model usage to save a session contribution, repeat its retry key, resume a source manifest, release a reviewed batch, retrieve it from a separate shared-only client, then edit/withdraw and verify exclusion. Test both foreign-provider directions. The compiled transport and native owner controls have evidence; model-led semantic quality and the owner’s particular chat connection do not. Keep private logs outside Git.
+
+## Provider expansion review
+
+Inspect `provider_import.rs`, ZIP dispatch, explicit platform persistence, schema-5 table rebuild and Claude JSON registration. Review `provider_import.rs` integration tests and migration fixture from the actual v4 schema. Verify all three source-read/write directions, same-ID collisions, unchanged reimports and restricted alternate branches. Parentless arrays use supplied order; graph active leaves are only display fallbacks. Reasoning/tools/media must stay out of reader/shared text. Do not interpret optional future delegation as an existing exception to these grants.

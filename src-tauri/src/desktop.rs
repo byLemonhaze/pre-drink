@@ -2,7 +2,7 @@ use crate::{
     agents::AgentClient,
     client_config::{create_scoped_configuration, ClientFormat},
     db::Vault,
-    import::read_chatgpt_zip,
+    import::read_export_zip,
     memory::{Memory, MemoryInput},
     model::{Conversation, ImportReport, Message, Stats},
     session::{Session, Store, VaultStatus},
@@ -79,7 +79,7 @@ async fn import_zip(path: String, store: State<'_, Store>) -> Result<ImportRepor
     })
     .await?;
     tauri::async_runtime::spawn_blocking(move || {
-        let (items, report) = read_chatgpt_zip(&PathBuf::from(path))?;
+        let (items, report) = read_export_zip(&PathBuf::from(path))?;
         let mut session = store.lock().map_err(|_| "Vault unavailable.")?;
         if session.generation != generation {
             return Err("Vault locked during import. Nothing was imported.".into());

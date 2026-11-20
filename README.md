@@ -2,7 +2,7 @@
 
 **Your AI history, sober and ready.**
 
-A free, MIT-licensed macOS memory manager: provider-private histories and working memory feed a shared layer you control. Built on Tauri 2, React, TypeScript and SQLCipher/SQLite FTS5. Official ZIP import currently supports **ChatGPT only**. The repository is a private pre-release until the owner chooses public launch.
+A free, MIT-licensed macOS memory manager: provider-private histories and working memory feed a shared layer you control. Built on Tauri 2, React, TypeScript and SQLCipher/SQLite FTS5. Official ZIP import supports recognized **ChatGPT, Claude and Grok** account-export formats; representative real-export acceptance remains open. The repository is a private pre-release until the owner chooses public launch.
 
 **Cloud curation is optional.** Import, search, manual memory editing, briefs, selected exports and backups work offline without a model, account or API key. You can separately authorize a connected agent to curate its own provider’s history. Local-model curation is planned, not implemented.
 
@@ -15,7 +15,7 @@ A free, MIT-licensed macOS memory manager: provider-private histories and workin
 | Shared memory            | Released facts, decisions and projects, plus approved manual notes | Authorized clients read eligible summaries; no foreign raw history          |
 | Briefs and context packs | Specifications and handoffs assembled from eligible knowledge      | Owner-reviewed briefs and explicit selected exports                         |
 
-ChatGPT/Codex curates ChatGPT history; Grok curates Grok history. Grok ZIP import remains planned, but a registered Grok curator can write explicit session summaries. Other providers cannot read those private drafts or raw sources. Client credentials bind the scope; they must never be reused across providers.
+ChatGPT/Codex curates ChatGPT history, Grok curates Grok history and Claude curates Claude history. All three have separate working-memory scopes. Other providers cannot read those private drafts or raw sources. Client credentials bind the scope; they must never be reused across providers.
 
 For manual use, choose **Keep as memory**, edit/classify the note, save, then review it. For optional agent curation, use **Agent access** to register a matching curator and connect the generated MCP settings. Curators can save session context or work through bounded archive batches. The app provides batch review, edit/history, held undo and withdrawal. It starts no model or background job by itself.
 
@@ -47,9 +47,9 @@ Choose a separate vault password of at least 14 characters. Prefer a long, uniqu
 
 ## Import and search
 
-- Import official ChatGPT ZIPs using the native picker or file-drop handler. Claude and Grok are postponed.
-- Recognizes `conversations.json` and numbered `conversations-N.json`, including nested paths, without extracting files to disk.
-- Preserves JSON snapshots and text branches across repeat imports. The latest imported snapshot sets the active branch; manual privacy flags survive imports.
+- Import official ChatGPT, Claude or Grok ZIPs using the native picker or file-drop handler. See [provider contracts and limits](docs/PROVIDERS.md).
+- Recognizes ChatGPT/Claude `conversations.json` and numbered `conversations-N.json`, and Grok `prod-grok-backend.json`, including nested paths, without extracting files to disk.
+- Preserves JSON snapshots and text branches across repeat imports. The latest imported snapshot sets the displayed branch; when the provider has no confirmed active leaf, a warned latest-leaf fallback is used. Manual privacy flags survive imports.
 - FTS5 searches titles and text across branches using literal words combined with AND within a title or message.
 - Markdown supports code, lists, and tables. HTML execution, remote images, and clickable external links are disabled.
 - Attachments, audio, images, tool results, and reasoning channels are not rendered or separately imported. Keep the original ZIP if you need those assets.
@@ -81,7 +81,7 @@ The app locks manually, after 15 minutes without owner activity, on macOS sleep/
 
 **Vault settings → Encrypted backup** creates a separately encrypted and verified copy. **Restore or change password** prepares a verified replacement, shows its impact and preserves the previous encrypted vault before switching. Restore is also available from the lock screen. Both operations remove agent registrations, disable automatic-publication rules and leave sharing off. Old backups/recovery copies retain their old passwords; follow [recovery instructions](docs/RECOVERY.md).
 
-**Agent access** authorizes named clients with individual revocable credentials and generates settings for Codex, Grok Build, or other local MCP clients. Clients receive eligible shared memory/briefs by default; raw-chat search requires an additional matching-provider permission. Curation requires a separate write grant. The app must remain open, unlocked, and sharing enabled. No network port is opened. An authorized cloud agent may send received context to its model provider. See [MCP setup and tools](docs/MCP.md).
+**Agent access** authorizes named clients with individual revocable credentials and generates settings for Codex, Grok Build, Claude local MCP or other local MCP clients. Clients receive eligible shared memory/briefs by default; raw-chat search requires an additional matching-provider permission. Curation requires a separate write grant. The app must remain open, unlocked, and sharing enabled. No network port is opened. An authorized cloud agent may send received context to its model provider. See [MCP setup and tools](docs/MCP.md).
 
 ## Verification
 
@@ -109,6 +109,7 @@ Generate synthetic fixtures with `python3 scripts/create_sample_export.py`. Debu
 - [Validation record](docs/VALIDATION.md)
 - [Product definition, requirements and ideas](docs/PRODUCT.md)
 - [Agent curation and session-memory contract](docs/AGENT_CURATION.md)
+- [Provider import formats and support matrix](docs/PROVIDERS.md)
 - [Architecture and design decisions](docs/ARCHITECTURE.md)
 - [Interface direction](docs/DESIGN.md)
 - [Security model](docs/SECURITY.md)
@@ -127,4 +128,4 @@ See [review findings and responses](docs/REVIEW_RESPONSE.md) for the implemented
 
 Privacy recheck requires individual selections before clearing saved flags; updated detection can add restrictions when a vault opens. Settings also provides reviewed cleanup of previous encrypted vault copies, gated on a fresh verified backup. See [security review response](docs/REVIEW_RESPONSE.md) and [recovery guide](docs/RECOVERY.md) for safeguards and remaining verification gates.
 
-Schema 4 preserves manual notes and approvals, adds encrypted curation state and turns old broad raw-chat grants into shared-only access. Issue fresh provider-scoped registrations when needed. Never downgrade a migrated vault; keep an encrypted backup.
+Schema 4 preserves manual notes and approvals, adds encrypted curation state and turns old broad raw-chat grants into shared-only access. Schema 5 adds Claude scopes while preserving existing v4 grants, policies and history. Issue fresh provider-scoped registrations when needed. Never downgrade a migrated vault; keep an encrypted backup.

@@ -358,6 +358,7 @@ mod tests {
     fn reimport_does_not_silently_clear_legacy_restrictions() {
         let mut v = legacy_fixture();
         let parsed = crate::model::ParsedConversation {
+            platform: "chatgpt".into(),
             id: "c".into(),
             title: "Timestamp discussion".into(),
             created_at: None,

@@ -7,7 +7,7 @@ Model Context Protocol is a standard way for an AI application to discover tools
 1. Put the app in a stable location before generating its configuration: the executable path is embedded.
 2. Open and unlock the vault.
 3. Review and approve eligible memories and briefs.
-4. In **Agent access**, choose Codex, Grok Build, or Other client (JSON), name the client, leave source/curation access off unless needed; selecting Codex binds ChatGPT and selecting Grok binds Grok, and acknowledge the provider-processing disclosure.
+4. In **Agent access**, choose Codex, Grok Build, Claude (local MCP), or Other client (JSON), name the client, leave source/curation access off unless needed; selecting Codex binds ChatGPT, Grok binds Grok and Claude binds Claude, and acknowledge the provider-processing disclosure.
 5. Save the generated configuration in that agent's **local** MCP settings. Its secret token is shown once. Never commit it or paste it into a conversation.
 6. Enable sharing and keep Pre-Drink open/unlocked.
 7. Ask the agent to use `get_context_pack` with a narrow topic.
@@ -16,7 +16,7 @@ The app generates TOML for Codex/Grok Build or common `mcpServers` JSON for othe
 
 The stdio handshake, discovery and calls are integration tested. Codex CLI 0.169.1 has also passed eight fictional-data acceptance phases (ten actual MCP calls), including approval/source restrictions, memory-only scope, lock, unlock and persisted revocation. The app’s fictional Codex/Grok configuration screens have native evidence; this does not establish setup in every external desktop client. No client is automatically given access.
 
-See [installed-client acceptance](MCP_ACCEPTANCE.md) for setup, per-client status and privacy/lifecycle evidence. Claude Code remains untested. Grok Build 1.0.41 also passed eight fictional-data phases and ten actual MCP calls after owner sign-in.
+See [installed-client acceptance](MCP_ACCEPTANCE.md) for setup, per-client status and privacy/lifecycle evidence. Actual Claude client execution remains untested; generated Claude JSON registration is deterministically tested. Grok Build 1.0.41 also passed eight fictional-data phases and ten actual MCP calls after owner sign-in.
 
 ## Client configuration formats
 
@@ -26,7 +26,7 @@ Keep the settings file readable/writable only by your Mac account and outside pr
 
 The serializer preserves spaces, quotes, backslashes and Unicode in paths. Non-absolute paths, invalid Unicode and control characters fail without leaving a registration. Grok paths containing `${` are refused because the client interprets environment expressions in settings; use a stable location without that sequence. The TOML serializer was already present in the locked dependency graph and is now a direct dependency.
 
-Grok Build supports command-based local stdio servers, as described in its [MCP guide](https://docs.x.ai/build/features/mcp-servers). This is distinct from [Grok web custom connectors](https://docs.x.ai/grok/connectors), which require a publicly reachable server. Pre-Drink does not expose a public endpoint or create tunnels. The Grok Build checks establish local stdio tool-result compatibility for the tested version; they do not establish Grok Bot/web compatibility. Client-specific configuration generation is implemented. Native configuration-screen checks are recorded in NATIVE_WALKTHROUGH; adding MCP clients does not add Claude or Grok chat-export import support. A fresh model-led curation write/resume run remains open.
+Grok Build supports command-based local stdio servers, as described in its [MCP guide](https://docs.x.ai/build/features/mcp-servers). This is distinct from [Grok web custom connectors](https://docs.x.ai/grok/connectors), which require a publicly reachable server. Pre-Drink does not expose a public endpoint or create tunnels. The Grok Build checks establish local stdio tool-result compatibility for the tested version; they do not establish Grok Bot/web compatibility. Client-specific configuration generation is implemented. Native configuration-screen checks are recorded in NATIVE_WALKTHROUGH; import support is separately defined and tested in PROVIDERS. A fresh model-led curation write/resume run remains open.
 
 ## Tools
 
@@ -56,7 +56,7 @@ The local server makes no AI calls and has no per-use charge. Your assistant may
 - Memory-only restriction: retain it or explicitly authorize a separate chat-enabled client.
 - No matches: check approval, privacy, source eligibility and literal topic text.
 - Connection unavailable: GUI must run and executable/socket paths must match. Regenerate after moving the app.
-- Result too large: narrow the topic. List tools do not yet paginate.
+- Result too large: narrow the topic. The shared fact/decision/project lists do not paginate; private source/note/job-source actions have their documented continuations.
 
 ## Selected exports versus live grants
 
@@ -64,7 +64,7 @@ The local server makes no AI calls and has no per-use charge. Your assistant may
 
 ## Agent writing and curation
 
-Enable the curation checkbox when registering Codex or Grok. This grants its provider's safe source access and private working-memory writes; it does not turn sharing on or authorize automatic publication. Generic JSON registrations stay shared-only. Existing schema-3 broad chat grants are downgraded to shared-only on upgrade.
+Enable the curation checkbox when registering Codex, Grok or Claude. This grants its provider's safe source access and private working-memory writes; it does not turn sharing on or authorize automatic publication. Generic JSON registrations stay shared-only. Existing schema-3 broad chat grants are downgraded to shared-only on upgrade.
 
 The seventh tool, `curate_memory`, takes an `operation` object containing a tagged action, for example `{"operation":{"action":"status"}}`:
 
@@ -88,3 +88,9 @@ For bulk history, create a job using `save_job` with `id: null`, `expected_revis
 Use **Agent access → Agent curation** to review/edit/withdraw contributions, inspect history and progress, or release up to 30 selected notes after an exact preview. Automatic sharing is separately opt-in for future archive/session projects and decisions; facts, links and instruction-like content wait for review. Sensitive, stale-source and unresolved-conflict content stays withheld. Auto-released content is explicitly labelled, never presented as individually owner-reviewed.
 
 All operations use the existing sharing/lock/revocation boundary. Client names and claimed model identities cannot broaden a credential. Do not reuse provider credentials across models. See [AGENT_CURATION](AGENT_CURATION.md) for the full contract and limitations.
+
+## Claude and future delegates
+
+Choose **Claude (local MCP)** for `mcpServers` JSON and a Claude-bound grant. Merge the entry into a compatible local Claude client’s private settings; never upload it to a chat or repository. This does not create web connectivity or establish tested Claude model execution. Its source/write scope is Claude only; shared summaries are available under the same delivery rules.
+
+An optional cross-provider delegate is planned, not implemented. No current format, client name or `curate_memory` argument grants it. The owner must separately select source archives and acknowledge the model destination when that feature exists. Cloud curation is always optional.

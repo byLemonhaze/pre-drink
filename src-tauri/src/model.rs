@@ -29,6 +29,7 @@ pub struct Message {
 
 #[derive(Debug)]
 pub struct ParsedConversation {
+    pub platform: String,
     pub id: String,
     pub title: String,
     pub created_at: Option<f64>,
