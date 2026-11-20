@@ -1,3 +1,4 @@
+import ThemeSwitch from "./ThemeSwitch";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
@@ -13,7 +14,6 @@ import {
   FileArchive,
   FolderOpen,
   GitBranch,
-  GlassWater,
   HardDrive,
   Import,
   Library,
@@ -327,9 +327,7 @@ function App({
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="brand-symbol">
-            <GlassWater size={23} strokeWidth={1.6} />
-          </div>
+          <img className="app-mark" src="/favicon.svg" alt="" />
           <span>
             pre-drink<span className="brand-dot">.</span>
           </span>
@@ -387,30 +385,12 @@ function App({
             Vault settings
           </button>
         </nav>
-        <div className="workspace-label source-label">IMPORT SOURCE</div>
-        <div className="source">
-          <span className="provider-icon">✳</span>
-          <span>ChatGPT</span>
-          <span className="source-dot" />
-        </div>
-        <div className="upcoming">
-          <span>YOUR THREE LAYERS</span>
-          <p>
-            Archive → Memory → Briefs
-            <br />
-            Keep the story. Curate the context.
-          </p>
-        </div>
         <div className="sidebar-bottom">
+          <ThemeSwitch />
           <div className="local-label">
             <span className="status-dot" />
-            Encrypted on this Mac.
+            Encrypted locally
           </div>
-          <p>
-            Sharing under your control.
-            <br />
-            Lock to stop agent access.
-          </p>
           <div className="version">
             PRE-DRINK{" "}
             <span>
@@ -713,33 +693,34 @@ function App({
                           </span>
                           <h2>{selectedConversation.title}</h2>
                         </div>
-                        <button
-                          className={`icon-button ${selectedConversation.private ? "is-private" : ""}`}
-                          title={
-                            selectedConversation.private
-                              ? "Make conversation non-private"
-                              : "Mark conversation private"
-                          }
-                          aria-label={
-                            selectedConversation.private
-                              ? "Make conversation non-private"
-                              : "Mark conversation private"
-                          }
-                          onClick={togglePrivate}
-                        >
-                          <LockKeyhole size={18} />
-                        </button>
-                      </div>
-                      <div className="archive-removal-row">
-                        <ArchiveRemoval
-                          key={selectedConversation.id}
-                          conversationId={selectedConversation.id}
-                          onChanged={() => {
-                            setSelected(null);
-                            setMessages([]);
-                            setRevision((n) => n + 1);
-                          }}
-                        />
+                        <div className="reader-actions">
+                          <button
+                            className={`icon-button ${selectedConversation.private ? "is-private" : ""}`}
+                            title={
+                              selectedConversation.private
+                                ? "Make conversation non-private"
+                                : "Mark conversation private"
+                            }
+                            aria-label={
+                              selectedConversation.private
+                                ? "Make conversation non-private"
+                                : "Mark conversation private"
+                            }
+                            onClick={togglePrivate}
+                          >
+                            <LockKeyhole size={18} />
+                          </button>
+                          <ArchiveRemoval
+                            compact
+                            key={selectedConversation.id}
+                            conversationId={selectedConversation.id}
+                            onChanged={() => {
+                              setSelected(null);
+                              setMessages([]);
+                              setRevision((n) => n + 1);
+                            }}
+                          />
+                        </div>
                       </div>
                       {(selectedConversation.private ||
                         selectedConversation.sensitive) && (

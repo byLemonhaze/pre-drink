@@ -1,7 +1,9 @@
+import ThemeSwitch from "./ThemeSwitch";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import { GlassWater, LockKeyhole, ShieldCheck } from "lucide-react";
+import { LockKeyhole, ShieldCheck } from "lucide-react";
 import App from "./App";
+import Modal from "./Modal";
 import VaultMaintenance from "./VaultMaintenance";
 import BuildInfo, { type VaultIdentity } from "./BuildInfo";
 import { listen } from "@tauri-apps/api/event";
@@ -21,6 +23,8 @@ export default function VaultGate() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [panel, setPanel] = useState<"details" | "restore" | null>(null);
+  const [maintenanceBusy, setMaintenanceBusy] = useState(false);
   const generation = useRef(0);
   const lastTouch = useRef(0);
   const reportedReady = useRef(false);
@@ -124,6 +128,8 @@ export default function VaultGate() {
     }
   }
   function changed(message: string) {
+    setPanel(null);
+    setMaintenanceBusy(false);
     generation.current++;
     setError("");
     setNotice(message);
@@ -144,107 +150,176 @@ export default function VaultGate() {
   return (
     <div className="vault-gate">
       <div className="unlock-card">
-        <div className="brand">
-          <div className="brand-symbol">
-            <GlassWater size={25} />
+        <header className="lock-brandbar">
+          <div className="brand">
+            <img className="app-mark" src="/favicon.svg" alt="" />
+            <span>pre-drink.</span>
           </div>
-          <span>pre-drink.</span>
-        </div>
-        <div className="eyebrow">LOCAL VAULT / ENCRYPTED</div>
-        <h1>{create ? "Create vault" : "Unlock vault"}</h1>
-        <p>
-          {create
-            ? "Create your encrypted vault with a long, unique password. Only you can unlock it."
-            : "Unlock your archive, memory, and curated briefs."}
-        </p>
-        {notice && (
-          <p className="maintenance-notice" role="status">
-            {notice}
-          </p>
-        )}
-        <form onSubmit={unlock}>
-          <label>
-            Vault password
-            <input
-              autoFocus
-              type="password"
-              autoComplete={create ? "new-password" : "current-password"}
-              value={password}
-              minLength={create ? 14 : undefined}
-              maxLength={1024}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={busy}
-            />
-          </label>
-          {create && (
-            <label>
-              Confirm password
-              <input
-                type="password"
-                autoComplete="new-password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                required
-                disabled={busy}
-              />
-            </label>
-          )}
-          {create && status?.legacy_exists && (
-            <div className="migration-note">
-              <strong>Your existing archive will be encrypted.</strong>
-              <p>
-                The app verifies the encrypted copy before switching. Existing
-                exports and Mac backups remain outside this protection.
-              </p>
-              <label className="checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={removeLegacy}
-                  onChange={(e) => setRemoveLegacy(e.target.checked)}
-                />
-                Remove the old unencrypted database after verification
-              </label>
-            </div>
-          )}
-          {error && (
-            <p className="form-error" role="alert">
-              {error}
+          <ThemeSwitch />
+        </header>
+        <div className="unlock-layout">
+          <section className="unlock-story" aria-label="Pre-Drink">
+            <h2>
+              Your AI history,
+              <br />
+              <span>sober and ready.</span>
+            </h2>
+            <p>
+              A private home for your conversations.
+              <br />
+              Better context for whatever comes next.
             </p>
-          )}
-          <button
-            className="button primary"
-            disabled={busy || !status || !isTauri()}
-          >
-            <LockKeyhole size={16} />
-            {busy
-              ? "Opening securely…"
-              : create
-                ? status?.legacy_exists
-                  ? "Encrypt my existing vault"
-                  : "Create encrypted vault"
-                : "Unlock vault"}
-          </button>
-        </form>
-        <div className="security-caption">
-          <ShieldCheck size={17} />
-          <span>
-            Argon2id · AES-256 · authenticated database pages
-            <br />
-            Locks after 15 minutes without activity in Pre-Drink.
-          </span>
+            <div className="local-promise">
+              <ShieldCheck size={15} /> Local. Encrypted. Under your control.
+            </div>
+          </section>
+          <section className="unlock-form-panel">
+            <div className="eyebrow">YOUR PRIVATE SPACE</div>
+            <h1>{create ? "Create your vault." : "Welcome back."}</h1>
+            <p className="unlock-intro">
+              {create
+                ? "One password. A place for your whole AI story."
+                : "Your archive, memory and briefs are waiting."}
+            </p>
+            {notice && (
+              <p className="maintenance-notice" role="status">
+                {notice}
+              </p>
+            )}
+            <form onSubmit={unlock}>
+              <label>
+                Vault password
+                <input
+                  autoFocus
+                  type="password"
+                  autoComplete={create ? "new-password" : "current-password"}
+                  value={password}
+                  minLength={create ? 14 : undefined}
+                  maxLength={1024}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={busy}
+                />
+              </label>
+              {create && (
+                <label>
+                  Confirm password
+                  <input
+                    type="password"
+                    autoComplete="new-password"
+                    value={confirm}
+                    onChange={(e) => setConfirm(e.target.value)}
+                    required
+                    disabled={busy}
+                  />
+                </label>
+              )}
+              {create && status?.legacy_exists && (
+                <div className="migration-note">
+                  <strong>Your existing archive will be encrypted.</strong>
+                  <p>
+                    The app verifies the encrypted copy before switching.
+                    Existing exports and Mac backups remain outside this
+                    protection.
+                  </p>
+                  <label className="checkbox-row">
+                    <input
+                      type="checkbox"
+                      checked={removeLegacy}
+                      onChange={(e) => setRemoveLegacy(e.target.checked)}
+                    />
+                    Remove the old unencrypted database after verification
+                  </label>
+                </div>
+              )}
+              {error && (
+                <p className="form-error" role="alert">
+                  {error}
+                </p>
+              )}
+              <button
+                className="button primary"
+                disabled={busy || !status || !isTauri()}
+              >
+                <LockKeyhole size={16} />
+                {busy
+                  ? "Opening securely…"
+                  : create
+                    ? status?.legacy_exists
+                      ? "Encrypt my existing vault"
+                      : "Create encrypted vault"
+                    : "Unlock vault"}
+              </button>
+            </form>
+            <div className="security-caption">
+              <LockKeyhole size={14} />
+              <span>
+                {create
+                  ? "Use a unique phrase of at least 14 characters."
+                  : "Your password stays on this Mac."}
+              </span>
+            </div>
+            <p className="fine-print lock-recovery-note">
+              {create
+                ? "There is no password reset. Keep your password and encrypted backups safe."
+                : "Locking stops agent access. There is no password reset."}
+            </p>
+          </section>
         </div>
-        <p className="fine-print">
-          {create
-            ? "Use at least 14 characters; a unique phrase of several random words is better. There is no password reset or recovery key. Keep your password and encrypted backups safe."
-            : "Your password stays on this Mac. Locking also stops agent access. There is no password reset."}
-        </p>
-        {status && <BuildInfo identity={status} />}
-        {status && isTauri() && (
-          <details className="restore-disclosure">
-            <summary>Restore from an encrypted backup</summary>
-            <VaultMaintenance locked onChanged={changed} />
-          </details>
+        {status && (
+          <footer className="unlock-footer">
+            <p className="fine-print">
+              Pre-Drink {status.app_version} ·{" "}
+              {status.isolated_storage
+                ? "Separate test storage"
+                : "Local vault"}
+            </p>
+            <div>
+              <button
+                type="button"
+                className="text-button"
+                disabled={busy}
+                onClick={() => setPanel("details")}
+              >
+                Vault details
+              </button>
+              {isTauri() && (
+                <button
+                  type="button"
+                  className="text-button"
+                  disabled={busy}
+                  onClick={() => setPanel("restore")}
+                >
+                  Restore backup
+                </button>
+              )}
+            </div>
+          </footer>
+        )}
+        {status && panel && (
+          <Modal
+            label={panel === "restore" ? "Restore backup" : "Vault details"}
+            busy={maintenanceBusy}
+            onClose={() => setPanel(null)}
+          >
+            <button
+              className="button secondary"
+              data-initial-focus
+              disabled={maintenanceBusy}
+              onClick={() => setPanel(null)}
+            >
+              Back to unlock
+            </button>
+            {panel === "restore" ? (
+              <VaultMaintenance
+                locked
+                onChanged={changed}
+                onBusyChange={setMaintenanceBusy}
+              />
+            ) : (
+              <BuildInfo identity={status} expanded />
+            )}
+          </Modal>
         )}
         {!isTauri() && (
           <p className="fine-print">

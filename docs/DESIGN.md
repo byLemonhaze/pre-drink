@@ -1,42 +1,44 @@
 # Interface direction
 
-Pre-Drink uses a dark, system-inspired interface with restrained retro details. It should feel like a useful local utility: flat graphite panels, clear borders, compact controls and readable content.
+Pre-Drink defaults to warm cream and orange. A locally remembered Dark option keeps the charcoal/orange interface available. Appearance is a visual preference, independent of vault approval, privacy and agent-sharing state. The lock screen should feel spacious and welcoming; the workspace should prioritize readable history, clear curation state and deliberate sharing.
 
 ## Palette and type
 
-| Role                   | Value     |
-| ---------------------- | --------- |
-| Canvas                 | `#111316` |
-| Surface                | `#181b20` |
-| Raised controls        | `#22262d` |
-| Borders                | `#343a43` |
-| Primary text           | `#e6e8ec` |
-| Secondary text         | `#a1a7b1` |
-| Amber selection/action | `#deb477` |
-| Success status         | `#9bc5ae` |
-| Error text             | `#f1a19a` |
+| Role              | Light     | Dark      |
+| ----------------- | --------- | --------- |
+| Canvas            | `#f5efe4` | `#101112` |
+| Surface           | `#fffaf1` | `#181a1c` |
+| Raised controls   | `#eee5d7` | `#242729` |
+| Borders           | `#d9cbb8` | `#34393b` |
+| Primary text      | `#302b25` | `#e7e9e9` |
+| Secondary text    | `#6e6357` | `#a4abad` |
+| Brand orange      | `#ff742b` | `#ff742b` |
+| Small accent text | `#a93d0a` | `#ff742b` |
+| Success text      | `#396044` | `#9bc5ae` |
+| Error text        | `#a7352f` | `#f1a19a` |
 
-Use the system sans-serif font for content and controls, and the local system monospace stack for metadata, counters and small labels. No remote fonts. Keep reading text at comfortable sizes; avoid applying terminal styling to entire conversations.
+Use the system sans-serif stack for the wordmark, content and controls. Keep system monospace for compact metadata and code. No remote fonts. In light mode small accent text uses a deeper orange for legibility; large brand artwork and the unlock action retain the bright orange. Status always includes words, not color alone.
 
-## Component rules
+## One glass mark
 
-- Flat panel divisions instead of floating decorative cards where practical.
-- Small corner radii and visible keyboard focus rings.
-- Amber for the primary action and selected navigation; muted green only for status.
-- Status always includes words, not color alone.
-- Native dark appearance for window chrome and form controls.
-- Plain screen names: Archive, Memory, Briefs, Agent access, Import history, Vault settings.
-- Preserve reduced-motion preferences; no simulated CRT flicker or scanlines over text.
-- Carry the same colors and typography into the landing page and icon.
+`src-tauri/icons/source.svg` is the canonical glass silhouette: orange on a cream rounded tile. The favicon and in-app brand images use that same artwork; generated PNG/ICNS assets package it for macOS. The documentation mark is the same vector scaled down. Do not substitute the generic Lucide glass icon in the lock screen or sidebar. Other utility icons may use Lucide.
 
-## Distribution state
+## Appearance behavior
 
-The repository remains private until the owner explicitly makes it public. GitHub Pages is unpublished. Landing-page changes are local/private source changes only; never re-enable hosting or change visibility as part of visual work.
+The lock header and workspace sidebar each expose labeled Light and Dark buttons with a pressed state. Light is the default even when macOS uses dark mode. `public/theme.js` restores the preference before the app bundle paints; `public/theme.css` defines shared semantic colors for startup, forms, dialogs, archive, memory, briefs and sharing. Only the non-sensitive value `light` or `dark` is saved in WebView local storage. Unavailable storage falls back safely; no vault contents or credentials are written there. The native window theme and background are also requested through narrowly allowed appearance APIs. Native title-bar styling may vary with the OS.
 
-## Visual verification
+## Responsive lock screen
 
-Native unlock, archive, source-linked memory editor and manual lock were inspected using an isolated synthetic vault. No personal chat content was used or added to the repository. Check the landing page at desktop and narrow mobile sizes before publishing.
+The lock screen occupies one viewport, with a spacious brand/story column and a focused password panel. Technical diagnostics and backup restoration open contained dialogs instead of extending the page. The same first-run form, wrong-password error and recovery actions must fit the supported 980 × 640 window. Short windows reduce spacing, and narrow browser previews omit the decorative story column. Exceptional long recovery/migration content and enlarged text retain internal scrolling as an accessibility fallback.
 
-## Next visual pass
+The password panel keeps the no-reset message and local-storage boundary explicit. Changing the theme never changes the password or sharing state. Recovery dialogs keep their pending-action guard and keyboard cancellation.
 
-The owner still wants the current appearance overhauled. Move toward a quieter desktop utility: neutral charcoal surfaces, less amber, compact navigation, fewer repeated explanatory labels and more room for conversation and memory content. Keep the sharing preview and clear Draft/Approved/Restricted states prominent. Use local system fonts, visible keyboard focus and plain controls. Treat this as the next visual direction, not an approved final design or a completed overhaul. Verify Archive, Memory, Briefs and Share context at standard and minimum window sizes using fictional data.
+## Workspace
+
+The sidebar is 176 pixels wide (164 at narrower widths). Repeated import-source and three-layer copy is removed. The header keeps lock and agent-sharing state visible while scrolling. The reader has more room, with privacy and reviewed deletion beside its title. Memory/brief filters wrap at narrow widths. Long content scrolls inside the workspace; the one-viewport requirement applies specifically to the ordinary lock screen.
+
+The sharing picker renders 25 choices per page and retains selections across pages and searches. Exact outgoing Markdown and exclusions remain the review point. Paging and visual changes do not change approval or export policy.
+
+## Distribution and review state
+
+The owner requested light-default cream/orange, retained dark mode, a less crowded lock screen and consistent logo artwork. These refinements are implemented for review; they are not a claim that final visual acceptance or public-launch readiness is complete. Native checks use only fictional data. The static landing page still needs a full visual alignment pass and remains unpublished. Keep the repository private until the owner's explicit launch decision.

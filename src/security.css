@@ -14,7 +14,7 @@
   border: 1px solid var(--line);
   border-radius: 5px;
   padding: 38px;
-  box-shadow: 0 18px 65px #0005;
+  box-shadow: 0 18px 65px var(--shadow);
 }
 .unlock-card .brand {
   margin: 0 0 38px;
@@ -74,7 +74,7 @@ form textarea {
   margin: 14px 0;
 }
 .checkbox-row input {
-  accent-color: var(--accent);
+  accent-color: var(--accent-text);
   margin-top: 3px;
   flex-shrink: 0;
 }
@@ -248,7 +248,7 @@ form textarea {
   max-height: 92vh;
   overflow: auto;
   width: 580px;
-  box-shadow: 0 18px 65px #0005;
+  box-shadow: 0 18px 65px var(--shadow);
 }
 .editor-modal.wide {
   width: 720px;
@@ -405,10 +405,10 @@ form textarea {
 .unlock-card {
   width: 460px;
   background: var(--surface);
-  border: 1px solid #40454e;
+  border: 1px solid var(--line);
   border-radius: 6px;
   padding: 32px;
-  box-shadow: 0 22px 80px #0007;
+  box-shadow: 0 22px 80px var(--shadow);
 }
 .unlock-card .brand {
   padding-bottom: 24px;
@@ -424,10 +424,10 @@ form textarea {
 .unlock-card > p,
 .editor-modal > p {
   font-size: 13px;
-  color: #aeb4be;
+  color: var(--muted);
 }
 form label:not(.checkbox-row) {
-  color: #c4c9d1;
+  color: var(--subtle-text);
   font-size: 12px;
 }
 form input:not([type="checkbox"]),
@@ -435,8 +435,8 @@ form select,
 form textarea,
 .memory-filters > input,
 .memory-filters > select {
-  background: #101216;
-  border-color: #3b424d;
+  background: var(--field);
+  border-color: var(--line);
   border-radius: 3px;
   color: var(--text);
 }
@@ -444,7 +444,7 @@ form textarea {
   line-height: 1.8;
 }
 .checkbox-row {
-  color: #b7bec9;
+  color: var(--subtle-text);
   font-size: 12px;
 }
 .security-caption {
@@ -453,49 +453,49 @@ form textarea {
   font-size: 10px;
 }
 .security-caption svg {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .button.secondary {
-  background: #272c34;
-  color: #d5dae2;
-  border-color: #414854;
+  background: var(--raised);
+  color: var(--text);
+  border-color: var(--line);
 }
 .lock-button {
-  color: var(--accent) !important;
+  color: var(--accent-text) !important;
 }
 .memory-grid {
   gap: 12px;
 }
 .memory-meta {
   font-family: var(--font-mono);
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 10px;
 }
 .approval {
   font-family: var(--font-mono);
-  color: #afb6c1;
-  background: #20242a;
-  border-color: #454b55;
+  color: var(--muted);
+  background: var(--raised);
+  border-color: var(--line);
   border-radius: 3px;
 }
 .approval.ready {
-  color: #acd1b8;
-  background: #233329;
-  border-color: #435e4b;
+  color: var(--success);
+  background: var(--success-bg);
+  border-color: var(--success-line);
 }
 .memory-content {
-  color: #d9dde4 !important;
+  color: var(--text) !important;
   font-size: 14px !important;
 }
 .source-link {
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 11px;
 }
 .card-actions button {
-  color: #c4cbd7;
+  color: var(--text);
 }
 .card-actions button:hover {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .empty-layer h3 {
   font-family: var(--font-ui);
@@ -515,14 +515,14 @@ dialog.editor-modal {
   max-height: calc(100dvh - 50px);
 }
 dialog.editor-modal::backdrop {
-  background: #0009;
+  background: var(--backdrop);
   backdrop-filter: blur(4px);
 }
 .editor-modal {
-  background: #1c2026;
-  border-color: #4a515d;
+  background: var(--surface);
+  border-color: var(--strong-line);
   border-radius: 6px;
-  box-shadow: 0 20px 80px #0009;
+  box-shadow: 0 20px 80px var(--shadow);
 }
 .editor-modal h2 {
   font-family: var(--font-ui);
@@ -530,43 +530,43 @@ dialog.editor-modal::backdrop {
   font-weight: 600;
 }
 .save-memory-button {
-  background: #29271f;
-  border-color: #4d4435;
-  color: #d8b681;
+  background: var(--accent-soft);
+  border-color: var(--primary-line);
+  color: var(--accent-text);
   font-size: 11px;
 }
 .sharing-warning {
-  background: #30291f;
-  color: #e0bd89 !important;
-  border-color: #594a33;
+  background: var(--warning-bg);
+  color: var(--warning) !important;
+  border-color: var(--warning-line);
 }
 .form-error {
-  background: #312024;
-  border-color: #684047;
-  color: #f1aaa5 !important;
+  background: var(--danger-bg);
+  border-color: var(--danger-line);
+  color: var(--danger) !important;
 }
 .migration-note {
-  background: #272b32;
+  background: var(--raised);
 }
 .config-box {
-  background: #20242a;
-  border-color: #404754;
+  background: var(--raised);
+  border-color: var(--line);
 }
 .config-box textarea,
 .context-preview {
-  background: #101216;
-  border-color: #3a424e;
-  color: #d1b790;
+  background: var(--field);
+  border-color: var(--line);
+  color: var(--accent-text);
   border-radius: 3px;
   font-family: var(--font-mono);
 }
 .client-row {
-  background: #1d2228;
-  border-color: #383f49;
+  background: var(--surface);
+  border-color: var(--line);
   border-radius: 4px;
 }
 .client-row p {
-  color: #aab3c1;
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -611,7 +611,7 @@ dialog.editor-modal::backdrop {
 }
 .restore-disclosure > summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--accent-text);
 }
 .restore-disclosure .settings-card {
   margin-top: 16px;
@@ -653,4 +653,286 @@ dialog.editor-modal::backdrop {
 }
 .retained-confirmation .form-actions {
   flex-wrap: wrap;
+}
+
+.page-intro {
+  margin: 6px 0 18px;
+  line-height: 1.6;
+}
+.memory-filters {
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.section-heading .button {
+  margin-bottom: 12px;
+}
+.sharing-page {
+  max-width: 1280px;
+}
+.share-output {
+  border-color: var(--strong-line);
+}
+@media (max-width: 1100px) {
+  .memory-filters .checkbox-row {
+    white-space: normal;
+  }
+}
+
+/* The lock screen is a single viewport; optional tasks open contained dialogs. */
+.vault-gate {
+  height: 100dvh;
+  min-height: 0;
+  padding: clamp(12px, 3vh, 32px);
+  overflow: hidden;
+  grid-template-rows: minmax(0, 1fr);
+}
+.unlock-card {
+  width: clamp(360px, 44vw, 480px);
+  max-height: 100%;
+  padding: clamp(18px, 3vh, 28px);
+  overflow-y: auto;
+  box-shadow: 0 16px 48px var(--shadow);
+}
+.unlock-card .brand {
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+.unlock-card h1 {
+  font-size: clamp(24px, 3.5vh, 29px);
+  margin: 10px 0;
+}
+.unlock-card > p {
+  line-height: 1.5;
+}
+.unlock-card form {
+  margin: clamp(10px, 2vh, 18px) 0;
+}
+.unlock-card form label:not(.checkbox-row) {
+  margin: 10px 0 8px;
+  gap: 6px;
+}
+.unlock-card .security-caption {
+  padding-top: 12px;
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+.unlock-footer {
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.unlock-footer > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+.unlock-footer .text-button {
+  font-size: 11px;
+  padding: 6px 9px;
+}
+.unlock-card .editor-modal .button {
+  width: auto;
+  margin: 0;
+}
+
+.unlock-card h1 {
+  color: var(--accent-text);
+}
+.unlock-card > p {
+  color: var(--subtle-text);
+}
+.memory-meta {
+  color: var(--muted);
+}
+.memory-meta .approval {
+  color: var(--subtle-text);
+}
+.memory-meta .approval.ready {
+  color: var(--success);
+}
+
+/* A spacious entry point, with recovery and technical details one step away. */
+.unlock-card {
+  width: min(940px, 100%);
+  padding: clamp(16px, 3vh, 28px);
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.lock-brandbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: clamp(24px, 6vh, 56px);
+}
+.unlock-card .brand {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  font: 650 23px var(--font-ui);
+  letter-spacing: -1px;
+  gap: 9px;
+}
+.unlock-layout {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  align-items: center;
+  gap: clamp(32px, 5vw, 64px);
+}
+.unlock-story h2 {
+  font-size: clamp(33px, 3.9vw, 44px);
+  line-height: 1.12;
+  font-weight: 600;
+  letter-spacing: -1.8px;
+  color: var(--text);
+}
+.unlock-story h2 span {
+  color: var(--headline-accent);
+}
+.unlock-story > p {
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.75;
+}
+.local-promise {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 28px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.unlock-form-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: clamp(22px, 3vw, 32px);
+  box-shadow: 0 12px 32px var(--shadow);
+}
+.unlock-form-panel > .eyebrow {
+  font: 600 10px var(--font-ui);
+  letter-spacing: 1.3px;
+  color: var(--muted);
+}
+.unlock-card .unlock-form-panel h1 {
+  color: var(--text);
+  font-size: 29px;
+  line-height: 1.2;
+  letter-spacing: -1px;
+  margin: 12px 0 10px;
+}
+.unlock-intro {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.unlock-card form {
+  margin: 24px 0 0;
+}
+.unlock-card form label:not(.checkbox-row) {
+  font-size: 12px;
+  gap: 9px;
+}
+.unlock-card form input:not([type="checkbox"]) {
+  min-height: 44px;
+  border-radius: 8px;
+  background: var(--field);
+}
+.unlock-card form .button.primary {
+  min-height: 44px;
+  border-radius: 8px;
+  margin-top: 12px;
+  font-size: 13px;
+  background: var(--accent);
+  color: #402511;
+  border-color: var(--accent);
+  box-shadow: none;
+}
+.unlock-card .security-caption {
+  justify-content: center;
+  border: 0;
+  padding-top: 18px;
+  margin: 0;
+  font: 11px/1.5 var(--font-ui);
+}
+.unlock-card .security-caption svg {
+  color: var(--muted);
+}
+.unlock-card .lock-recovery-note {
+  text-align: center;
+  margin-top: 9px;
+  font-size: 10px !important;
+  line-height: 1.5;
+}
+.unlock-footer {
+  margin-top: clamp(28px, 5vh, 48px);
+  padding-top: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.unlock-footer > div {
+  margin: 0;
+}
+.unlock-footer .text-button {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+.unlock-footer .text-button:hover {
+  background: var(--raised);
+  color: var(--text);
+}
+@media (max-height: 720px) {
+  .lock-brandbar {
+    margin-bottom: 24px;
+  }
+  .unlock-story h2 {
+    font-size: 36px;
+  }
+  .unlock-form-panel {
+    padding: 22px;
+  }
+  .unlock-footer {
+    margin-top: 24px;
+    padding-top: 14px;
+  }
+}
+@media (max-width: 720px) {
+  .unlock-layout {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .unlock-story {
+    display: none;
+  }
+  .unlock-card {
+    width: min(460px, 100%);
+  }
+  .unlock-footer {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-height: 720px) {
+  .vault-gate {
+    padding-block: 12px;
+  }
+  .unlock-card {
+    padding-block: 12px;
+  }
+  .lock-brandbar {
+    margin-bottom: 16px;
+  }
+  .unlock-footer {
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+  .unlock-card form {
+    margin-top: 18px;
+  }
 }

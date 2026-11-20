@@ -20,8 +20,10 @@ interface Result {
 export default function VaultMaintenance({
   locked = false,
   onChanged,
+  onBusyChange,
 }: {
   locked?: boolean;
+  onBusyChange?: (busy: boolean) => void;
   onChanged: (message: string) => void;
 }) {
   const [mode, setMode] = useState<"restore" | "password">("restore");
@@ -33,6 +35,9 @@ export default function VaultMaintenance({
   const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    onBusyChange?.(busy);
+  }, [busy, onBusyChange]);
   const pending = useRef<string | null>(null);
   const mounted = useRef(true);
   useEffect(() => {

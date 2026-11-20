@@ -6,10 +6,16 @@ export interface VaultIdentity {
   isolated_storage: boolean;
   database_path: string;
 }
-export default function BuildInfo({ identity }: { identity: VaultIdentity }) {
+export default function BuildInfo({
+  identity,
+  expanded = false,
+}: {
+  identity: VaultIdentity;
+  expanded?: boolean;
+}) {
   const built = new Date(Number(identity.built_at) * 1000);
   return (
-    <details className="build-info">
+    <details className="build-info" open={expanded}>
       <summary>
         Pre-Drink {identity.app_version} · {identity.build_profile} ·{" "}
         {identity.isolated_storage

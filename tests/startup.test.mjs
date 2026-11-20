@@ -94,3 +94,29 @@ test("unrelated resource errors do not replace the loading state", () => {
   app.fire("error", { target: {} });
   assert.equal(app.elements.get("startup-retry").hidden, true);
 });
+
+test("appearance defaults to light and cannot block startup when preferences fail", () => {
+  const themeSource = readFileSync(
+    new URL("../public/theme.js", import.meta.url),
+    "utf8",
+  );
+  for (const [saved, expected] of [
+    [null, "light"],
+    ["dark", "dark"],
+    ["light", "light"],
+    ["unexpected", "light"],
+    [new Error("unavailable"), "light"],
+  ]) {
+    const document = { documentElement: { dataset: {} } };
+    vm.runInNewContext(themeSource, {
+      document,
+      localStorage: {
+        getItem() {
+          if (saved instanceof Error) throw saved;
+          return saved;
+        },
+      },
+    });
+    assert.equal(document.documentElement.dataset.theme, expected);
+  }
+});

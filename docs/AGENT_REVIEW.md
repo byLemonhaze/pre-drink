@@ -97,3 +97,11 @@ Review `Modal.tsx` and its four callers: native modal background inertness, init
 ## Long-chat and curation browsing review
 
 Review `PagedList.tsx`, `ConversationMessages.tsx`, `Memory.tsx` and `Briefs.tsx` for filter-before-page behavior, page reset/clamping, keyboard focus, hidden branches/restricted notes and full-source preservation. `npm run test:reading` renders real components to verify bounded output, retained-branch filtering, inert Markdown resources and explicit long-message previews. It does not simulate interactive WebView focus or replace native acceptance. Use `examples/native_reading_fixture.rs` for a separate fictional 2,000-message conversation, 3,000 memories and 500 briefs. Desktop IPC still loads full result collections; render paging is not a claim of bounded database/IPC memory.
+
+## Storage fault review
+
+`src-tauri/src/storage_failure.rs` adds encrypted-file fault regressions. A per-connection SQLite page limit forces capacity failures during import, memory edit and brief edit; complete logical snapshots must match the previous state, reopening must succeed and retry must work after lifting the limit. A separate test spawns a writer, flushes uncommitted changes, waits for an explicit boundary marker, kills that process and reopens the vault to verify search, approvals and retry. All paths are temporary fictional storage. Review the scope carefully: these do not inject filesystem ENOSPC at backup/publication boundaries or simulate hardware power loss.
+
+## Appearance and compact sharing review
+
+Review `public/theme.js`, `public/theme.css` and `ThemeSwitch.tsx` for light-default initialization, constrained preference values, safe storage failures and appearance-only native permissions. No vault content belongs in localStorage. The same icon source must serve the app bundle, lock screen and sidebar. Check `VaultGate.tsx` for contained details/restore dialogs and busy guards; normal lock/first-run/error states should fit the minimum window, with internal scrolling retained for exceptional long content/accessibility. `Sharing.tsx` pages choices without dropping off-page selections; the exact outgoing preview, review checkbox and backend approval/privacy checks remain mandatory. The proposed agent-workspace model in PRODUCT is documentation only: no agent write or self-approval authority was added.

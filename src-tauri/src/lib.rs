@@ -30,3 +30,6 @@ pub mod lifecycle;
 pub mod retention;
 
 pub mod retained_vaults;
+
+#[cfg(test)]
+mod storage_failure;

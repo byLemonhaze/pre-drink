@@ -1,4 +1,5 @@
 import Modal from "./Modal";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 interface Preview {
@@ -12,9 +13,11 @@ interface Preview {
 }
 export default function ArchiveRemoval({
   conversationId,
+  compact = false,
   onChanged,
 }: {
   conversationId?: string;
+  compact?: boolean;
   onChanged: () => void;
 }) {
   const [preview, setPreview] = useState<Preview | null>(null);
@@ -65,11 +68,19 @@ export default function ArchiveRemoval({
   return (
     <div className="archive-removal">
       <button
-        className="button secondary"
+        className={compact ? "icon-button" : "button secondary"}
+        aria-label={compact ? "Delete conversation…" : undefined}
+        title={compact ? "Delete conversation…" : undefined}
         disabled={busy}
         onClick={() => void inspect()}
       >
-        {conversationId ? "Delete conversation…" : "Review older snapshots…"}
+        {compact ? (
+          <Trash2 size={16} />
+        ) : conversationId ? (
+          "Delete conversation…"
+        ) : (
+          "Review older snapshots…"
+        )}
       </button>
       {message && <p role="status">{message}</p>}
       {preview && (

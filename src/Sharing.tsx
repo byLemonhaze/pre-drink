@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import PagedList from "./PagedList";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { Copy, Download, Eye } from "lucide-react";
@@ -164,23 +165,32 @@ export default function Sharing() {
             Find a memory or brief
             <input
               type="search"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search your saved context"
             />
           </label>
-          <p>{selected.length} / 50 selected</p>
+          <p>
+            {selected.length} / 50 selected · Selection stays across pages and
+            searches.
+          </p>
           <div className="share-choices">
             {!busy && !choices.length && (
               <p>Create and approve a memory or brief first.</p>
             )}
-            {choices
-              .filter((c) =>
+            <PagedList
+              items={choices.filter((c) =>
                 `${c.title} ${c.content}`
                   .toLowerCase()
                   .includes(query.toLowerCase()),
-              )
-              .map((c) => {
+              )}
+              scope={query}
+              label="items"
+            >
+              {(c) => {
                 const checked = selected.some((s) => key(s) === key(c));
                 return (
                   <label className="share-choice" key={key(c)}>
@@ -199,7 +209,8 @@ export default function Sharing() {
                     </span>
                   </label>
                 );
-              })}
+              }}
+            </PagedList>
           </div>
           <button
             className="button primary"
