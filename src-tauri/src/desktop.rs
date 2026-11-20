@@ -494,7 +494,7 @@ pub fn run() {
             }));
             let store = Arc::new(Mutex::new(session));
             #[cfg(target_os = "macos")]
-            crate::mac_lock::register(store.clone());
+            crate::mac_lock::register(store.clone()).map_err(std::io::Error::other)?;
             crate::broker::serve(&data.join("agents.sock"), store.clone())
                 .map_err(std::io::Error::other)?;
             crate::session::watchdog(store.clone());

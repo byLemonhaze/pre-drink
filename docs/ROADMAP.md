@@ -6,7 +6,7 @@ The detailed agreed order and exit criteria are in [EXECUTION_PLAN](EXECUTION_PL
 
 ChatGPT-only official ZIP import; branch/snapshot archive; FTS5; separate-password SQLCipher vault; editable memory and briefs; source-aware sharing rules; selected Markdown preview/copy/file export; local authenticated MCP; encrypted backups; manual/idle/macOS lifecycle locking. Saves produce drafts and require a separate saved-version review before approval. The dark native interface and static landing assets exist.
 
-This is a working private pre-release. Basic native review, sharing, recovery and fictional import workflows have evidence. Codex CLI and Grok Build have passed the fictional MCP client policy matrix. Representative real exports, physical file drop, full keyboard/lifecycle coverage, native client setup screens and distribution gates remain open. Claude and Grok export imports are not yet supported; MCP-client compatibility is tracked separately in MCP_ACCEPTANCE.
+This is a working private pre-release. Basic native review, sharing, recovery and fictional import workflows have evidence. Codex CLI and Grok Build have passed the fictional MCP client policy matrix. Native Finder drop/reimport, password change, Codex/Grok configuration screens and sharing-off after restart are now verified with fictional data. Representative real exports, full keyboard/lifecycle coverage and distribution gates remain open. Claude and Grok export imports are not yet supported; MCP-client compatibility is tracked separately in MCP_ACCEPTANCE.
 
 ## Agreed execution order
 

@@ -164,3 +164,10 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Passed:** first Finder drop adds 2 fictional conversations/6 messages and reports 7 omitted hidden/tool/system/non-text messages. Native branch display and search confirm retained alternate text.
 - **Repeat:** second drop reports 0 new/2 refreshed; vault remains at 4 conversations/8 messages with no duplicates. Sensitive content stays hidden; sharing stays off.
 - **Finish:** fictional vault locked. Updated acceptance/review documents; no product-code or personal-data changes. Valid physical-drop acceptance is closed; representative exports and broader failure cases remain separate.
+
+## Failure handling and Mac screen-lock correction
+
+- **Native passes:** malformed/oversized declared JSON rejection; cancelled plaintext export without a file; truncated backup rejection and intact-backup retry; quit before restore confirmation and reopen with unchanged active data/password.
+- **Reproduced defect:** the owner's Mac screen lock did not close the baseline vault or disable sharing with a native Save panel open; the pre-lock export could still be saved. Only fictional data was involved.
+- **Fix:** one-way distributed screen-lock observer, existing independent sleep/session/idle protections retained, missing notification center fails app setup. No notification can unlock or enable sharing. Core Foundation types promoted from an existing locked dependency.
+- **Checks:** 83 Rust checks, four startup checks, formatting and all-target Clippy pass. Rebuilt-app screen-lock retest passes with the Save panel open: sharing off before saving, stale export denied and no output file. Separate owner-performed sleep/wake also locks the vault and disables sharing; unlocking preserves data and sensitivity. Notification delivery/OS coverage remains an explicit limit. The fictional app was locked and quit; no personal vault was used.
