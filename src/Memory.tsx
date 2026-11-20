@@ -1,3 +1,4 @@
+import Modal from "./Modal";
 import ReviewDialog from "./Review";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -59,84 +60,79 @@ export function MemoryEditor({
     }
   }
   return (
-    <div className="modal-backdrop">
-      <section
-        className="editor-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Edit memory"
+    <Modal label="Edit memory" busy={busy} onClose={onClose}>
+      <button
+        className="modal-close icon-button"
+        aria-label="Close memory editor"
+        disabled={busy}
+        onClick={onClose}
       >
-        <button
-          className="modal-close icon-button"
-          aria-label="Close memory editor"
-          onClick={onClose}
-        >
-          <X size={17} />
-        </button>
-        <div className="eyebrow">LAYER 02 · MEMORY</div>
-        <h2>{memory ? "Edit memory" : "New memory"}</h2>
-        <p>
-          Turn the conversation into one clear, lasting note. Your source stays
-          linked; your original chat stays intact.
+        <X size={17} />
+      </button>
+      <div className="eyebrow">LAYER 02 · MEMORY</div>
+      <h2>{memory ? "Edit memory" : "New memory"}</h2>
+      <p>
+        Turn the conversation into one clear, lasting note. Your source stays
+        linked; your original chat stays intact.
+      </p>
+      <form onSubmit={save}>
+        <label>
+          Type
+          <select value={kind} onChange={(e) => setKind(e.target.value)}>
+            <option value="fact">Fact</option>
+            <option value="decision">Decision</option>
+            <option value="project">Project</option>
+          </select>
+        </label>
+        <label>
+          Memory
+          <textarea
+            data-initial-focus
+            rows={8}
+            value={content}
+            maxLength={16000}
+            onChange={(e) => {
+              setContent(e.target.value);
+            }}
+            required
+          />
+        </label>
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={privateNote}
+            onChange={(e) => setPrivate(e.target.checked)}
+          />
+          Keep this memory private
+        </label>
+        <p className="fine-print">
+          Saving returns this item to draft. Use Review &amp; approve on its
+          card to share the saved version.
         </p>
-        <form onSubmit={save}>
-          <label>
-            Type
-            <select value={kind} onChange={(e) => setKind(e.target.value)}>
-              <option value="fact">Fact</option>
-              <option value="decision">Decision</option>
-              <option value="project">Project</option>
-            </select>
-          </label>
-          <label>
-            Memory
-            <textarea
-              autoFocus
-              rows={8}
-              value={content}
-              maxLength={16000}
-              onChange={(e) => {
-                setContent(e.target.value);
-              }}
-              required
-            />
-          </label>
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={privateNote}
-              onChange={(e) => setPrivate(e.target.checked)}
-            />
-            Keep this memory private
-          </label>
-          <p className="fine-print">
-            Saving returns this item to draft. Use Review &amp; approve on its
-            card to share the saved version.
+        <p className="fine-print">
+          Approval never overrides a private or sensitive source. Sharing also
+          needs an authorized client and an unlocked vault.
+        </p>
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
           </p>
-          <p className="fine-print">
-            Approval never overrides a private or sensitive source. Sharing also
-            needs an authorized client and an unlocked vault.
-          </p>
-          {error && (
-            <p className="form-error" role="alert">
-              {error}
-            </p>
-          )}
-          <div className="form-actions">
-            <button
-              type="button"
-              className="button secondary"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button className="button primary" disabled={busy}>
-              {busy ? "Saving…" : "Save memory"}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+        )}
+        <div className="form-actions">
+          <button
+            type="button"
+            className="button secondary"
+            disabled={busy}
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button className="button primary" disabled={busy}>
+            {busy ? "Saving…" : "Save memory"}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 

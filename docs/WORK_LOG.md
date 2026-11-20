@@ -171,3 +171,11 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Reproduced defect:** the owner's Mac screen lock did not close the baseline vault or disable sharing with a native Save panel open; the pre-lock export could still be saved. Only fictional data was involved.
 - **Fix:** one-way distributed screen-lock observer, existing independent sleep/session/idle protections retained, missing notification center fails app setup. No notification can unlock or enable sharing. Core Foundation types promoted from an existing locked dependency.
 - **Checks:** 83 Rust checks, four startup checks, formatting and all-target Clippy pass. Rebuilt-app screen-lock retest passes with the Save panel open: sharing off before saving, stale export denied and no output file. Separate owner-performed sleep/wake also locks the vault and disables sharing; unlocking preserves data and sensitivity. Notification delivery/OS coverage remains an explicit limit. The fictional app was locked and quit; no personal vault was used.
+
+## Native large library and keyboard dialogs
+
+- Added a reproducible generator for a fresh encrypted fictional 5,000-conversation/100,000-message native library; no personal exports or default storage are opened.
+- Native pagination (100 → 200), unique search beyond loaded pages, empty results/recovery and source-linked draft memory saving pass. This is functional native evidence, not a rendering-speed guarantee or representative export check.
+- Fixed a reproduced modal defect: Tab could reach archive controls behind the memory editor and Escape did not dismiss it. Memory, brief, approval and archive-deletion dialogs now share native WebView modality, explicit focus wrapping and cancellation; pending actions cannot be dismissed.
+- Final native checks pass: forward/reverse Tab wrapping, Escape cancellation, 980 × 640 memory/brief dialog scrolling and accessible action buttons, and empty-brief validation without a new saved item. Both fictional sessions were locked and quit.
+- Frontend/native builds, four startup checks, formatting, all-target Clippy and the source-only guard pass. No production Rust or dependency changes; remote verification is tracked separately. Representative official exports remain outstanding; personal content and authentication details never belong in this log.

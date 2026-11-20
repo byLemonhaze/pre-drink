@@ -1,3 +1,4 @@
+import Modal from "./Modal";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 interface Preview {
@@ -72,57 +73,54 @@ export default function ArchiveRemoval({
       </button>
       {message && <p role="status">{message}</p>}
       {preview && (
-        <div className="modal-backdrop">
-          <section
-            className="editor-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Review archive deletion"
-          >
-            <div className="eyebrow">REVIEW PERMANENT DELETION</div>
-            <h2>{preview.title}</h2>
-            <p>
-              {conversationId
-                ? `${preview.messages} messages and ${preview.snapshots} raw snapshots will be deleted from this vault and its search index. ${preview.memories} linked memories will remain as blocked drafts; ${preview.briefs} dependent briefs will stay blocked by their missing evidence.`
-                : `${preview.snapshots} older raw JSON snapshots will be removed. The most recently imported raw version of each conversation, all message branches, notes and briefs remain.`}
-            </p>
-            <p>
-              There is no undo here. Original export ZIPs, encrypted backups,
-              retained vault generations and Mac snapshots can still contain
-              this data. Deleting does not securely erase those copies.
-            </p>
-            <label>
-              Type DELETE to confirm
-              <input
-                autoFocus
-                value={confirmation}
-                disabled={busy}
-                onChange={(e) => setConfirmation(e.target.value)}
-                autoComplete="off"
-              />
-            </label>
-            <div className="form-actions">
-              <button
-                className="button secondary"
-                disabled={busy}
-                onClick={() => setPreview(null)}
-              >
-                Cancel
-              </button>
-              <button
-                className="button primary"
-                disabled={
-                  busy ||
-                  confirmation !== "DELETE" ||
-                  (!conversationId && !preview.snapshots)
-                }
-                onClick={() => void remove()}
-              >
-                {busy ? "Deleting…" : "Delete reviewed data"}
-              </button>
-            </div>
-          </section>
-        </div>
+        <Modal
+          label="Review archive deletion"
+          busy={busy}
+          onClose={() => setPreview(null)}
+        >
+          <div className="eyebrow">REVIEW PERMANENT DELETION</div>
+          <h2>{preview.title}</h2>
+          <p>
+            {conversationId
+              ? `${preview.messages} messages and ${preview.snapshots} raw snapshots will be deleted from this vault and its search index. ${preview.memories} linked memories will remain as blocked drafts; ${preview.briefs} dependent briefs will stay blocked by their missing evidence.`
+              : `${preview.snapshots} older raw JSON snapshots will be removed. The most recently imported raw version of each conversation, all message branches, notes and briefs remain.`}
+          </p>
+          <p>
+            There is no undo here. Original export ZIPs, encrypted backups,
+            retained vault generations and Mac snapshots can still contain this
+            data. Deleting does not securely erase those copies.
+          </p>
+          <label>
+            Type DELETE to confirm
+            <input
+              data-initial-focus
+              value={confirmation}
+              disabled={busy}
+              onChange={(e) => setConfirmation(e.target.value)}
+              autoComplete="off"
+            />
+          </label>
+          <div className="form-actions">
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => setPreview(null)}
+            >
+              Cancel
+            </button>
+            <button
+              className="button primary"
+              disabled={
+                busy ||
+                confirmation !== "DELETE" ||
+                (!conversationId && !preview.snapshots)
+              }
+              onClick={() => void remove()}
+            >
+              {busy ? "Deleting…" : "Delete reviewed data"}
+            </button>
+          </div>
+        </Modal>
       )}
     </div>
   );

@@ -1,3 +1,4 @@
+import Modal from "./Modal";
 import ReviewDialog from "./Review";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
@@ -181,102 +182,97 @@ function BriefEditor({
     }
   }
   return (
-    <div className="modal-backdrop">
-      <section
-        className="editor-modal wide"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Edit brief"
+    <Modal label="Edit brief" wide busy={busy} onClose={onClose}>
+      <button
+        className="modal-close icon-button"
+        aria-label="Close brief editor"
+        disabled={busy}
+        onClick={onClose}
       >
-        <button
-          className="modal-close icon-button"
-          aria-label="Close brief editor"
-          onClick={onClose}
-        >
-          <X size={17} />
-        </button>
-        <div className="eyebrow">CURATED, NOT AUTOMATIC</div>
-        <h2>{brief ? "Edit brief" : "New brief"}</h2>
-        <form onSubmit={save}>
-          <label>
-            Title
-            <input
-              autoFocus
-              value={title}
-              maxLength={200}
-              onChange={(e) => {
-                setTitle(e.target.value);
-              }}
-              required
-            />
-          </label>
-          <label>
-            Add an approved memory
-            <select
-              value=""
-              onChange={(e) => {
-                const m = available.find((m) => m.id === e.target.value);
-                if (m) addSource(m);
-              }}
-            >
-              <option value="">Choose a source to include…</option>
-              {available
-                .filter((m) => !sources.includes(m.id))
-                .map((m) => (
-                  <option value={m.id} key={m.id}>
-                    {m.kind}: {m.content.slice(0, 100)}
-                  </option>
-                ))}
-            </select>
-          </label>
-          <p className="fine-print">
-            {sources.length} linked memories. Source links are retained so
-            privacy decisions continue to apply.
-          </p>
-          <label>
-            Brief (Markdown)
-            <textarea
-              rows={11}
-              value={content}
-              maxLength={32000}
-              onChange={(e) => {
-                setContent(e.target.value);
-              }}
-              required
-            />
-          </label>
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={privateBrief}
-              onChange={(e) => setPrivate(e.target.checked)}
-            />
-            Keep this brief private
-          </label>
-          <p className="fine-print">
-            Saving returns this item to draft. Use Review &amp; approve on its
-            card to share the saved version.
-          </p>
-          <p className="fine-print">
-            Private, sensitive, deleted, or unapproved sources always block
-            sharing. If a source was deleted, create a fresh brief with valid
-            sources.
-          </p>
-          {error && <p className="form-error">{error}</p>}
-          <div className="form-actions">
-            <button
-              className="button secondary"
-              type="button"
-              onClick={onClose}
-            >
-              Cancel
-            </button>
-            <button className="button primary" disabled={busy}>
-              {busy ? "Saving…" : "Save brief"}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
+        <X size={17} />
+      </button>
+      <div className="eyebrow">CURATED, NOT AUTOMATIC</div>
+      <h2>{brief ? "Edit brief" : "New brief"}</h2>
+      <form onSubmit={save}>
+        <label>
+          Title
+          <input
+            data-initial-focus
+            value={title}
+            maxLength={200}
+            onChange={(e) => {
+              setTitle(e.target.value);
+            }}
+            required
+          />
+        </label>
+        <label>
+          Add an approved memory
+          <select
+            value=""
+            onChange={(e) => {
+              const m = available.find((m) => m.id === e.target.value);
+              if (m) addSource(m);
+            }}
+          >
+            <option value="">Choose a source to include…</option>
+            {available
+              .filter((m) => !sources.includes(m.id))
+              .map((m) => (
+                <option value={m.id} key={m.id}>
+                  {m.kind}: {m.content.slice(0, 100)}
+                </option>
+              ))}
+          </select>
+        </label>
+        <p className="fine-print">
+          {sources.length} linked memories. Source links are retained so privacy
+          decisions continue to apply.
+        </p>
+        <label>
+          Brief (Markdown)
+          <textarea
+            rows={11}
+            value={content}
+            maxLength={32000}
+            onChange={(e) => {
+              setContent(e.target.value);
+            }}
+            required
+          />
+        </label>
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={privateBrief}
+            onChange={(e) => setPrivate(e.target.checked)}
+          />
+          Keep this brief private
+        </label>
+        <p className="fine-print">
+          Saving returns this item to draft. Use Review &amp; approve on its
+          card to share the saved version.
+        </p>
+        <p className="fine-print">
+          Private, sensitive, deleted, or unapproved sources always block
+          sharing. If a source was deleted, create a fresh brief with valid
+          sources.
+        </p>
+        {error && <p className="form-error">{error}</p>}
+        <div className="form-actions">
+          <button
+            className="button secondary"
+            type="button"
+            disabled={busy}
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button className="button primary" disabled={busy}>
+            {busy ? "Saving…" : "Save brief"}
+          </button>
+        </div>
+      </form>
+    </Modal>
   );
 }

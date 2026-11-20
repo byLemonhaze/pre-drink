@@ -1,3 +1,4 @@
+import Modal from "./Modal";
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import type { MemoryItem } from "./Memory";
@@ -58,77 +59,70 @@ export default function ReviewDialog({
     }
   }
   return (
-    <div className="modal-backdrop">
-      <section
-        className="editor-modal wide"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Review for sharing"
-      >
-        <div className="eyebrow">REVIEW BEFORE SHARING</div>
-        <h2>{review?.title || "Loading review…"}</h2>
-        {review && (
-          <>
-            <p className="memory-content">{review.content}</p>
-            {review.sources.length > 0 && (
-              <>
-                <h3>Current supporting memories</h3>
-                {review.sources.map((source) => (
-                  <article className="settings-card" key={source.id}>
-                    <strong>{source.kind}</strong>
-                    <p className="memory-content">{source.content}</p>
-                    <p className="fine-print">
-                      {source.approved &&
-                      !source.private &&
-                      !source.sensitive &&
-                      !source.source_restricted
-                        ? "Approved"
-                        : "Restricted or awaiting approval"}
-                    </p>
-                  </article>
-                ))}
-              </>
-            )}
-            {review.restricted ? (
-              <p className="form-error">
-                This item has private, sensitive, missing, or unapproved content
-                or sources. It cannot be approved for sharing.
-              </p>
-            ) : (
-              <label className="checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(e) => setChecked(e.target.checked)}
-                />
-                I reviewed this saved version and its sources and approve it for
-                agent sharing.
-              </label>
-            )}
-            <p className="fine-print">
-              Edits return it to draft. If anything changes during review,
-              approval is rejected.
+    <Modal label="Review for sharing" wide busy={busy} onClose={onClose}>
+      <div className="eyebrow">REVIEW BEFORE SHARING</div>
+      <h2>{review?.title || "Loading review…"}</h2>
+      {review && (
+        <>
+          <p className="memory-content">{review.content}</p>
+          {review.sources.length > 0 && (
+            <>
+              <h3>Current supporting memories</h3>
+              {review.sources.map((source) => (
+                <article className="settings-card" key={source.id}>
+                  <strong>{source.kind}</strong>
+                  <p className="memory-content">{source.content}</p>
+                  <p className="fine-print">
+                    {source.approved &&
+                    !source.private &&
+                    !source.sensitive &&
+                    !source.source_restricted
+                      ? "Approved"
+                      : "Restricted or awaiting approval"}
+                  </p>
+                </article>
+              ))}
+            </>
+          )}
+          {review.restricted ? (
+            <p className="form-error">
+              This item has private, sensitive, missing, or unapproved content
+              or sources. It cannot be approved for sharing.
             </p>
-          </>
-        )}
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
+          ) : (
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={checked}
+                onChange={(e) => setChecked(e.target.checked)}
+              />
+              I reviewed this saved version and its sources and approve it for
+              agent sharing.
+            </label>
+          )}
+          <p className="fine-print">
+            Edits return it to draft. If anything changes during review,
+            approval is rejected.
           </p>
-        )}
-        <div className="form-actions">
-          <button className="button secondary" onClick={onClose}>
-            Close
-          </button>
-          <button
-            className="button primary"
-            disabled={!review || review.restricted || !checked || busy}
-            onClick={() => void approve()}
-          >
-            {busy ? "Approving…" : "Approve saved version"}
-          </button>
-        </div>
-      </section>
-    </div>
+        </>
+      )}
+      {error && (
+        <p className="form-error" role="alert">
+          {error}
+        </p>
+      )}
+      <div className="form-actions">
+        <button className="button secondary" disabled={busy} onClick={onClose}>
+          Close
+        </button>
+        <button
+          className="button primary"
+          disabled={!review || review.restricted || !checked || busy}
+          onClick={() => void approve()}
+        >
+          {busy ? "Approving…" : "Approve saved version"}
+        </button>
+      </div>
+    </Modal>
   );
 }

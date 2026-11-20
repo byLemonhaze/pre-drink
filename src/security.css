@@ -239,17 +239,6 @@ form textarea {
   line-height: 1.9;
   max-width: 410px;
 }
-.modal-backdrop {
-  position: fixed;
-  inset: 0;
-  background: var(--raised);
-  backdrop-filter: blur(6px);
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 25px;
-}
 .editor-modal {
   position: relative;
   background: var(--canvas);
@@ -517,7 +506,15 @@ form textarea {
 .empty-layer {
   color: var(--muted);
 }
-.modal-backdrop {
+dialog.editor-modal {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  color: var(--text);
+  max-width: calc(100vw - 50px);
+  max-height: calc(100dvh - 50px);
+}
+dialog.editor-modal::backdrop {
   background: #0009;
   backdrop-filter: blur(4px);
 }
