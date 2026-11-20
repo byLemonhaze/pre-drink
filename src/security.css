@@ -588,3 +588,50 @@ form textarea {
   font-size: 10px;
   white-space: normal;
 }
+
+.maintenance-card {
+  margin-top: 20px;
+}
+.maintenance-card > label,
+.maintenance-card form label {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 14px;
+  font-size: 12px;
+}
+.maintenance-card form {
+  display: grid;
+  gap: 14px;
+}
+.maintenance-notice {
+  overflow-wrap: anywhere;
+  padding: 14px;
+  border: 1px solid var(--line);
+}
+.restore-disclosure {
+  margin-top: 24px;
+  font-size: 13px;
+}
+.restore-disclosure > summary {
+  cursor: pointer;
+  color: var(--accent);
+}
+.restore-disclosure .settings-card {
+  margin-top: 16px;
+  padding: 18px;
+}
+.vault-gate {
+  overflow-y: auto;
+  align-items: safe center;
+}
+.archive-removal-row {
+  padding: 10px 24px;
+  border-bottom: 1px solid var(--line);
+}
+.archive-removal .editor-modal h2 {
+  overflow-wrap: anywhere;
+}
+.vault-gate {
+  height: 100vh;
+  min-height: 0;
+}

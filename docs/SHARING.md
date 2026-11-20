@@ -29,4 +29,4 @@ This selection has no effect on **Agent access**. Existing MCP grants can query 
 
 ## Current limits
 
-No export presets, automatic instruction-file installation, per-project MCP grants or raw-chat selection. Native clipboard support is macOS-only. In-app restore/password change remain separate lifecycle work. Automated and native evidence is recorded in [VALIDATION](VALIDATION.md).
+No export presets, automatic instruction-file installation, per-project MCP grants or raw-chat selection. Native clipboard support is macOS-only. In-app restore/password change are separate reviewed lifecycle operations that invalidate this session’s previews. Automated and native evidence is recorded in [VALIDATION](VALIDATION.md).

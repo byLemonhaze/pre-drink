@@ -65,7 +65,7 @@ The repository contains source, generic product documents and synthetic fixtures
 
 ## Acceptance and release status
 
-Implemented: encrypted persistent storage, ChatGPT import/search, memory CRUD, curated briefs, selected Markdown preview/copy/file export, source-aware privacy, encrypted backups, authenticated local MCP and lock lifecycle. Automated checks use synthetic fixtures; an earlier native curation flow was exercised. The current separate-review and flag-recheck screens have basic synthetic native-flow evidence; full failure, lifecycle, representative-export and installed-client checks remain open.
+Implemented: encrypted persistent storage, ChatGPT import/search, memory CRUD, curated briefs, selected Markdown preview/copy/file export, source-aware privacy, encrypted backups, reviewed in-app restore/password change, conversation deletion/snapshot cleanup, authenticated local MCP and lock lifecycle. Automated checks use synthetic fixtures; an earlier native curation flow was exercised. The current separate-review and flag-recheck screens have basic synthetic native-flow evidence; full failure, lifecycle, representative-export and installed-client checks remain open.
 
 Public-release gates remain: representative real export validation, large-library behavior, physical drag-and-drop, individual client setup, independent security review, Developer ID signing and notarization. See the roadmap and review guide. “Real implementation” does not imply these gates have already passed.
 
@@ -78,7 +78,7 @@ The agreed work ahead, dependencies, evidence requirements and owner actions are
 - Per-brief/project client permissions and reusable export presets.
 - Superseded decisions, revision history, contradictions and stale-memory review.
 - Local drafting assistance with approval, never silent extraction.
-- In-app restore, password rotation, and carefully specified recovery options.
+- Guided retained-generation cleanup and broader recovery/filesystem verification.
 
 No cloud sync, semantic/embedding search, automatic fact extraction, Gemini, mobile, live capture, or team features in the current scope.
 
@@ -91,3 +91,9 @@ A simple landing page explains the three layers, privacy boundaries and supporte
 The Share context screen assembles an explicit selection of memories and briefs, shows the entire outgoing Markdown and requires a review confirmation before copy or file save. Restricted/draft/source-blocked items are excluded and explained locally. Delivery uses the same backend assembly and revalidates the reviewed saved/source versions and unlock session. It exports no raw-chat metadata or automatic source excerpts. The owner chooses any subsequent destination app themselves. See [SHARING](SHARING.md).
 
 This creates plaintext outside the vault; clipboard history, synced folders and receiving products may retain it. A live MCP grant is broader than a selected export and is managed separately. Changing imported source text/role now returns derived memories to draft and blocks dependent briefs until reviewed again.
+
+## Vault lifecycle
+
+Restore is available while locked or unlocked and does not require access to the old vault password. It inspects a standalone encrypted backup, shows its counts and impact, preserves the previous encrypted vault, and switches only after explicit review. Password change similarly verifies the current password and prepares a replacement under the new password. Both remove agent registrations and leave sharing off. Older recovery copies/backups keep their previous passwords and need separate cleanup after verification.
+
+Conversation deletion removes the archive record, its text/search entries and raw snapshots. Derived memories remain as blocked drafts with missing-source markers; briefs cannot silently share that deleted evidence. Snapshot retention is a separate explicit cleanup of older raw JSON versions, preserving the latest imported raw version and all message branches. No deletion claims secure erasure of independent copies. See RECOVERY and SECURITY.

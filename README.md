@@ -62,13 +62,17 @@ The file and clipboard are plaintext outside vault encryption. Nothing is sent t
 
 If a newer import changes a source message's text or role, its linked memories return to draft and dependent briefs require source review again. An unchanged reimport preserves approvals.
 
+## Delete archive material deliberately
+
+The conversation viewer offers **Delete conversation…**, with an impact preview and typed confirmation. Deletion removes messages, raw snapshots and search entries; source-linked memories remain blocked drafts and dependent briefs stay blocked. **Vault settings → Archive snapshot retention** separately removes older raw JSON copies while retaining the current raw version and all message branches. These actions do not erase independent backups, old vault generations or original ZIPs.
+
 ## Encryption, backup, and agents
 
-Database: `~/Library/Application Support/com.predrink.vault/vault.enc.sqlite3`. SQLCipher 4.20 encrypts archive, memory, briefs, search index, and database journal pages. Password keys use Argon2id. Read [security design and limits](docs/SECURITY.md).
+Initial database: `~/Library/Application Support/com.predrink.vault/vault.enc.sqlite3`. After restore/password change, `active-vault.json` selects a private generation folder under the same app directory. Build details show the active path. Do not downgrade to a build that ignores this selection. SQLCipher 4.20 encrypts archive, memory, briefs, search index, and database journal pages. Password keys use Argon2id. Read [security design and limits](docs/SECURITY.md).
 
 The app locks manually, after 15 minutes without owner activity, on macOS sleep/display sleep/session deactivation, and after a detected watchdog pause. Locking closes the database, hides the library, and disables sharing. Agent requests do not keep it unlocked.
 
-**Settings → Save encrypted backup** creates a separately encrypted and verified copy. Restore is currently manual: follow [recovery instructions](docs/RECOVERY.md), preserving your current vault first.
+**Vault settings → Encrypted backup** creates a separately encrypted and verified copy. **Restore or change password** prepares a verified replacement, shows its impact and preserves the previous encrypted vault before switching. Restore is also available from the lock screen. Both operations remove agent registrations and leave sharing off. Old backups/recovery copies retain their old passwords; follow [recovery instructions](docs/RECOVERY.md).
 
 **Agent access** authorizes named clients with individual revocable credentials. Clients receive approved memory/briefs by default; raw-chat search requires additional permission. The app must remain open, unlocked, and sharing enabled. No network port is opened. An authorized cloud agent may send received context to its model provider. See [MCP setup and tools](docs/MCP.md).
 

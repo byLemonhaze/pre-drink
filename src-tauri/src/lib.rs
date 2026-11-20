@@ -23,3 +23,7 @@ pub use desktop::run;
 
 #[cfg(all(feature = "desktop", target_os = "macos"))]
 mod mac_lock;
+
+pub mod lifecycle;
+
+pub mod retention;

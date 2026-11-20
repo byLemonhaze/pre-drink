@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { GlassWater, LockKeyhole, ShieldCheck } from "lucide-react";
 import App from "./App";
+import VaultMaintenance from "./VaultMaintenance";
 import BuildInfo, { type VaultIdentity } from "./BuildInfo";
 import { listen } from "@tauri-apps/api/event";
 
@@ -19,6 +20,7 @@ export default function VaultGate() {
   const [removeLegacy, setRemoveLegacy] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const generation = useRef(0);
   const lastTouch = useRef(0);
   const refresh = useCallback(async () => {
@@ -27,10 +29,10 @@ export default function VaultGate() {
     try {
       const next = await invoke<Status>("vault_status");
       if (current === generation.current) setStatus(next);
-    } catch {
+    } catch (e) {
       if (current === generation.current) {
         setStatus(null);
-        setError("Could not reach your vault. Reopen Pre-Drink.");
+        setError(String(e));
       }
     }
   }, []);
@@ -112,10 +114,19 @@ export default function VaultGate() {
       setBusy(false);
     }
   }
+  function changed(message: string) {
+    generation.current++;
+    setError("");
+    setNotice(message);
+    setPassword("");
+    setConfirm("");
+    void refresh();
+  }
   if (status?.unlocked)
     return (
       <App
         onLock={() => void lock()}
+        onVaultChanged={changed}
         sharing={status.sharing}
         identity={status}
       />
@@ -137,6 +148,11 @@ export default function VaultGate() {
             ? "Create your encrypted vault with a long, unique password. Only you can unlock it."
             : "Unlock your archive, memory, and curated briefs."}
         </p>
+        {notice && (
+          <p className="maintenance-notice" role="status">
+            {notice}
+          </p>
+        )}
         <form onSubmit={unlock}>
           <label>
             Vault password
@@ -215,6 +231,12 @@ export default function VaultGate() {
             : "Your password stays on this Mac. Locking also stops agent access. There is no password reset."}
         </p>
         {status && <BuildInfo identity={status} />}
+        {status && isTauri() && (
+          <details className="restore-disclosure">
+            <summary>Restore from an encrypted backup</summary>
+            <VaultMaintenance locked onChanged={changed} />
+          </details>
+        )}
         {!isTauri() && (
           <p className="fine-print">
             Interface preview. Open the Mac app to create or unlock a vault.

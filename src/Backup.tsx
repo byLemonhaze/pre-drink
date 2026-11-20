@@ -73,9 +73,9 @@ export default function Backup() {
       </form>
       {message && <p role="status">{message}</p>}
       <p className="fine-print">
-        Backups also retain client registrations. Revoke old clients after a
-        restore. Keep backups on a separate drive. See the included recovery
-        guide before replacing an existing vault.
+        Backups retain client registrations. In-app restore removes those
+        registrations and leaves sharing off. Keep backups on a separate drive.
+        Use the restore review below or follow the recovery guide.
       </p>
     </section>
   );

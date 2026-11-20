@@ -2,17 +2,17 @@
 
 Verified locally on 2026-11-19 using synthetic data only. No user export, vault, private screenshot, account credential or raw session log is included here.
 
-| Check                                      | Result                                                                                                                                    |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend TypeScript + production bundle    | Passed                                                                                                                                    |
-| Prettier and Rust formatting               | Passed                                                                                                                                    |
-| Cargo tests (locked dependencies)          | 50 passed: 15 importer/vault, 19 security, 9 unit, 5 sharing, 1 recovery, 1 actual stdio MCP; plus one explicitly invoked scale benchmark |
-| Clippy, all targets, warnings denied       | Passed                                                                                                                                    |
-| Optimized Apple Silicon app bundle         | Previously built at a31608c, approximately 19.8 MiB; this review-fix pass builds a debug app                                              |
-| Signing inspection                         | Local linker/ad-hoc signature only; no Developer ID identity, sealed public-distribution signature or notarization ticket                 |
-| Native synthetic workflow                  | Vault creation, picker import, source-linked memory approval, brief approval, context preview and manual lock verified                    |
-| Landing page                               | Desktop and 375/320-pixel layouts reviewed; no horizontal overflow after fix; FAQ and download-status navigation verified                 |
-| Repository guard and staged-content review | Source/documents/synthetic fixtures only; ignored data and build outputs excluded                                                         |
+| Check                                      | Result                                                                                                                                                                                      |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frontend TypeScript + production bundle    | Passed                                                                                                                                                                                      |
+| Prettier and Rust formatting               | Passed                                                                                                                                                                                      |
+| Cargo tests (locked dependencies)          | 62 passing cases across full-suite and targeted runs: 13 unit, 15 importer/vault, 19 security, 5 sharing, 5 lifecycle, 3 retention, 1 recovery, 1 stdio MCP; prior explicit scale benchmark |
+| Clippy, all targets, warnings denied       | Passed                                                                                                                                                                                      |
+| Optimized Apple Silicon app bundle         | Previously built at a31608c, approximately 19.8 MiB; this review-fix pass builds a debug app                                                                                                |
+| Signing inspection                         | Local linker/ad-hoc signature only; no Developer ID identity, sealed public-distribution signature or notarization ticket                                                                   |
+| Native synthetic workflow                  | Vault creation, picker import, source-linked memory approval, brief approval, context preview and manual lock verified                                                                      |
+| Landing page                               | Desktop and 375/320-pixel layouts reviewed; no horizontal overflow after fix; FAQ and download-status navigation verified                                                                   |
+| Repository guard and staged-content review | Source/documents/synthetic fixtures only; ignored data and build outputs excluded                                                                                                           |
 
 ## Dependency advisories
 
@@ -54,7 +54,7 @@ Initial launch/tool access was slow and first showed an empty window; it subsequ
 
 Local full suite: **50 passed**, plus one explicit ignored-by-default benchmark. Frontend production build, Prettier/Rust formatting, Clippy all targets with warnings denied and a separate native debug bundle passed. Tests cover exact selected payload/file equality and Unicode byte counts; exclusion of private/sensitive/draft/missing items; omission of provenance; changed source reimport and source privacy; edit/delete/session/idle staleness before side effects; zero eligible results; duplicate/oversize selections; file collision/symlink/invalid destination and propagated delivery errors. Batch-index rollback/retry and duplicate-version handling also pass.
 
-The destructive recovery case removes only a disposable generated vault, restores its independently encrypted backup and compares all logical tables (including provenance, snapshots, clients and FTS), correct-password behavior, source restrictions, sharing-off, revocation and permissions. It validates the documented manual recovery path; in-app restoration and password rotation remain unimplemented.
+The destructive recovery case removes only a disposable generated vault, restores its independently encrypted backup and compares all logical tables (including provenance, snapshots, clients and FTS), correct-password behavior, source restrictions, sharing-off, revocation and permissions. At that batch it validated the documented manual recovery path; later lifecycle implementation and evidence are recorded below.
 
 Native macOS debug verification with isolated fictional storage: approved-note/blocked-brief selection, complete preview, owner-only exclusion explanation, clipboard export and matching paste into an unsaved editor, native Markdown save, zero-eligible disabled actions, selection invalidation and manual lock. The saved native export independently matched all 207 preview bytes and mode 0600; the blocked brief and its exclusion text were absent. Remaining native cases include actual clipboard denial, disk-full, dialog cancellation, concurrent edits/lock while a dialog is open and fuller keyboard/resize coverage. Backend staleness/failure tests do not replace those UI checks.
 
@@ -76,3 +76,19 @@ Command: `cargo test --manifest-path src-tauri/Cargo.toml --locked --test benchm
 This measures normalized import/index/search, not ZIP decompression/parsing, UI rendering, long/media-heavy chats, cold-start latency, cancellation or all hardware. It is a recorded observation, not a general performance guarantee. The ordinary suite skips the benchmark to avoid treating timing as a flaky CI assertion.
 
 Remote CI at `b2ce46a` passed ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44645007179)). The current batch's remote result is pending until pushed and run; local results above are separate evidence.
+
+## Lifecycle implementation batch
+
+Local validation: **61 passed in the full suite**, followed by passing affected lifecycle/retention suites and one additional missing-selector regression (**62 cases total, 13 unit cases**), including 5 lifecycle and 3 archive-retention cases alongside all previous importer/security/sharing/recovery/MCP cases. Frontend production build, Clippy all targets with warnings denied and a separate native debug bundle pass. The earlier scale benchmark is unchanged historical evidence, not a newly run benchmark for this batch.
+
+New automated evidence: restore preserves the chosen backup byte-for-byte and retains the previous encrypted vault; registration removal; correct old/new password behavior; repeated rotations; locked/empty-store recovery; private directory/file modes; edit/lock/idle/cancel/wrong-token/wrong-password rejection; malformed/newer-schema/active-journal refusal; corrupt/missing selector fails closed after layout publication; tampered preparation rejection; unpublished-stage restart model; unwritable publication folder preserves the original. Deletion tests cover exact impact counts, missing-source blocking after reimport, removal from FTS, current-snapshot retention, stale confirmation and transactional rollback after a synthetic deletion failure.
+
+Limitations: the interruption case models unpublished state and restart, not an actual power cut. Full disk-full injection at each filesystem boundary, full native password-change entry/submission, process interruption during every publication boundary, automatic retained-generation cleanup and additional backup filesystems remain open. Password changes retain older encrypted copies under old passwords and disclose that fact; they do not claim secure erasure.
+
+Remote CI for `be16955` passed ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44652417525)). This lifecycle batch still needs its own remote run after commit. No personal vault or export was used for these checks.
+
+### Native lifecycle check
+
+A separately named macOS debug app with a fresh fictional vault verified the locked-screen restore path: native backup picker, password entry for an existing backup, integrity review showing 1 conversation/1 message/1 memory/0 briefs, explicit consent, successful replacement, unlock with the backup password, restored archive content, sharing off, new active-generation location in Settings, and manual lock. Conversation deletion preview showed 1 message/2 raw snapshots; snapshot cleanup preview showed 1 older snapshot. Both destructive previews were cancelled, leaving the library intact. Backend tests, not native deletion submission, establish deletion execution/rollback. Full native password-change entry/submission still needs owner-driven verification. A small subsequent UI fix clears a stale unlock error after successful replacement; it is covered by frontend compilation, not a repeated native flow.
+
+Cold-start remains a release issue: the separate debug app initially showed an empty window and later loaded after restarting and waiting. No cause or reliable timing was established. Successful recovery after loading does not resolve startup reliability. No personal vault, personal export or personal password was used.

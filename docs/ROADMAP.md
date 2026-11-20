@@ -12,7 +12,7 @@ This is a working private pre-release. The current review UI, representative rea
 
 1. **M1, in progress:** dependable ChatGPT workflow; contextual sensitivity detection and safe reclassification; build/vault identity; native approval, isolated upgrade, real export and MCP checks.
 2. **M2, implemented; basic native flow verified:** make exact sharing preview the centerpiece; selective copy and Markdown export with privacy/staleness enforcement.
-3. **M3, early verification started:** in-app restore, password change, conversation deletion/snapshot retention; disposable wipe-and-restore test now passes; lifecycle UI remains planned.
+3. **M3, implemented; validation in progress:** reviewed in-app restore/password change, preserved encrypted generations, client reset, conversation deletion and explicit raw-snapshot cleanup. Disposable recovery and lifecycle regression suites pass; native and durability limits remain documented.
 4. **M4, planned:** Claude first, then Grok; synthetic fixtures by provider and observed format; cross-provider provenance/privacy verification.
 5. **M5, planned:** signed/notarized release, clean installation test, fictional-data demo, strong README and owner-approved public launch.
 

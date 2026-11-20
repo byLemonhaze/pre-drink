@@ -25,6 +25,7 @@ pub struct VaultStatus {
 
 pub struct Session {
     pub vault: Option<Vault>,
+    pub(crate) pending_replacement: Option<crate::lifecycle::PendingReplacement>,
     pub directory: PathBuf,
     pub isolated_storage: bool,
     pub sharing: bool,
@@ -37,6 +38,7 @@ impl Session {
     pub fn new(directory: PathBuf) -> Self {
         Self {
             vault: None,
+            pending_replacement: None,
             directory,
             isolated_storage: false,
             sharing: false,
@@ -45,20 +47,21 @@ impl Session {
             on_lock: None,
         }
     }
-    pub fn path(&self) -> PathBuf {
-        self.directory.join("vault.enc.sqlite3")
+    pub fn path(&self) -> Result<PathBuf, String> {
+        crate::lifecycle::active_path(&self.directory)
     }
     pub fn legacy_path(&self) -> PathBuf {
         self.directory.join("vault.sqlite3")
     }
-    pub fn status(&mut self) -> VaultStatus {
+    pub fn status(&mut self) -> Result<VaultStatus, String> {
         self.expire();
-        VaultStatus {
+        let path = self.path()?;
+        Ok(VaultStatus {
             unlocked: self.vault.is_some(),
-            exists: self.path().exists(),
+            exists: path.exists(),
             legacy_exists: self.legacy_path().exists(),
             sharing: self.sharing,
-            database_path: self.path().to_string_lossy().into_owned(),
+            database_path: path.to_string_lossy().into_owned(),
             app_version: env!("CARGO_PKG_VERSION"),
             build_revision: env!("PRE_DRINK_BUILD_REVISION"),
             built_at: env!("PRE_DRINK_BUILT_AT"),
@@ -68,10 +71,12 @@ impl Session {
                 "Release build"
             },
             isolated_storage: self.isolated_storage,
-        }
+        })
     }
     pub fn lock(&mut self) {
-        if self.vault.is_none() && !self.sharing {
+        let prepared = self.pending_replacement.is_some();
+        self.cancel_replacement();
+        if self.vault.is_none() && !self.sharing && !prepared {
             return;
         }
         if let Some(callback) = &self.on_lock {
@@ -116,7 +121,7 @@ impl Session {
         if password.len() > 1024 {
             return Err("Password is too long.".into());
         }
-        let path = self.path();
+        let path = self.path()?;
         let vault = if create {
             if path.exists() {
                 return Err("A vault already exists. Unlock it with its password.".into());

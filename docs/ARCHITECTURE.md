@@ -85,7 +85,7 @@ The bridge uses standard MCP stdio, then an owner-only Unix socket internally. N
 
 ### Backup before convenience
 
-Export a fresh encrypted database, verify it, then publish without overwrite. Existing files are preserved. Restore is currently documented/manual; no hidden cloud recovery or password reset exists. Do not add silent plaintext recovery copies.
+Export a fresh encrypted database, verify it, then publish without overwrite. Existing files are preserved. Restore and password change prepare a separate verified generation, preserve the previous vault, then atomically publish a small active-directory selector. No hidden cloud recovery or password reset exists. Do not add silent plaintext recovery copies.
 
 ## Important failure behavior
 
@@ -104,3 +104,11 @@ Tests and pending validation are documented in AGENT_REVIEW.md. No remote AI pro
 Current rules distinguish structured/labeled phone numbers from bare timestamps and distinguish assigned credentials from general technical discussion. Existing stored restrictions persist until the owner previews and applies a recheck. The backend computes a deterministic content/flag snapshot, revalidates it, updates all classifications in one transaction, preserves manual privacy and provenance, and clears memory/brief approvals when anything changes. The session wrapper disables sharing before applying, including on failure. Reimports retain existing sensitivity so they cannot bypass this review path. No schema or encryption-format change is required.
 
 Build identity (package version, source revision/local-change marker, build time and profile) and storage mode are exposed only to the local owner UI, including the locked screen. Test storage requires the explicit debug-only override; release builds always use ordinary application storage. Displaying a release profile does not claim Developer ID signing or notarization.
+
+## Vault replacement and archive retention
+
+`lifecycle.rs` owns preparation, active-path resolution and publication. Existing installations without a selector keep their root database. Restore copies a standalone encrypted backup into a mode-0700 generated directory; it rejects non-empty source journals and never modifies the chosen backup. Password change authenticates the current password read-only, then uses the encrypted backup path with a fresh salt/new key. Both validate integrity/schema/relationships, remove client registrations, checkpoint/flush, and retain a digest of the prepared bytes. The session stores no password in its prepared state.
+
+Preparation stops sharing and binds the active path, session generation and SQLite connection change counter. Commit rechecks them and the prepared digest, reopens/verifies with the supplied password, flushes the new generation, closes the old session and atomically renames a flushed selector into place. The prior database and matching journals remain where they were. Publication failure before rename retains the original selection; directory-sync failure after rename returns a completed-with-warning result. Malformed selectors and missing generation targets fail closed; a post-publication layout marker also prevents fallback to the old root database if the selector is lost. Normal resolution never chooses an older generation implicitly. Pending copies are discarded on cancel/lock or stale apply where cleanup is possible; abrupt termination can leave unpublished encrypted copies. Older binaries cannot interpret the new layout and must not be used after switching.
+
+`retention.rs` previews deletion under a session-bound change counter. Conversation deletion transactionally removes FTS entries, raw snapshots, messages and conversation/tag links, resets linked memory approval, and retains missing-source markers. Old source IDs cannot silently reattach after reimport. Snapshot cleanup removes only snapshots whose digest differs from the latest imported raw JSON; current JSON, all message branches and curation remain. Neither operation purges external backups or retained vault generations. Both stop live sharing on apply and reject stale reviews.

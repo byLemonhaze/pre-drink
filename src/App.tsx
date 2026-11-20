@@ -36,6 +36,8 @@ import { MemoryEditor, MemoryView } from "./Memory";
 import Briefs from "./Briefs";
 import Agents from "./Agents";
 import Backup from "./Backup";
+import ArchiveRemoval from "./ArchiveRemoval";
+import VaultMaintenance from "./VaultMaintenance";
 import BuildInfo, { type VaultIdentity } from "./BuildInfo";
 import PrivacyRecheck from "./PrivacyRecheck";
 import Sharing from "./Sharing";
@@ -59,10 +61,12 @@ const format = (value: number) => value.toLocaleString();
 
 function App({
   onLock,
+  onVaultChanged,
   sharing,
   identity,
 }: {
   onLock: () => void;
+  onVaultChanged: (message: string) => void;
   sharing: boolean;
   identity: VaultIdentity;
 }) {
@@ -723,6 +727,17 @@ function App({
                           <LockKeyhole size={18} />
                         </button>
                       </div>
+                      <div className="archive-removal-row">
+                        <ArchiveRemoval
+                          key={selectedConversation.id}
+                          conversationId={selectedConversation.id}
+                          onChanged={() => {
+                            setSelected(null);
+                            setMessages([]);
+                            setRevision((n) => n + 1);
+                          }}
+                        />
+                      </div>
                       {(selectedConversation.private ||
                         selectedConversation.sensitive) && (
                         <div className="reader-warning">
@@ -982,6 +997,16 @@ function App({
               <BuildInfo identity={identity} />
             </section>
             <Backup />
+            <section className="settings-card">
+              <h2>Archive snapshot retention</h2>
+              <p>
+                Keep the newest imported raw snapshot for each conversation.
+                Review and remove older raw snapshots explicitly. Retained
+                message branches stay searchable.
+              </p>
+              <ArchiveRemoval onChanged={() => setRevision((n) => n + 1)} />
+            </section>
+            <VaultMaintenance onChanged={onVaultChanged} />
             <section className="settings-card">
               <h2>Security boundaries</h2>
               <p>

@@ -37,7 +37,7 @@ async fn owner_op<T: Send + 'static>(
 }
 #[tauri::command]
 async fn vault_status(store: State<'_, Store>) -> Result<VaultStatus, String> {
-    session_op(store.inner().clone(), |s| Ok(s.status())).await
+    session_op(store.inner().clone(), |s| s.status()).await
 }
 #[tauri::command]
 async fn unlock_vault(
@@ -263,6 +263,52 @@ async fn backup_vault(
 }
 
 #[tauri::command]
+async fn prepare_restore(
+    path: String,
+    password: String,
+    store: State<'_, Store>,
+) -> Result<crate::lifecycle::LifecyclePreview, String> {
+    let password = Zeroizing::new(password);
+    session_op(store.inner().clone(), move |s| {
+        s.prepare_restore(&PathBuf::from(path), &password)
+    })
+    .await
+}
+#[tauri::command]
+async fn prepare_password_change(
+    current_password: String,
+    new_password: String,
+    store: State<'_, Store>,
+) -> Result<crate::lifecycle::LifecyclePreview, String> {
+    let current = Zeroizing::new(current_password);
+    let next = Zeroizing::new(new_password);
+    session_op(store.inner().clone(), move |s| {
+        s.prepare_password_change(&current, &next)
+    })
+    .await
+}
+#[tauri::command]
+async fn apply_replacement(
+    review_id: String,
+    password: String,
+    store: State<'_, Store>,
+) -> Result<crate::lifecycle::LifecycleResult, String> {
+    let password = Zeroizing::new(password);
+    session_op(store.inner().clone(), move |s| {
+        s.apply_replacement(&review_id, &password)
+    })
+    .await
+}
+#[tauri::command]
+async fn cancel_replacement(review_id: String, store: State<'_, Store>) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| {
+        s.cancel_prepared(&review_id);
+        Ok(())
+    })
+    .await
+}
+
+#[tauri::command]
 async fn list_briefs(store: State<'_, Store>) -> Result<Vec<crate::briefs::Brief>, String> {
     owner_op(store.inner().clone(), |v| v.briefs(false, "")).await
 }
@@ -276,6 +322,26 @@ async fn save_brief(
 #[tauri::command]
 async fn delete_brief(id: String, store: State<'_, Store>) -> Result<(), String> {
     owner_op(store.inner().clone(), move |v| v.delete_brief(&id)).await
+}
+
+#[tauri::command]
+async fn preview_removal(
+    input: crate::retention::RemovalInput,
+    store: State<'_, Store>,
+) -> Result<crate::retention::RemovalPreview, String> {
+    session_op(store.inner().clone(), move |s| s.preview_removal(&input)).await
+}
+#[tauri::command]
+async fn apply_removal(
+    input: crate::retention::RemovalInput,
+    review_hash: String,
+    session_generation: u64,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| {
+        s.apply_removal(&input, &review_hash, session_generation)
+    })
+    .await
 }
 
 pub fn run() {
@@ -343,6 +409,12 @@ pub fn run() {
             revoke_client,
             set_sharing,
             backup_vault,
+            prepare_restore,
+            prepare_password_change,
+            apply_replacement,
+            cancel_replacement,
+            preview_removal,
+            apply_removal,
             list_briefs,
             save_brief,
             delete_brief

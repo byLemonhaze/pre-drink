@@ -522,11 +522,11 @@ fn privacy_recheck_disables_sharing_even_if_the_preview_is_stale() {
 fn build_and_storage_identity_are_explicit_without_exposing_passwords() {
     let dir = tempfile::tempdir().unwrap();
     let mut s = Session::new(dir.path().into());
-    let status = s.status();
+    let status = s.status().unwrap();
     assert_eq!(status.app_version, env!("CARGO_PKG_VERSION"));
     assert!(!status.build_revision.is_empty());
     assert!(status.built_at.parse::<u64>().is_ok());
     assert!(!status.isolated_storage);
     s.isolated_storage = true;
-    assert!(s.status().isolated_storage);
+    assert!(s.status().unwrap().isolated_storage);
 }
