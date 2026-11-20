@@ -74,7 +74,7 @@ The app locks manually, after 15 minutes without owner activity, on macOS sleep/
 
 **Vault settings → Encrypted backup** creates a separately encrypted and verified copy. **Restore or change password** prepares a verified replacement, shows its impact and preserves the previous encrypted vault before switching. Restore is also available from the lock screen. Both operations remove agent registrations and leave sharing off. Old backups/recovery copies retain their old passwords; follow [recovery instructions](docs/RECOVERY.md).
 
-**Agent access** authorizes named clients with individual revocable credentials. Clients receive approved memory/briefs by default; raw-chat search requires additional permission. The app must remain open, unlocked, and sharing enabled. No network port is opened. An authorized cloud agent may send received context to its model provider. See [MCP setup and tools](docs/MCP.md).
+**Agent access** authorizes named clients with individual revocable credentials and generates settings for Codex, Grok Build, or other local MCP clients. Clients receive approved memory/briefs by default; raw-chat search requires additional permission. The app must remain open, unlocked, and sharing enabled. No network port is opened. An authorized cloud agent may send received context to its model provider. See [MCP setup and tools](docs/MCP.md).
 
 ## Verification
 

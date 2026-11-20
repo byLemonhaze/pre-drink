@@ -129,3 +129,10 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Passed:** all nine affected lifecycle/recovery cases, all-target Clippy, formatting and the repository guard; production frontend and isolated debug bundle build. `0b169f8` has passing remote checks.
 - **Native limit:** computer-control attachment stalled and returned an expired-continuation error. The isolated app reported ready in 1,262 ms, but no new native connection/recovery workflow was verified. The ordinary vault was not unlocked or modified; the isolated process was stopped. No personal content or raw logs enter Git.
 - **Next:** native client setup/restart, owner-entered password change, representative isolated export/upgrade evidence and physical file drop. Apple enrollment stays last.
+
+## Client-specific setup settings
+
+- **Implemented:** Agent access offers Codex/Grok Build TOML and generic JSON, with destination/merge instructions and a clear distinction between hiding settings and revoking access. The generated result retains its own format label even if the next client selection changes.
+- **Safety:** registration and serialization are atomic; unsupported paths leave no credential behind. Tokens stay in environment entries, never arguments. No client files, sharing scope, app privacy rules or default sharing state are changed automatically.
+- **Passed:** 36 affected Rust cases, frontend/native debug builds, formatting, the repository guard, all-target Clippy, and read-only installed-client configuration checks. Codex read exact command/arguments/environment; Grok discovered the expected stdio executable. No model invocation or personal content was needed.
+- **Remaining:** native connection-screen walkthrough and full app restart remain open after the earlier control-tool failure. Signing/enrollment and public release remain deferred. `afeb3bf` passed GitHub verification.

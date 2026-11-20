@@ -6,12 +6,37 @@ interface Client {
   name: string;
   allow_chats: boolean;
 }
+type ClientFormat = "codex" | "grok" | "generic";
+const destinations: Record<
+  ClientFormat,
+  { label: string; instructions: string }
+> = {
+  codex: {
+    label: "Codex",
+    instructions:
+      "Add these Pre-Drink sections to your private ~/.codex/config.toml (or your custom CODEX_HOME/config.toml). Keep your other settings and replace any existing Pre-Drink sections. Restart the client to load the change.",
+  },
+  grok: {
+    label: "Grok Build",
+    instructions:
+      "Add these Pre-Drink sections to your private ~/.grok/config.toml (or your custom GROK_HOME/config.toml). Keep your other settings and replace any existing Pre-Drink sections. Restart Grok Build to load the change. This is for the local coding client, not Grok web or Grok Bot.",
+  },
+  generic: {
+    label: "Other client (JSON)",
+    instructions:
+      "Merge the pre-drink entry into your client's private mcpServers settings, keeping any other servers. Your client must support local stdio connections. Follow its setup instructions and reload the connection.",
+  },
+};
 export default function Agents({ sharing }: { sharing: boolean }) {
   const [clients, setClients] = useState<Client[]>([]);
   const [name, setName] = useState("");
   const [allowChats, setAllowChats] = useState(false);
   const [consent, setConsent] = useState(false);
-  const [config, setConfig] = useState("");
+  const [format, setFormat] = useState<ClientFormat>("codex");
+  const [config, setConfig] = useState<{
+    format: ClientFormat;
+    text: string;
+  } | null>(null);
   const [error, setError] = useState("");
   const [topic, setTopic] = useState("");
   const [pack, setPack] = useState("");
@@ -25,11 +50,17 @@ export default function Agents({ sharing }: { sharing: boolean }) {
   }, []);
   async function register(e: React.FormEvent) {
     e.preventDefault();
+    if (busy || !consent) return;
+    setConfig(null);
     setBusy(true);
     setError("");
     try {
-      const result = await invoke("create_client", { name, allowChats });
-      setConfig(JSON.stringify(result, null, 2));
+      const text = await invoke<string>("create_client", {
+        name,
+        allowChats,
+        format,
+      });
+      setConfig({ format, text });
       setName("");
       setConsent(false);
       await refresh();
@@ -49,7 +80,7 @@ export default function Agents({ sharing }: { sharing: boolean }) {
   async function revoke(id: string) {
     try {
       await invoke("revoke_client", { id });
-      setConfig("");
+      setConfig(null);
       await refresh();
     } catch (e) {
       setError(String(e));
@@ -102,9 +133,27 @@ export default function Agents({ sharing }: { sharing: boolean }) {
         <h2>Authorize a client</h2>
         <form onSubmit={register}>
           <label>
+            Agent application
+            <select
+              value={format}
+              disabled={busy}
+              onChange={(e) => {
+                setFormat(e.target.value as ClientFormat);
+                setConsent(false);
+              }}
+            >
+              {Object.entries(destinations).map(([value, destination]) => (
+                <option key={value} value={value}>
+                  {destination.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
             Client name
             <input
               value={name}
+              disabled={busy}
               maxLength={80}
               onChange={(e) => setName(e.target.value)}
               placeholder="For example, my coding agent"
@@ -115,7 +164,11 @@ export default function Agents({ sharing }: { sharing: boolean }) {
             <input
               type="checkbox"
               checked={allowChats}
-              onChange={(e) => setAllowChats(e.target.checked)}
+              disabled={busy}
+              onChange={(e) => {
+                setAllowChats(e.target.checked);
+                setConsent(false);
+              }}
             />
             Also allow searching safe raw conversations and marking them private
           </label>
@@ -128,6 +181,7 @@ export default function Agents({ sharing }: { sharing: boolean }) {
             <input
               type="checkbox"
               checked={consent}
+              disabled={busy}
               onChange={(e) => setConsent(e.target.checked)}
               required
             />
@@ -140,21 +194,25 @@ export default function Agents({ sharing }: { sharing: boolean }) {
         </form>
         {config && (
           <div className="config-box">
-            <strong>
-              Save this configuration in your agent’s MCP settings.
-            </strong>
+            <strong>{destinations[config.format].label} configuration</strong>
+            <p>{destinations[config.format].instructions}</p>
             <p>
               The token grants access to this scope while sharing is on. Treat
-              it as a secret; it is shown only now.
+              it as a secret; it is shown only now. Keep the settings file
+              private to your Mac account and outside project repositories.
+              Hiding this configuration does not revoke access.
             </p>
             <textarea
               rows={13}
               readOnly
-              value={config}
+              value={config.text}
               aria-label="MCP client configuration"
               spellCheck={false}
             />
-            <button className="button secondary" onClick={() => setConfig("")}>
+            <button
+              className="button secondary"
+              onClick={() => setConfig(null)}
+            >
               Hide configuration
             </button>
           </div>
@@ -172,6 +230,7 @@ export default function Agents({ sharing }: { sharing: boolean }) {
           </div>
           <button
             className="button secondary"
+            disabled={busy}
             onClick={() => void revoke(client.id)}
           >
             Revoke access

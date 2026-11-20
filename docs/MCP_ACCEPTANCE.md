@@ -20,6 +20,12 @@ The Grok runs used existing account authentication, an empty working folder, iso
 
 The earlier authentication block was resolved when the owner completed `grok login --oauth`. Initialization then advertised `cached_token` and `grok.com`, and cached authentication succeeded. The [Grok ACP guide](https://docs.x.ai/build/cli/headless-scripting) describes that flow; inspect the advertised methods for the installed client. One local test-driver attempt redundantly unlocked an already-unlocked restarted fixture and stopped before making its final MCP call. Correcting that sequence and rerunning the single restart case passed; no product change was required.
 
+## Generated settings acceptance
+
+The app now generates Codex/Grok Build TOML and generic JSON directly. Unit tests parse each format and compare exact executable/socket paths (including quotes, spaces, backslashes and Unicode), argument separation and credential values. Issued credentials obey memory-only versus chat scope and revocation in every format; unsupported paths roll back registration.
+
+Read-only checks against installed Codex CLI 0.169.1 loaded generated TOML and confirmed the exact command, arguments and environment. Grok Build 1.0.41 discovered its generated stdio entry and exact executable path; its inspection output does not expose all environment values, so those are validated by the parser tests. Both checks used fresh temporary homes and an empty working directory; no model call or persistent owner setting changed. This does not close native connection-screen verification.
+
 ## Reproducible backend fixture
 
 When desktop automation is unavailable, a developer-only example can host the actual encrypted vault, broker and policy code with invented content:

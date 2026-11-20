@@ -1,5 +1,6 @@
 use crate::{
-    agents::{AgentClient, NewClient},
+    agents::AgentClient,
+    client_config::{create_configuration, ClientFormat},
     db::Vault,
     import::read_chatgpt_zip,
     memory::{Memory, MemoryInput},
@@ -227,13 +228,25 @@ async fn list_clients(store: State<'_, Store>) -> Result<Vec<AgentClient>, Strin
 async fn create_client(
     name: String,
     allow_chats: bool,
+    format: ClientFormat,
     store: State<'_, Store>,
-) -> Result<serde_json::Value, String> {
-    session_op(store.inner().clone(),move|s|{
-        let NewClient{client,token}=s.access()?.create_client(&name,allow_chats)?;
-        let config=serde_json::json!({"mcpServers":{"pre-drink":{"command":std::env::current_exe().map_err(|e|e.to_string())?,"args":["--mcp"],"env":{"PRE_DRINK_SOCKET":s.directory.join("agents.sock"),"PRE_DRINK_CLIENT_ID":client.id,"PRE_DRINK_CLIENT_TOKEN":token}}}});
-        s.touch();Ok(config)
-    }).await
+) -> Result<String, String> {
+    session_op(store.inner().clone(), move |s| {
+        let executable =
+            std::env::current_exe().map_err(|_| "Cannot locate the Pre-Drink executable.")?;
+        let socket = s.directory.join("agents.sock");
+        let config = create_configuration(
+            s.access()?,
+            &name,
+            allow_chats,
+            format,
+            &executable,
+            &socket,
+        )?;
+        s.touch();
+        Ok(config)
+    })
+    .await
 }
 #[tauri::command]
 async fn revoke_client(id: String, store: State<'_, Store>) -> Result<(), String> {

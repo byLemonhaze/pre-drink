@@ -11,6 +11,7 @@ pub mod review;
 pub mod agents;
 #[cfg(unix)]
 pub mod broker;
+pub mod client_config;
 #[cfg(unix)]
 pub mod mcp;
 pub mod session;

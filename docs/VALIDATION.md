@@ -144,3 +144,13 @@ Damage checks flip bytes in the first and a later encrypted page and truncate a 
 The production frontend and separate debug bundle build successfully from `0b169f8`; an isolated fictional launch reported interface-ready at 1,262 ms. Native computer control then failed to attach with an expired-continuation error after a long tool stall. No connection-screen, password-change or additional native-restore result is claimed. The ordinary installed vault stayed locked and was not used. The isolated process was stopped. Native controls and owner-entered password-change submission remain open.
 
 GitHub verification of `0b169f8` passed before this batch. This batch changes tests/documentation only; it does not add a provider, alter encryption or claim release readiness.
+
+## Client-specific configuration generation (2026-11-20)
+
+Agent access now selects Codex, Grok Build or generic JSON before registration. The backend serializes the correct local stdio settings, with credentials only in environment entries. Configuration failure rolls back registration. Invalid/control-character paths are refused, and Grok paths containing environment-substitution syntax are rejected rather than silently reinterpreted. Scope and consent remain explicit; no settings file is edited and sharing is not enabled automatically.
+
+All **36 affected Rust checks** pass: 16 unit cases (three new configuration cases), 19 security cases and the actual stdio MCP integration. New checks cover round-trip spaces/quotes/backslashes/Unicode, exact keys and argument boundaries, both scopes and revocation for every format, invalid-path rollback and unknown-format rejection. The first socket attempt was blocked by the execution environment; the permitted local-socket run passed. Frontend production build, native debug app bundle, formatting, tracked-file guard and all-target Clippy with warnings denied pass. TOML 1.2.1 was promoted from an existing locked transitive dependency; no dependency version was changed.
+
+Read-only installed-client checks used production-generated fictional settings in temporary configuration homes. Codex CLI 0.169.1 returned the exact stdio command, arguments and environment. Grok Build 1.0.41 discovered the generated entry with the exact executable path; its inspection output does not expose all environment values, which remain covered by parser tests. No model calls, persistent account configuration edits, personal vaults or real export data were involved. Temporary settings were removed. New native controls are compiled but not yet verified through the Mac interface.
+
+The preceding recovery commit `afeb3bf` passed its full GitHub workflow. Consult the configuration change's own run for its remote result.

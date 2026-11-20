@@ -68,3 +68,7 @@ Read `src-tauri/tests/fixtures/README.md` and the ChatGPT manifest. The golden e
 ## Latest recovery evidence
 
 `tests/recovery.rs` now compares destructive manual recovery with app-managed reviewed restore after total synthetic vault loss, including restart from the selector, complete logical-table comparison and deliberate client-registration removal. `tests/lifecycle.rs` also rejects encrypted first/later-page corruption and partial-page truncation without changing the original, verifies retry, and restores from the reviewed private copy after its source disappears. Nine affected cases pass. These tests do not simulate physical power loss or every disk-full boundary. Native automation attachment failed in the latest isolated attempt; no new screen-level evidence should be inferred from it.
+
+## Client configuration review focus
+
+Review `client_config.rs`, `desktop::create_client`, and `Agents.tsx` together: selected format must match the returned configuration and destination instructions, failed formatting must roll back registration, paths must survive serialization without becoming shell expressions, and tokens must remain environment entries. Grok expands `${...}` in settings, so affected paths are rejected. Settings are shown locally and never written into another agent's files. Verify the native selector, consent reset, one-time display and hide/revoke distinction; compiled/read-only parser evidence does not replace that walkthrough.
