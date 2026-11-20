@@ -48,7 +48,9 @@ The first incomplete handoff did not establish a result; this later verification
 
 Generate local fictional ZIPs with `scripts/create_import_fixtures.py --output <new temporary folder>`. Drag the valid ZIP from Finder into the unlocked isolated app, verify imported counts and omissions, and repeat for idempotence. A picker import or programmatic backend call does not count as physical drag-and-drop evidence.
 
-**Result in this session: inconclusive.** Two computer-control attempts to drag the selected valid ZIP from Finder into the app produced no import or count change. The control gesture was not established as a successful cross-window file drop; this is not a passed gate or a diagnosed app defect. The temporary Finder window was closed.
+**Result after owner-assisted drops on 2026-11-20: passed.** The owner physically dragged the selected fictional ZIP from Finder into the isolated app. Native inspection reports 2 new conversations, 0 refreshed and 6 text messages processed; totals change from 2 conversations/2 messages to 4 conversations/8 messages. Import notes disclose 7 hidden, tool, system or non-text messages omitted from the reader. The reading-nook conversation displays its current reply and retains alternate replies/history; searching for an alternate reply term returns that conversation. The pre-existing sensitive conversation remains hidden and sharing stays off.
+
+The owner dropped the same ZIP a second time. Native inspection reports **0 new, 2 refreshed, 6 text messages processed**, with totals unchanged at **4 conversations/8 messages**. No duplicate conversations or messages were added. The app was left locked. These owner gestures and observed results supersede the earlier inconclusive automated drag attempts. This checks a valid fictional ZIP and repeat import; it does not establish physical-drop behavior for every malformed/oversized export or representative personal exports.
 
 ## Finish
 

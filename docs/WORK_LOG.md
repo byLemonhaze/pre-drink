@@ -158,3 +158,9 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 - **Passed:** owner submitted the native change; independent keyboard-based unlock checks reject the old fictional phrase and accept the new one. The active generation changed, prior recovery generation is listed, archive/memory/brief and sensitivity remain, and sharing is off.
 - **Limit:** clients were already revoked before rotation, so this run does not establish removal of populated registrations. Physical file drop and broader failure/representative-data checks remain open.
 - **Finish:** left the separate fictional app locked. Documentation only; no personal data or product-code change. Supersedes the earlier incomplete-handoff status.
+
+## Owner-assisted physical drop and repeat import
+
+- **Passed:** first Finder drop adds 2 fictional conversations/6 messages and reports 7 omitted hidden/tool/system/non-text messages. Native branch display and search confirm retained alternate text.
+- **Repeat:** second drop reports 0 new/2 refreshed; vault remains at 4 conversations/8 messages with no duplicates. Sensitive content stays hidden; sharing stays off.
+- **Finish:** fictional vault locked. Updated acceptance/review documents; no product-code or personal-data changes. Valid physical-drop acceptance is closed; representative exports and broader failure cases remain separate.
