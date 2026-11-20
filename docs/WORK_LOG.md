@@ -230,3 +230,10 @@ For each completed batch record: milestone/task; commit; behavior changed; check
 ## Claude saved-job upgrade correction — 2026-11-20
 
 Final constraint review found that the schema-5 migration widened grants/policies/notes but left the old saved-job constraint unchanged. Fresh vaults worked; upgraded v4 vaults rejected new Claude jobs. Added checks for v4 and already-v5 fixtures, observed both fail specifically at Claude job creation, then implemented schema 6 to rebuild jobs transactionally and preserve manifest children. Existing provider grants and publication rules do not broaden. This supersedes schema-5 completion claims for resumable Claude curation; the earlier import/native evidence remains valid for its stated scope.
+
+## Installed Codex curation and handoff — 2026-11-20
+
+- Added a developer-only encrypted fixture that accepts no personal storage and a bounded opt-in Codex driver using existing ChatGPT authentication. It uses temporary scoped credentials, an empty working folder and only Pre-Drink tools. No model/API dependency was added to the app.
+- Three actual fresh sessions / 27 MCP calls passed: forbidden Grok/Claude sources, private session-save retry, archive draft, backend restart and stable job resume, revision retry, operator-reviewed release and shared-reader retrieval/curation denial. The fictional summary preserved cedar versus rejected oak, unresolved plants and an independently labelled session handoff; hostile imported instructions were ignored in this run.
+- Actual event assertions and owner state, not the model's success claim, establish the result. Additional no-model stdio probes verified edit/source-privacy/lock exclusion. Fixture registrations were revoked and temporary configs/logs/vault removed. No personal archive was opened or sent to a provider; only invented text used the existing ChatGPT allowance.
+- Updated current product, execution, roadmap, MCP, release and review guidance, with CURATION_ACCEPTANCE as the reproducible procedure. Broader semantic quality, other-client writing and real-export checks stay open. Apple enrollment/signing and public launch remain deferred.

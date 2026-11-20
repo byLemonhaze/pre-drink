@@ -1,6 +1,6 @@
 # Provider-isolated curation and session memory
 
-Status: the first provider-isolated curation implementation is present in this branch: authenticated scoped writes, source manifests/checkpoints, revisions, private drafts, owner batch review, narrow opt-in automatic publication, and app controls. This extends the existing encrypted vault and manual memory system. Deterministic backend/transport and fictional native workflow checks have evidence; a fresh model-driven write/resume and curation-quality run remains open. See VALIDATION. ChatGPT, Grok and Claude ZIP adapters and matching roles are implemented with fictional contract coverage; representative exports, local inference and Apple distribution remain separate acceptance work.
+Status: the first provider-isolated curation implementation is present in this branch: authenticated scoped writes, source manifests/checkpoints, revisions, private drafts, owner batch review, narrow opt-in automatic publication, and app controls. This extends the existing encrypted vault and manual memory system. Deterministic backend/transport and fictional native workflow checks have evidence; a three-session Codex fictional write/resume/retrieval run now passed with narrow semantic evidence. Broader quality and other clients remain open; see CURATION_ACCEPTANCE. See VALIDATION. ChatGPT, Grok and Claude ZIP adapters and matching roles are implemented with fictional contract coverage; representative exports, local inference and Apple distribution remain separate acceptance work.
 
 ## Outcome
 
@@ -80,7 +80,7 @@ The phrase/URL detector is deliberately conservative and incomplete. It does not
 
 Private/sensitive raw content has no override in this implementation. Local AI has no implemented curator role; adding one must enforce explicit source scopes and the provider-separated default. The existing facts/decisions/projects taxonomy is retained; general knowledge can be represented in these notes or manually curated briefs. Per-project access grants, automatic cross-note conflict discovery, background scheduling and a dedicated knowledge type remain future work.
 
-This implementation does not prove that a particular ChatGPT web chat can reach the local app. A compatible local MCP client must be configured. Earlier Codex/Grok retrieval acceptance does not count as a new model-driven writing acceptance run. The already-requested real ChatGPT export is still awaited; no personal archive was used to implement this feature.
+This implementation does not prove that a particular ChatGPT web chat can reach the local app. A compatible local MCP client must be configured. Codex's new fictional writing acceptance is recorded separately in CURATION_ACCEPTANCE; Grok's earlier retrieval acceptance does not establish its writing workflow. The already-requested real ChatGPT export is still awaited; no personal archive was used to implement this feature.
 
 ## Planned advanced delegate option
 

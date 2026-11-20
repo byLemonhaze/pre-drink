@@ -96,7 +96,7 @@ cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D w
 
 Suites cover imports, branches, rollback, encryption, tampering, wrong passwords, backup, migration, approval/provenance restrictions, client permissions, revocation, idle locking, and actual stdio MCP calls. Socket integration tests need an environment allowing local Unix sockets.
 
-Fictional native checks cover picker/Finder import, approval, exact selected export, recovery/password change, Mac lock/sleep, large-library browsing and the new curation review/edit/history flow. Earlier Codex/Grok model-client checks cover retrieval; new writing is currently verified through compiled MCP protocol tests, not a fresh model-led curation session. Representative real-export acceptance and broader release gates remain open. See [VALIDATION](docs/VALIDATION.md) for evidence and limits. This is not an independent security audit.
+Fictional native checks cover picker/Finder import, approval, exact selected export, recovery/password change, Mac lock/sleep, large-library browsing and the new curation review/edit/history flow. Codex now also passed a three-session fictional write/retry/resume/reviewed-retrieval check (27 MCP calls); see [curation acceptance](docs/CURATION_ACCEPTANCE.md). Grok's earlier model-client evidence covers retrieval, not the new writing workflow. Representative real-export acceptance and broader release gates remain open. See [VALIDATION](docs/VALIDATION.md) for evidence and limits. This is not an independent security audit.
 
 The lock screen and Settings show the app version/build and whether the app uses normal or isolated test storage. Each vault uses its own owner-chosen password; there is no shared default password.
 

@@ -91,8 +91,10 @@ Revoke the dedicated test credential, disable sharing, lock the fictional vault 
 
 Record the source commit, native build identity, macOS/client versions, each pass/fail and any sanitized error. Keep raw client transcripts, configuration, local paths and screenshots out of Git. A discovered server or successful handshake alone does not close this matrix. Report unresolved cases explicitly.
 
-## Schema-4 curation acceptance status
+## Provider curation acceptance status
 
 The historical model-client retrieval runs above predate agent writing. The current compiled stdio suite additionally exercises the seven-tool handshake, `curate_memory` status/write, identical retry receipts, owner release, attributed shared retrieval and rejection after lock. Backend regressions cover provider separation, evidence, revision conflicts, incremental manifests and lifecycle resets; the native fictional walkthrough covers owner review/edit/history/withdrawal. See VALIDATION for exact counts.
 
-A fresh model-led curation run remains open: one explicit session save, idempotent retry, source batch/checkpoint resume, reviewed release, shared-only retrieval and exclusion after edit/withdrawal. Use fictional storage only, bounded authorized model usage and temporary client settings. Do not repurpose historical retrieval success as evidence of new writing/quality or imply this chat is connected. Grok/Claude import adapters now have fictional contracts; representative export and actual model-led client acceptance remain separate. Manual offline use does not depend on any such cloud run.
+Codex CLI 0.171.0-alpha.13 now passed three fresh ChatGPT-authenticated sessions and 27 actual MCP calls covering session/archive writes, retries, backend restart/job resume, reviewed release and shared-only retrieval. Cross-provider raw reads and shared-reader curation were denied. No-model follow-up probes verified exclusion after edit/source restriction and on lock. The complete procedure, semantic observations and limits are in [CURATION_ACCEPTANCE](CURATION_ACCEPTANCE.md). This supersedes the earlier writing-only-unverified status for this bounded Codex fixture, not the historical client/version results above.
+
+Grok/Claude model-led writing, broad curation quality and representative official exports remain separate gates. This does not connect this chat or an arbitrary web session to the app. Manual offline use does not depend on any cloud acceptance run.
