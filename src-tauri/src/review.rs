@@ -1,4 +1,4 @@
-//! Owner-only review snapshots. MCP cannot save or approve anything.
+//! Owner-only review snapshots. MCP cannot approve or change owner policy.
 use crate::{db::Vault, memory::Memory};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
@@ -85,6 +85,21 @@ impl Vault {
     ) -> Result<(), String> {
         // The desktop session mutex covers this comparison and the write. Any changed
         // note, brief, source, or restriction requires a fresh visible review.
+        if kind == "memory"
+            && self
+                .connection
+                .query_row(
+                    "SELECT EXISTS(SELECT 1 FROM curation_notes WHERE id=?1)",
+                    [id],
+                    |r| r.get::<_, bool>(0),
+                )
+                .map_err(|e| e.to_string())?
+        {
+            return Err(
+                "Review agent contributions in Agent access so the current revision is shared."
+                    .into(),
+            );
+        }
         let current = self.approval_review(kind, id)?;
         if current.review_hash != review_hash {
             return Err(

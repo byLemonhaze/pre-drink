@@ -168,6 +168,7 @@ fn wipe_and_restore(through_app: bool) {
         query: String::new(),
         limit: None,
         conversation_id: String::new(),
+        curation: None,
     };
     if through_app {
         assert!(

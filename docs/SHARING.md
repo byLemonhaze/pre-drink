@@ -2,7 +2,7 @@
 
 Use **Share context** to prepare one deliberate copy for another product. You need no model, API key or internet connection.
 
-1. Create/edit memories or briefs, save them, then review and approve their saved versions.
+1. Create/edit manual memories or briefs, save them, then review and approve their saved versions. Agent contributions are released through Agent access batch review, or a separately enabled narrow automatic-publication rule.
 2. Open **Share context**. Select the notes and briefs you want to include, up to 50. Search filters the chooser without clearing selections.
 3. Choose **Build exact preview**. The screen shows the full outgoing Markdown, included/excluded counts and UTF-8 byte size. Exclusion reasons are visible only in the app and are not part of the exported text.
 4. Read the full preview and check **I reviewed this exact text and want to share it**.
@@ -13,7 +13,7 @@ Use **Share context** to prepare one deliberate copy for another product. You ne
 
 Only approved, non-private, non-sensitive saved records with eligible sources are included. Private/detected-sensitive content cannot be overridden here. Drafts and briefs with missing, changed or unapproved sources are excluded. If nothing is eligible, delivery remains disabled. A selection above 128,000 bytes is rejected rather than truncated.
 
-The export contains the chosen note text/brief title and content. It adds no archive conversation titles, message identifiers, automatic source excerpts or exclusion notices. If you manually wrote identifying information into an otherwise eligible note, that text still appears: review remains essential and detection is heuristic.
+The export contains the chosen note text/brief title and content. Agent contributions also carry provider, revision, archive/session origin and owner-review/automatic-policy attribution. An automatic release is not represented as human-reviewed. It adds no archive conversation titles, message identifiers, automatic source excerpts or exclusion notices. If you manually wrote identifying information into an otherwise eligible note, that text still appears: review remains essential and detection is heuristic.
 
 ## Changes after preview
 
@@ -25,7 +25,7 @@ Locking/reopening invalidates the preview. A copy already completed cannot be re
 
 The clipboard and `.md` file are plaintext outside the encrypted vault. On macOS, copying uses [Apple’s current-host-only option](https://developer.apple.com/documentation/appkit/nspasteboard/contentsoptions/currenthostonly) and first writes the [confidential clipboard marker](https://nspasteboard.org/). This limits Universal Clipboard transfer and asks cooperating managers to treat the content as confidential; it cannot enforce every manager’s behavior. Clipboard managers, other apps, cloud-synced folders and receiving AI providers may retain copies. New files have owner-only permissions on macOS, but that does not encrypt them. No automatic clipboard clearing or remote deletion is promised.
 
-This selection has no effect on **Agent access**. Existing MCP grants can query all eligible memories/briefs in their scope, and optionally raw chats. Previewing one brief or topic does not narrow those permissions. Manage or revoke clients separately.
+This selection has no effect on **Agent access**. Existing MCP grants can query all eligible memories/briefs in their scope, and, only with an additional matching-provider grant, eligible raw chats from that provider. Foreign histories and private working notes stay excluded; context packs themselves remain shared-only. Previewing one brief or topic does not narrow those permissions. Manage or revoke clients separately.
 
 ## Current limits
 

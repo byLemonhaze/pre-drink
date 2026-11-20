@@ -62,7 +62,7 @@ impl Vault {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .map_err(|e| e.to_string())?;
-        if version > 3 {
+        if version > 4 {
             return Err("This vault needs a newer Pre-Drink version.".into());
         }
         if version == 1 {
@@ -115,6 +115,20 @@ impl Vault {
                 .execute_batch("COMMIT;")
                 .map_err(|e| e.to_string())?;
         }
+        // Additive migration: preserve all manual notes and saved-version approvals.
+        // Broad legacy chat grants are deliberately downgraded, never guessed from names.
+        let tx = connection
+            .unchecked_transaction()
+            .map_err(|e| e.to_string())?;
+        tx.execute_batch(include_str!("curation.sql"))
+            .map_err(|e| e.to_string())?;
+        if version < 4 {
+            tx.execute("UPDATE agent_clients SET allow_chats=0", [])
+                .map_err(|e| e.to_string())?;
+            tx.execute_batch("PRAGMA user_version=4;")
+                .map_err(|e| e.to_string())?;
+        }
+        tx.commit().map_err(|e| e.to_string())?;
         let mut vault = Self { connection, path };
         vault.enforce_sensitive_rules()?;
         Ok(vault)
@@ -157,7 +171,7 @@ impl Vault {
                 .map_err(|_| "Couldn't create encrypted backup.")?;
             let exported = self
                 .connection
-                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=3;");
+                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=4;");
             let detached = self.connection.execute_batch("DETACH DATABASE backup;");
             exported
                 .and(detached)
@@ -172,6 +186,17 @@ impl Vault {
                 "brief_sources",
                 "archive_snapshots",
                 "agent_clients",
+                "agent_scopes",
+                "curation_policy",
+                "curation_notes",
+                "curation_publications",
+                "curation_sources",
+                "curation_revisions",
+                "curation_requests",
+                "curation_jobs",
+                "curation_job_sources",
+                "curation_processed_sources",
+                "source_versions",
                 "tags",
                 "conversation_tags",
             ] {
@@ -250,7 +275,7 @@ impl Vault {
         let tx = self.connection.transaction().map_err(|e| e.to_string())?;
         // Scan the FTS table once per import, not once per conversation. Temp
         // storage is memory-only and the transaction also covers index rebuilds.
-        tx.execute_batch("CREATE TEMP TABLE import_ids (id TEXT PRIMARY KEY);")
+        tx.execute_batch("CREATE TEMP TABLE import_ids (id TEXT PRIMARY KEY); CREATE TEMP TABLE import_message_ids (id TEXT PRIMARY KEY);")
             .map_err(|e| e.to_string())?;
         {
             let mut insert = tx
@@ -286,12 +311,19 @@ impl Vault {
             use sha2::{Digest, Sha256};
             let snapshot_id = hex::encode(Sha256::digest(c.raw_json.as_bytes()));
             tx.execute("INSERT OR IGNORE INTO archive_snapshots(id,conversation_id,raw_json,imported_at) VALUES (?1,?2,?3,unixepoch())", params![snapshot_id,c.id,c.raw_json]).map_err(|e|e.to_string())?;
-            // Retain branches from earlier exports, but only the newest snapshot defines the active path.
-            tx.execute(
-                "UPDATE messages SET is_active=0 WHERE conversation_id=?1",
-                [&c.id],
-            )
-            .map_err(|e| e.to_string())?;
+            // Retain branches, but deactivate only missing messages. Avoid transient
+            // active-path flips on identical imports: they invalidate evidence versions.
+            tx.execute("DELETE FROM import_message_ids", [])
+                .map_err(|e| e.to_string())?;
+            {
+                let mut insert = tx
+                    .prepare_cached("INSERT INTO import_message_ids(id) VALUES (?1)")
+                    .map_err(|e| e.to_string())?;
+                for message in &c.messages {
+                    insert.execute([&message.id]).map_err(|e| e.to_string())?;
+                }
+            }
+            tx.execute("UPDATE messages SET is_active=0 WHERE conversation_id=?1 AND id NOT IN (SELECT id FROM import_message_ids)",[&c.id]).map_err(|e|e.to_string())?;
             {
                 let mut insert = tx.prepare_cached("INSERT INTO messages(id,conversation_id,role,content,timestamp,branch_id,parent_id,is_active,sensitive,position)
                     VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10) ON CONFLICT(id) DO UPDATE SET
@@ -320,7 +352,7 @@ impl Vault {
         }
         tx.execute("INSERT INTO search_index(conversation_id,content) SELECT c.id,c.title FROM conversations c JOIN import_ids i ON i.id=c.id", []).map_err(|e| e.to_string())?;
         tx.execute("INSERT INTO search_index(conversation_id,content) SELECT m.conversation_id,m.content FROM messages m JOIN import_ids i ON i.id=m.conversation_id", []).map_err(|e| e.to_string())?;
-        tx.execute_batch("DROP TABLE import_ids;")
+        tx.execute_batch("DROP TABLE import_ids; DROP TABLE import_message_ids;")
             .map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
         Ok(report)

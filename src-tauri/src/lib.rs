@@ -12,6 +12,8 @@ pub mod agents;
 #[cfg(unix)]
 pub mod broker;
 pub mod client_config;
+pub mod curation;
+mod curation_jobs;
 #[cfg(unix)]
 pub mod mcp;
 pub mod session;
@@ -33,3 +35,6 @@ pub mod retained_vaults;
 
 #[cfg(test)]
 mod storage_failure;
+
+#[cfg(test)]
+mod curation_tests;

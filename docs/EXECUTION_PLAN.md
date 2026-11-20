@@ -1,12 +1,12 @@
 # Execution plan
 
-Agreed direction: 2026-11-19. Implementation baseline: `589967e`.
+Initial direction: 2026-11-19; revised for the owner-approved provider curation workflow on 2026-11-20. Original implementation baseline: `589967e`. Current evidence is in VALIDATION and the chronological WORK_LOG.
 
 ## Outcome
 
 Pre-Drink should be a useful daily macOS app and a credible portfolio project: import official AI exports into a private encrypted archive, curate facts/decisions/projects, assemble briefs, preview exactly what will be exported, and deliberately provide context to another product. Manual local features are free and require no model API. The main demonstration is the sharing preview and the control it gives the owner.
 
-Current implementation supports ChatGPT only. Claude and Grok are planned milestones, not available features. Source is independently implemented, informed by Loominary; it is not a Loominary fork.
+Official export import currently supports ChatGPT only. Provider-bound ChatGPT/Codex and Grok writing roles are implemented; Grok session summaries do not imply Grok ZIP support. Claude/Grok import remains later work. Source is independently implemented, informed by Loominary; it is not a Loominary fork.
 
 ## Non-negotiable boundaries
 
@@ -14,8 +14,8 @@ Current implementation supports ChatGPT only. Claude and Grok are planned milest
 - Never commit real exports, vaults, personal chat text, screenshots of personal data, credentials, passwords, signing material or raw private test logs. A private repository is not an exception.
 - Use official exports only. No live capture, scraping, browser credentials or userscripts.
 - Keep the encrypted archive as the source of truth. Sharing, plaintext exports and cloud-backed agents cross separate boundaries.
-- No automatic extraction, cloud sync, monetization, demand tests, semantic search, Gemini, mobile or team features in this execution plan.
-- Approval cannot override private sources or detected credentials. Changing content requires review again.
+- Optional external same-provider curation is in scope; mandatory cloud inference and an app-run background model service are not. Offline manual use must remain complete. No cloud sync, monetization, demand tests, semantic search, Gemini, mobile or team features.
+- Approval cannot override private sources or detected credentials. Every changed contribution revokes its prior release. Owner/manual edits require review; agent revisions can be released only by separate review or an already enabled narrow owner policy, with the basis recorded.
 - Test personal data only in isolated encrypted copies after a verified backup. Destructive recovery tests use disposable synthetic vaults exclusively.
 - A passing test suite does not establish a formal security audit or a signed public release.
 
@@ -27,17 +27,18 @@ The implementation/evidence ledger is [WORK_LOG](WORK_LOG.md). [VALIDATION](VALI
 
 ## Sequence and planning estimate
 
-M1 → M2 → M3 → M4 → M5. At the owner’s request, Apple enrollment is deferred to the final release stage. Development and all independent verification proceed now. Work can prepare fixtures or release documentation early, but must not present unfinished milestones as delivered.
+M1 → M2 → M3 → provider curation acceptance → M4 → M5. The curation implementation is additive and precedes new import providers. At the owner’s request, Apple enrollment is deferred to the final release stage. Development and all independent verification proceed now. Work can prepare fixtures or release documentation early, but must not present unfinished milestones as delivered.
 
-Planning allowance: roughly 3–5 focused working days for a dependable ChatGPT-only candidate, and 1–2 weeks for the broader release candidate, excluding Apple account processing and external review. These are effort estimates, not calendar commitments or a promise of unattended work between sessions. Re-estimate after M1 using real export sizes, native validation and remaining defects. Provider format changes and recovery failures can extend the work. A release candidate is not a public release until every release gate is met.
+The initial 3–5-day / 1–2-week estimate predates the expanded autonomous-curation requirement and is superseded. Remaining effort must be estimated after the fictional model-led curation run, the pending representative export and fresh review. No calendar-ready claim is justified while those inputs and distribution checks remain open. Work continues on independent checks without waiting for Apple enrollment.
 
-| Milestone                              | State at plan creation                        | Exit evidence                                                                                                                              |
-| -------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| M1: dependable ChatGPT workflow        | In progress                                   | Current native approval flow, false-positive regressions, isolated upgrade verification, a real MCP client, and clear build/vault identity |
-| M2: deliberate sharing preview         | Implemented; basic native flow verified       | Preview/export equality, eligibility revalidation, no surprise source metadata, selective copy/file export                                 |
-| M3: vault lifecycle and recovery       | Implemented; lifecycle validation in progress | Tested restore UI, password change, deletion/retention, destructive synthetic recovery exercise                                            |
-| M4: Claude, then Grok                  | Planned                                       | Provider/version fixtures, normalization and cross-provider privacy/import tests, local representative export checks                       |
-| M5: release and portfolio presentation | Planned; Apple prerequisites external         | Signed/notarized artifact, clean-machine installation, release evidence, fictional-data demo and reviewed documentation                    |
+| Milestone                              | Current state                                               | Exit evidence                                                                                                                              |
+| -------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| M1: dependable ChatGPT workflow        | In progress                                                 | Current native approval flow, false-positive regressions, isolated upgrade verification, a real MCP client, and clear build/vault identity |
+| M2: deliberate sharing preview         | Implemented; basic native flow verified                     | Preview/export equality, eligibility revalidation, no surprise source metadata, selective copy/file export                                 |
+| M3: vault lifecycle and recovery       | Implemented; lifecycle validation in progress               | Tested restore UI, password change, deletion/retention, destructive synthetic recovery exercise                                            |
+| Provider curation                      | Implemented; deterministic/native fictional checks recorded | Fresh model-led write/resume, shared retrieval, source isolation and quality acceptance                                                    |
+| M4: Claude, then Grok                  | Planned                                                     | Provider/version fixtures, normalization and cross-provider privacy/import tests, local representative export checks                       |
+| M5: release and portfolio presentation | Planned; Apple prerequisites external                       | Signed/notarized artifact, clean-machine installation, release evidence, fictional-data demo and reviewed documentation                    |
 
 ## M1 — Dependable ChatGPT workflow
 
@@ -68,7 +69,7 @@ Exit: native copy/file export verified, byte-for-byte comparison with the previe
 
 ## M3 — Vault lifecycle and recoverability
 
-- Add an in-app restore flow that inspects a backup without replacing the active vault, asks for its password locally, validates integrity/schema/relationships, and preserves the current vault before an explicit replacement step. On failure, keep the original usable. Sharing stays off after restore; explain/review restored client grants before enabling them.
+- Add an in-app restore flow that inspects a backup without replacing the active vault, asks for its password locally, validates integrity/schema/relationships, and preserves the current vault before an explicit replacement step. On failure, keep the original usable. Sharing stays off after restore; in-app restore removes client grants and disables automatic-publication rules before activation.
 - Add password change using a separately encrypted, verified replacement and a crash-safe swap. Test wrong current password, interruption, disk-full/no-write cases and reopen with old/new passwords. Existing backups retain their own old passwords. No stored recovery password or hidden bypass.
 - Add per-conversation deletion and snapshot retention/purge with clear app confirmation. Define behavior for linked notes/briefs and FTS records; deleted evidence must never leave derived content silently shareable. Explain that original exports, backups and filesystem snapshots can remain.
 - Add the destructive recovery acceptance test: create a disposable synthetic vault with branches, notes, briefs, privacy flags and client registrations; take and verify a backup; close and remove that test vault and journals; restore into an empty location; compare data/provenance/policies and exercise a new session. Never target personal vaults or real-data copies with this test.
@@ -131,11 +132,18 @@ Native acceptance now includes the fictional 5,000-conversation/100,000-message 
 
 Remaining order before Apple signing:
 
-1. Complete representative owner-local export/upgrade checks in isolated encrypted copies, larger IPC/maximum-message profiling and broader failure cases (including further filesystem exhaustion/publication boundaries where feasible; SQLite-capacity and pre-commit killed-writer recovery now have passing regressions). Never use personal storage for destructive tests.
-2. Finish the focused keyboard/resize/error-state pass and review any remaining security findings with explicit evidence and limits. A broader UI overhaul remains secondary to reliable behavior.
-3. Reconcile release documentation, obtain a fresh review, and prepare a fictional-data demo and disabled download assets. Keep ChatGPT as the only import provider for this phase; Claude/Grok import remains a separate later milestone.
-4. Apple enrollment/signing/notarization and clean-install verification come at the final distribution stage. Public repository/download publication still requires the owner's explicit launch decision.
+1. Exercise the new writing workflow with a configured real local MCP client against fictional storage: session save, retry, revision, source manifest resume, reviewed release and fresh shared retrieval. Earlier Codex/Grok retrieval acceptance does not close this gate. Use explicit bounded external-model usage; never send a personal archive as a test shortcut.
+2. Complete representative owner-local export/upgrade checks in isolated encrypted copies when the already requested official ZIP arrives. Verify useful consolidation and omitted/uncertain information separately from parser and transport success. No further export request is needed now.
+3. Profile larger IPC/maximum-message behavior, exercise additional filesystem publication/interruption boundaries, and finish broader keyboard/resize/error-state coverage. SQLite-capacity and pre-commit killed-writer tests already have evidence. Never use personal storage for destructive tests.
+4. Obtain a fresh review of schema 4 and source/publication boundaries, reconcile release evidence and prepare the fictional demo. New provider parsers remain a later milestone; define their scopes explicitly before advertising them.
+5. Apple enrollment/signing/notarization and clean-install verification come at the final distribution stage. Public repository/download publication still requires the owner’s explicit launch decision.
 
 Do not treat successful native paths as proof of all crash, hardware, lock-screen or clipboard-manager behavior. Keep open cases in VALIDATION and the next reviewer brief; queued GitHub checks are not passes.
 
-The current visual pass adds a responsive cream/orange entry screen, consistent glass artwork, and optional locally remembered dark mode across the vault. Share-context choices now page while retaining selection. Autonomous same-provider curation and explicit end-of-chat memory updates are required next core workflows, recorded in AGENT_CURATION. Finish this batch first; then prioritize their access/revision design and session-handoff implementation before more cosmetic work or import providers. Do not broaden client permissions during this batch. Representative export verification remains blocked on delivery of the already requested official ZIP, not on another export request.
+The cream/orange light-default UI and optional dark mode remain the current visual base. Further visual refinement is secondary to working curation and sharing. Source scopes are now changed only through explicit registrations; broad legacy grants are downgraded during migration. Cloud curation is optional and local inference remains planned.
+
+## Provider curation implementation update — 2026-11-20
+
+The owner approved the image flow and authorized implementation on the existing base. Provider-bound archive access, private agent contributions, retry/revision protection, durable incremental source jobs, batch review, narrow opt-in automatic publication and history/withdrawal controls are now implemented. Schema 4 preserves manual approvals and downgrades broad legacy chat permissions. The API and owner UI share the same encrypted store and privacy delivery checks.
+
+Deterministic tests, compiled MCP writing and fictional native review/edit/history checks now have evidence in VALIDATION; those establish only their stated scope. Model-led quality/large-real-export acceptance remains a separate gate; no real archive or provider API expenditure is part of this implementation. Keep Apple enrollment at the end and the repository private. See AGENT_CURATION for the implemented contract and explicitly retained limits.

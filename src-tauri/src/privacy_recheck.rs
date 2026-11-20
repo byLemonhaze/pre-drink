@@ -39,6 +39,7 @@ impl Vault {
             ("messages", "content", "conversation_id"),
             ("conversations", "title", "id"),
             ("memory", "content", "''"),
+            ("curation_notes", "content || ' ' || session_label", "''"),
             ("briefs", "title || ' ' || content", "''"),
         ] {
             let mut stmt = self
@@ -341,6 +342,7 @@ mod tests {
             query: "wifi".into(),
             limit: Some(10),
             conversation_id: String::new(),
+            curation: None,
         };
         assert_eq!(v.agent_call(&request).unwrap(), serde_json::json!([]));
         request.tool = "get_context_pack".into();

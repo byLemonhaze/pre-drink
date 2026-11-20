@@ -14,6 +14,9 @@ export interface MemoryItem {
   source_conversation_id: string | null;
   source_title: string | null;
   approved: boolean;
+  curator_provider?: string;
+  curator_revision?: number;
+  publication_basis?: string;
   private: boolean;
   sensitive: boolean;
   source_restricted: boolean;
@@ -179,7 +182,8 @@ export function MemoryView({
         <div>
           <h1>Memory</h1>
           <p className="page-intro">
-            Facts, decisions, and projects. Written and approved by you.
+            Facts, decisions, and projects. Your notes and released agent
+            contributions.
           </p>
         </div>
         <button className="button primary" onClick={() => setEditing(null)}>
@@ -237,11 +241,19 @@ export function MemoryView({
                 {m.private || m.sensitive || m.source_restricted
                   ? "Restricted"
                   : m.approved
-                    ? "Approved"
+                    ? m.publication_basis === "automatic_policy"
+                      ? "Auto-shared"
+                      : "Approved"
                     : "Draft"}
               </span>
             </div>
             <p className="memory-content">{m.content}</p>
+            {m.curator_provider && (
+              <p className="fine-print">
+                {m.curator_provider} · revision {m.curator_revision}. Manage
+                this contribution and its history in Agent access.
+              </p>
+            )}
             {m.source_conversation_id && (
               <button
                 className="source-link"
@@ -254,10 +266,18 @@ export function MemoryView({
               </button>
             )}
             <div className="card-actions">
-              <button onClick={() => setReviewing(m.id)}>
+              <button
+                disabled={!!m.curator_provider}
+                onClick={() => setReviewing(m.id)}
+              >
                 Review &amp; approve
               </button>
-              <button onClick={() => setEditing(m)}>Edit</button>
+              <button
+                disabled={!!m.curator_provider}
+                onClick={() => setEditing(m)}
+              >
+                Edit
+              </button>
               {deleting === m.id ? (
                 <>
                   <span>Remove this note?</span>
@@ -267,7 +287,12 @@ export function MemoryView({
                   <button onClick={() => setDeleting(null)}>Cancel</button>
                 </>
               ) : (
-                <button onClick={() => setDeleting(m.id)}>Delete</button>
+                <button
+                  disabled={!!m.curator_provider}
+                  onClick={() => setDeleting(m.id)}
+                >
+                  Delete
+                </button>
               )}
             </div>
           </article>

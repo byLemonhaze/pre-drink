@@ -71,7 +71,7 @@ impl Vault {
         }
         let mut stmt=self.connection.prepare("SELECT b.id,b.title,b.content,b.approved,b.private,b.sensitive,b.updated_at,
             EXISTS(SELECT 1 FROM brief_sources s LEFT JOIN memory m ON m.id=s.memory_id LEFT JOIN messages msg ON msg.id=m.source_message_id LEFT JOIN conversations c ON c.id=msg.conversation_id
-            WHERE s.brief_id=b.id AND (m.id IS NULL OR m.approved=0 OR m.private=1 OR m.sensitive=1 OR m.updated_at!=s.reviewed_at OR (m.had_source=1 AND (msg.id IS NULL OR c.id IS NULL OR c.private=1 OR c.sensitive=1 OR msg.sensitive=1))))
+            WHERE s.brief_id=b.id AND (m.id IN (SELECT id FROM curation_blocked) OR m.id IS NULL OR m.approved=0 OR m.private=1 OR m.sensitive=1 OR m.updated_at!=s.reviewed_at OR (m.had_source=1 AND (msg.id IS NULL OR c.id IS NULL OR c.private=1 OR c.sensitive=1 OR msg.sensitive=1))))
             FROM briefs b WHERE (?1='' OR instr(lower(b.title||' '||b.content),lower(?1))>0) ORDER BY b.updated_at DESC,b.id").map_err(|e|e.to_string())?;
         let rows = stmt
             .query_map([topic], |r| {

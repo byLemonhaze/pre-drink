@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Pre-Drink is a free, open-source Mac app for your AI history, reviewed memory, and carefully shared context. Local first. Encrypted by default."
+      content="Pre-Drink is a free Mac memory manager: provider-private histories, optional agent curation, and shared memory you control. Local first. Encrypted by default."
     />
     <meta name="theme-color" content="#111316" />
     <meta
@@ -106,20 +106,21 @@
             <span class="step-no">02</span>
             <h3>Make it yours.</h3>
             <p>
-              Keep a message as a fact, decision, or project note. Edit it. Link
-              it to its source. Assemble the useful parts into a clear brief.
+              Curate notes yourself, or authorize an agent to work with its own
+              provider’s history. Review useful drafts together and keep a
+              revision trail back to their evidence.
             </p>
             <span class="detail"
-              >Human-reviewed. Original story preserved.</span
+              >Private drafts. Sharing is a separate choice.</span
             >
           </article>
           <article>
             <span class="step-no">03</span>
             <h3>Share with intention.</h3>
             <p>
-              Connect an MCP-compatible assistant to approved memory and briefs.
-              Raw chat access is a separate permission. Revoke access when
-              you’re done.
+              Let compatible agents read eligible shared memory and briefs. Each
+              provider’s raw history stays behind its own permission boundary.
+              Preview selected context before copying or saving it.
             </p>
             <span class="detail">Sharing starts off. You turn it on.</span>
           </article>
@@ -160,9 +161,9 @@
               <span>03</span>
               <p>
                 <strong>Know where context goes next.</strong>A cloud-powered
-                assistant may send approved context to its provider. A local
-                connection doesn’t change that. Only authorize clients you
-                trust.
+                curator may send permitted source content to its provider. Cloud
+                curation is optional: manual workflows run offline without a
+                model or API key.
               </p>
             </div>
           </div>
@@ -185,18 +186,21 @@
           <details>
             <summary>Does it work with every AI product?</summary>
             <p>
-              Import currently supports official ChatGPT exports only. Approved
-              context is exposed through standard local MCP for compatible
-              assistants. Individual client setup and compatibility still need
-              validation. Claude and Grok imports are planned later.
+              Import currently supports official ChatGPT exports only. Local MCP
+              supports compatible assistants; Codex and Grok Build have
+              fictional retrieval evidence. New agent-writing quality checks
+              remain open. This does not connect arbitrary web chats. Claude and
+              Grok export imports are planned later.
             </p>
           </details>
           <details>
             <summary>Does it decide what to remember?</summary>
             <p>
-              You do. This version uses manual curation: select a message, edit
-              the note, and explicitly approve it. There is no background AI
-              extraction or automatic cloud upload.
+              You control the policy. Curate manually offline, or optionally
+              connect a same-provider agent to draft memory. Review complete
+              batches; narrow automatic-sharing rules are separate and off by
+              default. Automatic releases are labelled. No model runs in the
+              app, and a local-model curator is not yet implemented.
             </p>
           </details>
           <details>
@@ -204,7 +208,8 @@
             <p>
               There is no reset or server-held recovery key. Keep encrypted
               backups and their passwords. Original exports can rebuild the
-              archive, but not your manually edited notes and briefs.
+              archive, but not curated notes, session summaries, revision
+              history or briefs.
             </p>
           </details>
           <details>
@@ -212,9 +217,9 @@
             <p>
               The native app and core flows are implemented. Public downloads
               are pending Apple signing/notarization and release validation.
-              Representative real exports, larger libraries, and independent
-              security review remain on the roadmap. No software can promise
-              absolute security.
+              Representative real exports, model-led curation quality, broader
+              scale coverage and independent security review remain open. No
+              software can promise absolute security.
             </p>
           </details>
         </div>

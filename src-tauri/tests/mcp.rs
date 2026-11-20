@@ -102,7 +102,7 @@ fn actual_stdio_client_negotiates_lists_tools_and_obeys_lock_and_revocation() {
     assert_eq!(initialized["result"]["serverInfo"]["name"], "pre-drink");
     send(json!({"jsonrpc":"2.0","method":"notifications/initialized"}));
     send(json!({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}));
-    assert_eq!(receive()["result"]["tools"].as_array().unwrap().len(), 6);
+    assert_eq!(receive()["result"]["tools"].as_array().unwrap().len(), 7);
     send(
         json!({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
     );
@@ -184,6 +184,107 @@ fn actual_stdio_client_negotiates_lists_tools_and_obeys_lock_and_revocation() {
     store.lock().unwrap().sharing = true;
     send(
         json!({"jsonrpc":"2.0","id":11,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
+    );
+    assert_eq!(receive()["result"]["isError"], true);
+}
+
+#[test]
+fn actual_stdio_curator_writes_retries_and_stops_on_lock() {
+    use std::os::unix::fs::PermissionsExt;
+    let dir = tempfile::Builder::new()
+        .prefix("pd-curation-mcp-")
+        .tempdir_in("/tmp")
+        .unwrap();
+    std::fs::set_permissions(dir.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
+    let mut session = Session::new(dir.path().into());
+    session
+        .unlock("fictional curation transport phrase", true, false)
+        .unwrap();
+    let client = session
+        .access()
+        .unwrap()
+        .create_scoped_client("Fictional Codex", Some("chatgpt"), true)
+        .unwrap();
+    session.sharing = true;
+    let store: Store = Arc::new(Mutex::new(session));
+    let socket = dir.path().join("agents.sock");
+    broker::serve(&socket, store.clone()).unwrap();
+    let mut process = Process(
+        Command::new(env!("CARGO_BIN_EXE_pre-drink"))
+            .arg("--mcp")
+            .env("PRE_DRINK_SOCKET", &socket)
+            .env("PRE_DRINK_CLIENT_ID", &client.client.id)
+            .env("PRE_DRINK_CLIENT_TOKEN", &client.token)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap(),
+    );
+    let stdout = process.0.stdout.take().unwrap();
+    let (tx, rx) = mpsc::channel();
+    std::thread::spawn(move || {
+        for line in BufReader::new(stdout).lines() {
+            if tx.send(line.unwrap()).is_err() {
+                break;
+            }
+        }
+    });
+    let input = process.0.stdin.as_mut().unwrap();
+    let mut send = |message: Value| {
+        writeln!(input, "{message}").unwrap();
+        input.flush().unwrap();
+    };
+    let receive = || -> Value {
+        serde_json::from_str(
+            &rx.recv_timeout(Duration::from_secs(8))
+                .expect("MCP response timeout"),
+        )
+        .unwrap()
+    };
+    send(
+        json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"fictional-curator","version":"1"}}}),
+    );
+    assert!(receive()["error"].is_null());
+    send(json!({"jsonrpc":"2.0","method":"notifications/initialized"}));
+    send(
+        json!({"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"curate_memory","arguments":{"operation":{"action":"status"}}}}),
+    );
+    let response = receive();
+    assert_ne!(response["result"]["isError"], true);
+    assert!(response.to_string().contains("chatgpt"));
+    let input = json!({"request_key":"fictional-session-one","id":null,"expected_revision":0,"kind":"project","content":"Fictional garden uses ceramic planters.","origin":"session","session_label":"Fictional garden","sources":[],"conflict":false});
+    let write = json!({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"curate_memory","arguments":{"operation":{"action":"write","input":input}}}});
+    send(write.clone());
+    let first = receive();
+    assert_ne!(first["result"]["isError"], true);
+    send(write);
+    assert_eq!(first, receive());
+    let result: Value =
+        serde_json::from_str(first["result"]["content"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(result["revision"], 1);
+    assert_eq!(result["published"], false);
+    let note_id = result["id"].as_str().unwrap().to_string();
+    {
+        let mut locked = store.lock().unwrap();
+        let vault = locked.access().unwrap();
+        let review = vault
+            .curation_review(std::slice::from_ref(&note_id))
+            .unwrap();
+        vault
+            .publish_curation_review(&[note_id], &review.review_hash)
+            .unwrap();
+    }
+    send(
+        json!({"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"get_projects","arguments":{}}}),
+    );
+    let shared = receive();
+    assert!(shared.to_string().contains("owner_review"));
+    assert!(shared.to_string().contains("ceramic"));
+    // Lock must block both reads and writes using the otherwise-valid credential.
+    store.lock().unwrap().lock();
+    send(
+        json!({"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"curate_memory","arguments":{"operation":{"action":"write","input":input}}}}),
     );
     assert_eq!(receive()["result"]["isError"], true);
 }

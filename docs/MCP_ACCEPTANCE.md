@@ -90,3 +90,9 @@ Changes only stop future retrieval. A client's earlier responses or chat history
 Revoke the dedicated test credential, disable sharing, lock the fictional vault and exit the client. Remove its temporary configuration according to the local test-data cleanup policy; revocation is the access-control step. Do not change or remove existing client configurations.
 
 Record the source commit, native build identity, macOS/client versions, each pass/fail and any sanitized error. Keep raw client transcripts, configuration, local paths and screenshots out of Git. A discovered server or successful handshake alone does not close this matrix. Report unresolved cases explicitly.
+
+## Schema-4 curation acceptance status
+
+The historical model-client retrieval runs above predate agent writing. The current compiled stdio suite additionally exercises the seven-tool handshake, `curate_memory` status/write, identical retry receipts, owner release, attributed shared retrieval and rejection after lock. Backend regressions cover provider separation, evidence, revision conflicts, incremental manifests and lifecycle resets; the native fictional walkthrough covers owner review/edit/history/withdrawal. See VALIDATION for exact counts.
+
+A fresh model-led curation run remains open: one explicit session save, idempotent retry, source batch/checkpoint resume, reviewed release, shared-only retrieval and exclusion after edit/withdrawal. Use fictional storage only, bounded authorized model usage and temporary client settings. Do not repurpose historical retrieval success as evidence of new writing/quality or imply this chat is connected. Grok session summaries can be tested before its export parser; bulk Grok import cannot. Manual offline use does not depend on any such cloud run.

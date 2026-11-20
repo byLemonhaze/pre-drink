@@ -13,7 +13,10 @@ flowchart LR
   Bridge -->|private Unix socket + client token| Broker[Local access broker]
   Broker --> Session
   DB --> Archive[Archive snapshots and messages]
-  DB --> Memory[Reviewed memory]
+  DB --> Working[Provider-private drafts and revisions]
+  Working --> Policy[Owner review or optional publication rule]
+  Policy --> Memory[Eligible shared memory]
+  DB --> Memory
   DB --> Briefs[Approved briefs and provenance]
 ```
 
@@ -21,22 +24,24 @@ The GUI is the only process owning an unlocked database connection. The MCP brid
 
 ## Source map
 
-| Module                                 | Responsibility                                                          |
-| -------------------------------------- | ----------------------------------------------------------------------- |
-| `src/VaultGate.tsx`                    | Password gate, status, owner activity, lock-event unmount               |
-| `src/App.tsx`                          | Archive, search, branches, imports, privacy, navigation                 |
-| `src/Memory.tsx`, `Briefs.tsx`         | Curation and explicit review                                            |
-| `src/Agents.tsx`, `Backup.tsx`         | Consent, clients, preview, encrypted backups                            |
-| `src-tauri/src/desktop.rs`             | Tauri commands, startup, private directory, exclusive app-instance lock |
-| `crypto.rs`                            | Fixed-format Argon2id/SQLCipher configuration                           |
-| `db.rs`, `schema.sql`                  | Persistence, migrations, FTS, backup and import transactions            |
-| `import.rs`, `model.rs`                | Bounded ZIP normalization and branch graph                              |
-| `memory.rs`, `briefs.rs`, `privacy.rs` | Derived knowledge and eligibility predicates                            |
-| `session.rs`, `mac_lock.rs`            | Connection ownership, idle timer and native notifications               |
-| `client_config.rs`                     | Transactional registration and client-specific JSON/TOML settings       |
-| `agents.rs`                            | Client credentials/scopes and tool policy                               |
-| `broker.rs`                            | Bounded authenticated Unix socket requests                              |
-| `mcp.rs`                               | Official rmcp SDK stdio tool server                                     |
+| Module                                            | Responsibility                                                                                                |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `src/VaultGate.tsx`                               | Password gate, status, owner activity, lock-event unmount                                                     |
+| `src/App.tsx`                                     | Archive, search, branches, imports, privacy, navigation                                                       |
+| `src/Memory.tsx`, `Briefs.tsx`                    | Curation and explicit review                                                                                  |
+| `src/Agents.tsx`, `Backup.tsx`                    | Consent, clients, preview, encrypted backups                                                                  |
+| `src-tauri/src/desktop.rs`                        | Tauri commands, startup, private directory, exclusive app-instance lock                                       |
+| `crypto.rs`                                       | Fixed-format Argon2id/SQLCipher configuration                                                                 |
+| `db.rs`, `schema.sql`                             | Persistence, migrations, FTS, backup and import transactions                                                  |
+| `import.rs`, `model.rs`                           | Bounded ZIP normalization and branch graph                                                                    |
+| `memory.rs`, `briefs.rs`, `privacy.rs`            | Derived knowledge and eligibility predicates                                                                  |
+| `session.rs`, `mac_lock.rs`                       | Connection ownership, idle timer and native notifications                                                     |
+| `client_config.rs`                                | Transactional registration and client-specific JSON/TOML settings                                             |
+| `agents.rs`                                       | Client credentials/scopes and tool policy                                                                     |
+| `broker.rs`                                       | Bounded authenticated Unix socket requests                                                                    |
+| `mcp.rs`                                          | Official rmcp SDK stdio tool server                                                                           |
+| `curation.rs`, `curation.sql`, `curation_jobs.rs` | Provider-private contributions, evidence versions, revision/retry safety, publication and resumable manifests |
+| `src/Curation.tsx`                                | Owner workspace, batch review, edit/history/withdrawal and optional publication rules                         |
 
 ## Data model
 
@@ -46,11 +51,17 @@ The GUI is the only process owning an unlocked database connection. The MCP brid
 - **memory:** kind, editable content, source message FK, had-source marker, approval/privacy/sensitivity and timestamps. The marker preserves fail-closed behavior if a source disappears.
 - **briefs:** title/content, approval/privacy/sensitivity, updated time.
 - **brief_sources:** brief FK, memory FK (SET NULL on deletion), reviewed memory timestamp. Null source or version mismatch blocks sharing.
-- **agent_clients:** ID, display name, SHA-256 bearer-token hash, optional chat scope, creation time.
+- **agent_clients / agent_scopes:** client identity and SHA-256 bearer-token hash; owner-bound provider and curation grant. Legacy broad source access is downgraded during schema-4 migration.
+- **curation_notes / curation_sources:** provider-owned contributions, archive/session origin, current revision, conflicts/sensitivity/withdrawal and cumulative source IDs/versions.
+- **source_versions:** monotonically advanced evidence versions, including tombstones that prevent removed/reinserted IDs silently restoring old eligibility.
+- **curation_revisions / curation_requests:** full encrypted revision snapshots with author client IDs, and request hashes/results for idempotent retry.
+- **curation_policy / curation_publications:** per-provider archive/session automatic-publication switches and the released revision/basis. Both switches default off. Published contributions use the existing memory delivery layer.
+- **curation_jobs / curation_job_sources / curation_processed_sources:** stable source manifests, ordinal checkpoints and acknowledged evidence for incremental processing. No model execution or scheduling lives here.
+- **curation_blocked (view):** current exclusion predicate for conflicts, sensitivity, withdrawal and missing/restricted/foreign/stale evidence.
 - **tags/conversation_tags:** schema reserved; no editing UI yet.
 - **search_index:** encrypted FTS5 text, rebuilt for the affected ID set once per import transaction; a memory-only temporary table avoids repeated full-table scans.
 
-Schema version 2 added the source marker and curated layers. Schema version 3 rescans existing content with current privacy rules and resets previous approvals once. Encrypted backups retain schema version 3 and current approvals. Reject newer unknown schema versions. Encryption format 1 is separately defined in `crypto.rs`; schema upgrades must not silently change key derivation.
+Schema version 2 added the source marker and curated layers. Schema version 3 rescans existing content with current privacy rules and resets previous approvals once. Schema version 4 adds curation tables and provider grants, preserves existing manual approvals and downgrades old broad chat grants to shared-only. Encrypted backups retain schema version 4, manual approvals and complete curation data/history. In-app restore/password rotation removes clients and resets automatic-publication rules before activation. Reject newer unknown schema versions. Encryption format 1 is separately defined in `crypto.rs`; schema upgrades must not silently change key derivation.
 
 ## Decisions and tradeoffs
 
@@ -72,7 +83,7 @@ A stand-alone agent opening the database would need a password, saved key or ano
 
 ### Reviewed source chains
 
-Raw history is evidence, not approved memory. Saves always clear approval. The owner-only review command returns persisted content, current supporting notes and a snapshot hash; a separate approval command rechecks that snapshot under the session mutex. MCP has access to neither command. Memory list tools serialize a dedicated response without archive provenance. Schema-v3 upgrade rescans stored content and clears old approvals once. Notes and briefs require approval and retain provenance. Eligibility is computed at query time to reflect later privacy/source changes. A brief is not silently rewritten by an agent or automatically approved after changing a source.
+Raw history is evidence, not approved memory. Manual saves always clear approval. Agent writes create a new private revision, then optionally release it only under the owner’s already enabled narrow policy; every release records its basis. Owner edits always stay private until reviewed. The owner-only review command returns persisted content, current supporting notes and a snapshot hash; a separate approval command rechecks that snapshot under the session mutex. MCP has access to neither command. Memory list tools serialize a dedicated response without archive provenance. Schema-v3 upgrade rescans stored content and clears old approvals once. Notes and briefs require approval and retain provenance. Eligibility is computed at query time to reflect later privacy/source changes. A brief is not silently rewritten by an agent or automatically approved after changing a source.
 
 ### Selected plaintext sharing
 
@@ -82,7 +93,7 @@ An idempotently installed SQLite trigger invalidates linked memory approvals and
 
 ### Local transport with explicit sharing
 
-The bridge uses standard MCP stdio, then an owner-only Unix socket internally. Named credentials enable revocation and optional raw-chat scope. A same-user malicious process remains in the threat model; filesystem permissions alone do not isolate it. Remote HTTP/OAuth service access is not implemented.
+The bridge uses standard MCP stdio, then an owner-only Unix socket internally. Named credentials enable revocation and optional matching-provider raw-chat/curation scope. Generic clients stay shared-only. Provider isolation is enforced in the broker-facing backend, not inferred from a client-provided model name. This binds credentials, not the actual identity of the model holding them. A same-user malicious process remains in the threat model; filesystem permissions alone do not isolate it. Remote HTTP/OAuth service access is not implemented.
 
 ### Backup before convenience
 
@@ -128,4 +139,14 @@ The native reader mounts at most 20 matching messages per page. Memory and brief
 
 Conversation search covers all loaded messages in the selected branches, including collapsed text. Brief search covers titles and bodies. The brief editor searches all eligible approved source memories, displaying up to 50 matching options and explaining how to refine the search. Search inputs disable spelling correction/capitalization so macOS does not silently rewrite technical identifiers.
 
-These are render limits, not database paging or a memory-use guarantee. Existing desktop commands still return all messages for the selected conversation and all memory/brief rows. SQL paging, indexed note search, maximum-size individual Markdown expansion and much larger collections require separate profiling. Agent policy, returned tool limits and approval checks are unchanged.
+These are render limits, not database paging or a memory-use guarantee. Existing desktop commands still return all messages for the selected conversation and all memory/brief rows. SQL paging, indexed note search, maximum-size individual Markdown expansion and much larger collections require separate profiling. These existing render limits are independent of the schema-4 curation workspace. Curation lists use a bounded 30-item owner page, agent note responses have a byte budget, source reads are chunked and source manifests are paged; see MCP for limits.
+
+## Curation transactions and model boundary
+
+A write authenticates the client, derives its provider scope, verifies current source versions and expected contribution revision, and checks the retry key. The transaction saves the contribution, cumulative source references, complete revision, any permitted publication and its receipt together. A changed payload cannot reuse a key; an exact retry returns its original receipt, not a statement that the item is still shared. Publication is reevaluated on later delivery. Owner batch release hashes complete selected content and current eligibility; stale or partially ineligible batches fail atomically.
+
+Raw search, source reads, private notes/history, jobs, privacy writes and revisions all enforce the same provider grant. Shared context packs include eligible summaries/briefs only, even for source-enabled clients. Shared payloads expose provider, revision, archive/session origin and publication basis, without raw IDs/titles or private session labels. A reference envelope reduces ambiguity; it cannot make model instructions embedded in prose harmless.
+
+Evidence versions advance on meaningful content, role, parent/branch, active-path, timestamp or source-privacy changes. Import updates only actually removed/changed active-path rows, so identical imports do not create false invalidation. Missing/restricted/stale evidence blocks downstream memory, briefs and selected exports. Clearing privacy later does not resurrect an old released source version.
+
+A job snapshots eligible unacknowledged source IDs/versions in a stable order. The client reads bounded pages/chunks, saves notes, then acknowledges progress using an expected job revision. New jobs discover changed/new/unacknowledged sources, including IDs sorting before earlier cursors. Checkpoints attest only that the agent advanced them, not semantic coverage. All model reasoning, continuation, budget and scheduling remain in the external client. Cloud use is optional; there is no model/API integration in the vault and no implemented local-model role.

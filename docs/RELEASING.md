@@ -33,3 +33,9 @@ After a signed/notarized release passes the remaining validation gates, publish 
 The app makes no automatic update requests. Once public releases exist, users can explicitly visit the repository’s Releases page, read the release notes and supported architecture, and download a newer signed/notarized ZIP plus its checksum. Verify the checksum and publisher signature/Gatekeeper result before opening. Never bypass a macOS warning. Make an encrypted backup, quit Pre-Drink, replace the app in its stable install location, and reopen the existing vault. Follow any migration notes. Older versions must refuse newer schema versions; do not downgrade a migrated vault without a compatible backup.
 
 An automatic updater is deferred until its signing keys, verification, rollback policy and opt-in network behavior are designed and tested. Do not enable a download button until the signed artifact and its checks are actually verified.
+
+## Curation release gate and upgrade notes
+
+Schema 4 is an additive migration. Release notes must state that existing manual notes/approvals remain, broad old raw-chat grants become shared-only, and source/curation access requires a fresh provider-bound registration. Backup before upgrading; do not downgrade a migrated vault. In-app restore/password change resets curator grants and automatic-publication policies. No personal data or generated credentials belong in release evidence.
+
+Advertise ChatGPT ZIP import separately from Codex/Grok MCP roles. Fictional native/protocol writing checks do not establish model-led quality, web-chat connectivity or Grok export support. Complete the fresh fictional model-led session/resume test and representative local-export gate before making those claims. Cloud curation remains optional; offline manual use requires no account, model or API key. A local-model runner is planned, not bundled.

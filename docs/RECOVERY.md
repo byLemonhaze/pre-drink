@@ -4,7 +4,7 @@
 
 In **Vault settings → Encrypted backup**, choose a strong password and a new filename on APFS or another local filesystem supporting hard links. The password can differ from the live vault's password. Existing backups are never overwritten; each copy is reopened and verified before success is reported.
 
-Keep backups on a separate drive and passwords in a password manager. Backups include archive snapshots, search indexes, memories, briefs, sources, tags and client registrations. Separate original-export media attachments are not imported or included. A recovery copy on the same disk is not a substitute for an independent backup.
+Keep backups on a separate drive and passwords in a password manager. Backups include archive snapshots, search indexes, memories, briefs, sources, tags, client registrations and complete provider curation state: private drafts, evidence versions, revisions, job checkpoints and publication rules/records. Separate original-export media attachments are not imported or included. A recovery copy on the same disk is not a substitute for an independent backup.
 
 ## In-app restore
 
@@ -12,7 +12,7 @@ Restore is available in **Vault settings → Restore or change password**, and u
 
 1. Choose a standalone encrypted Pre-Drink backup and enter its password locally.
 2. Select **Inspect backup**. Agent sharing stops. The app copies the backup into a new private local folder, validates encryption, supported schema, integrity and relationships, and displays its conversation/message/memory/brief counts. The selected backup is never opened for modification. After inspection succeeds, the reviewed private copy is used for restoration; removing the original backup drive at that point does not change the reviewed contents. Keep the original backup for future recovery.
-3. Review the replacement and the previous vault location. Restore replaces the active library; it does not merge libraries. Registrations from the backup are removed so old credentials cannot regain access.
+3. Review the replacement and the previous vault location. Restore replaces the active library; it does not merge libraries. Registrations from the backup are removed so old credentials cannot regain access. Automatic-publication rules are reset to off; drafts/history and existing saved publications are retained subject to current eligibility.
 4. Confirm the review, then choose **Restore verified backup**. The app verifies the prepared bytes and session again and switches the active selection. Any intervening edit, lock, expiry or changed preparation requires a new review.
 5. Unlock with the **backup password**. Inspect the archive, memory and briefs. Sharing stays off; authorize current clients again only when ready.
 6. Create an independent encrypted backup before considering removal of old recovery copies.
@@ -25,7 +25,7 @@ Restore accepts standalone files up to 8 GiB. Non-empty WAL/rollback journals ar
 
 While unlocked, choose **Vault settings → Restore or change password → Change vault password**. Enter the current password, a different new password of at least 14 characters and its confirmation. The app verifies the current password, builds and verifies a separately encrypted replacement, and shows a review before switching and locking.
 
-Unlock with the new password. Agent registrations are removed and sharing stays off. Existing backups **and the preserved previous vault still use their previous passwords**. Password change does not retroactively re-encrypt or erase those copies. If the old password was exposed, those retained copies remain exposed to someone holding that password. Keep them only as long as necessary for recovery and follow the cleanup guidance below after verification.
+Unlock with the new password. Agent registrations are removed, automatic-publication rules are disabled and sharing stays off. Existing backups **and the preserved previous vault still use their previous passwords**. Password change does not retroactively re-encrypt or erase those copies. If the old password was exposed, those retained copies remain exposed to someone holding that password. Keep them only as long as necessary for recovery and follow the cleanup guidance below after verification.
 
 No password, hidden recovery key or bypass is stored. Password entry and final submission should be performed by the owner when exercising the native credential-change flow.
 
@@ -41,7 +41,7 @@ An unreadable, malformed or missing-target selector fails closed; a missing sele
 
 1. Quit Pre-Drink and its MCP bridges completely. Preserve the **entire application storage folder**, including `active-vault.json`, all generation folders and every journal. Do not replace or move live database files.
 2. Keep that complete preserved folder while investigating. If recovery from a verified standalone backup is needed, move the old application folder aside, create a fresh `com.predrink.vault` folder, and copy the backup into it as `vault.enc.sqlite3`. Do not copy the old selector, layout marker or unrelated journals into this fresh folder.
-3. Open a current app build and unlock with the backup password. The app applies private directory permissions. Verify the data, revoke restored registrations before enabling sharing (manual copying does not perform in-app registration cleanup), and make an independent backup.
+3. Open a current app build and unlock with the backup password. The app applies private directory permissions. Verify the data, revoke restored registrations and inspect/disable restored automatic-publication rules before enabling sharing (manual copying does not perform the in-app access/policy cleanup), and make an independent backup.
 4. If selecting a retained generation manually, preserve its database **and matching journals together**; do not copy only a potentially incomplete main file. Prefer opening an isolated copy with a current build and making a verified standalone backup before restoring it.
 5. Prefer the reviewed in-app cleanup below. For manual recovery only, first record the active path from Build details and verify the current vault and an independent backup. Quit the app. Remove only a specifically identified inactive generation folder, or an identified old root database with its matching journals. Never remove the active folder, active selector, entire app folder or unknown files as a space-saving guess. There is no automatic purge.
 
@@ -59,7 +59,7 @@ Cleanup only removes the selected known files (and an empty generation directory
 
 ## Forgotten password
 
-There is no reset, server-held key or backdoor. A backup requires its own password. Original ChatGPT ZIPs can rebuild an archive in a fresh vault but cannot recreate manually curated memory and briefs. In-app restore preserves the inaccessible old vault rather than overwriting it.
+There is no reset, server-held key or backdoor. A backup requires its own password. Original ChatGPT ZIPs can rebuild an archive in a fresh vault but cannot recreate manual or agent-authored memory, revision history, session summaries, job progress or briefs. In-app restore preserves the inaccessible old vault rather than overwriting it.
 
 ## Legacy plaintext migration
 
@@ -67,4 +67,8 @@ First-run migration detects v0.1 `vault.sqlite3`, excludes concurrent writers, c
 
 ## Evidence and remaining limits
 
-Automated coverage includes complete disposable wipe-and-restore exercises through both manual copying and the app’s reviewed replacement APIs, verified replacement/restart, original backup byte preservation, encrypted-page damage and partial-page truncation rejection, valid recovery after failed attempts, removal of the original backup after inspection, old/new password checks, agent reset, stale/cancel/expiry/tamper rejection, unsupported schema and active-journal refusal, permissions, an unwritable publication folder and an unpublished-stage interruption model. These use fictional data only. Actual power-loss, disk-full-at-every-write-point, full native password-change submission, broader filesystem support and personal-vault recovery require their own evidence. See [VALIDATION](VALIDATION.md).
+Automated coverage includes complete disposable wipe-and-restore exercises through both manual copying and the app’s reviewed replacement APIs, verified replacement/restart, original backup byte preservation, encrypted-page damage and partial-page truncation rejection, valid recovery after failed attempts, removal of the original backup after inspection, old/new password checks, agent reset, stale/cancel/expiry/tamper rejection, unsupported schema and active-journal refusal, permissions, an unwritable publication folder and an unpublished-stage interruption model. These use fictional data only. A later owner-assisted fictional native password-change/unlock passed; it is distinct from the new automated curation-state rotation regression. Actual power-loss, disk-full-at-every-write-point, broader filesystem support and personal-vault recovery remain open. See [VALIDATION](VALIDATION.md).
+
+## Schema-4 upgrade
+
+Make a verified backup before upgrading. Schema 4 preserves manual notes/approvals and the vault password, adds encrypted provider workspaces/history/jobs and downgrades broad legacy chat grants to shared-only. Create fresh provider-specific registrations if raw access or writing is wanted. The schema-v3 one-time approval reset remains relevant only to older v2 upgrades. Do not run an older app against a schema-4 vault. Encrypted backup tests include the new tables; preservation of curation history and resets during password rotation have dedicated regressions.

@@ -42,3 +42,11 @@ The sharing picker renders 25 choices per page and retains selections across pag
 ## Distribution and review state
 
 The owner requested light-default cream/orange, retained dark mode, a less crowded lock screen and consistent logo artwork. These refinements are implemented for review; they are not a claim that final visual acceptance or public-launch readiness is complete. Native checks use only fictional data. The static landing page still needs a full visual alignment pass and remains unpublished. Keep the repository private until the owner's explicit launch decision.
+
+## Provider curation controls
+
+Agent access contains the provider workspace selector, 30-item draft pages, explicit selection and complete batch review. Cards distinguish Private draft, Withheld, Shared after your review, Shared by your automatic rule and Withdrawn. Do not collapse automatic publication into a “reviewed” badge. Facts/links needing review are explained, and source/privacy restrictions cannot be dismissed as a styling issue.
+
+Edit/history and batch review use the shared contained modal with keyboard focus isolation and Escape cancellation while idle. Closing restores focus to the opening control. Earlier text is saved as a new held revision; it never silently reinstates a previous release. Manual Memory cards direct agent contribution edits back to this workspace.
+
+Keep automatic rules collapsed and off initially. Consent explains future eligible project/decision publication and distinguishes archive from session origin. Registration separates source access, curation and provider-processing consent. Cloud curation is optional; avoid copy implying that connecting a cloud model is required to use the app. A local-model option must not appear available until implemented.

@@ -57,8 +57,8 @@ impl Vault {
                         |r| r.get(0),
                     )
                     .map_err(|e| e.to_string())?;
-                p.memories = self.connection.query_row("SELECT count(*) FROM memory WHERE source_message_id IN (SELECT id FROM messages WHERE conversation_id=?1)", [id], |r| r.get(0)).map_err(|e| e.to_string())?;
-                p.briefs = self.connection.query_row("SELECT count(DISTINCT b.brief_id) FROM brief_sources b JOIN memory m ON m.id=b.memory_id JOIN messages msg ON msg.id=m.source_message_id WHERE msg.conversation_id=?1", [id], |r| r.get(0)).map_err(|e| e.to_string())?;
+                p.memories = self.connection.query_row("SELECT count(*) FROM (SELECT id FROM memory WHERE source_message_id IN (SELECT id FROM messages WHERE conversation_id=?1) UNION SELECT s.note_id FROM curation_sources s JOIN messages msg ON msg.id=s.message_id WHERE msg.conversation_id=?1)", [id], |r| r.get(0)).map_err(|e| e.to_string())?;
+                p.briefs = self.connection.query_row("SELECT count(DISTINCT b.brief_id) FROM brief_sources b JOIN memory m ON m.id=b.memory_id WHERE m.source_message_id IN (SELECT id FROM messages WHERE conversation_id=?1) OR m.id IN (SELECT s.note_id FROM curation_sources s JOIN messages msg ON msg.id=s.message_id WHERE msg.conversation_id=?1)", [id], |r| r.get(0)).map_err(|e| e.to_string())?;
                 let mut q = self
                     .connection
                     .prepare(
@@ -123,7 +123,7 @@ impl Vault {
                 .conversation_id
                 .as_deref()
                 .ok_or("Select a conversation.")?;
-            tx.execute("UPDATE memory SET approved=0,updated_at=max(updated_at+0.000001,unixepoch('subsec')) WHERE source_message_id IN (SELECT id FROM messages WHERE conversation_id=?1)", [id]).map_err(|e| e.to_string())?;
+            tx.execute("UPDATE memory SET approved=0,updated_at=max(updated_at+0.000001,unixepoch('subsec')) WHERE source_message_id IN (SELECT id FROM messages WHERE conversation_id=?1) OR id IN (SELECT s.note_id FROM curation_sources s JOIN messages msg ON msg.id=s.message_id WHERE msg.conversation_id=?1)", [id]).map_err(|e| e.to_string())?;
             tx.execute("DELETE FROM search_index WHERE conversation_id=?1", [id])
                 .map_err(|e| e.to_string())?;
             tx.execute("DELETE FROM conversations WHERE id=?1", [id])

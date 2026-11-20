@@ -73,17 +73,42 @@ pub fn create_configuration(
     executable: &Path,
     socket: &Path,
 ) -> Result<String, String> {
-    let transaction = vault
-        .connection
-        .unchecked_transaction()
-        .map_err(|_| "Could not create the client registration.")?;
-    let NewClient { client, token } = vault.create_client(name, allow_chats)?;
+    create_scoped_configuration(vault, name, allow_chats, false, format, executable, socket)
+}
+
+pub fn create_scoped_configuration(
+    vault: &Vault,
+    name: &str,
+    allow_chats: bool,
+    can_curate: bool,
+    format: ClientFormat,
+    executable: &Path,
+    socket: &Path,
+) -> Result<String, String> {
+    // Format is owner-selected, never supplied by an MCP caller. Generic clients
+    // remain shared-only until an explicit provider enrollment is designed.
+    let provider = if allow_chats || can_curate {
+        match format {
+            ClientFormat::Codex => Some("chatgpt"),
+            ClientFormat::Grok => Some("grok"),
+            ClientFormat::Generic => {
+                return Err("Choose Codex or Grok for provider-specific access.".into())
+            }
+        }
+    } else {
+        None
+    };
+    // Validate paths before registering. A formatting failure must leave no grant.
+    render(format, executable, socket, "validation", "validation")?;
+    let NewClient { client, token } = vault.create_scoped_client(name, provider, can_curate)?;
     let token = Zeroizing::new(token);
-    let mut config = Zeroizing::new(render(format, executable, socket, &client.id, &token)?);
-    transaction
-        .commit()
-        .map_err(|_| "Could not save the client registration.")?;
-    Ok(std::mem::take(&mut *config))
+    match render(format, executable, socket, &client.id, &token) {
+        Ok(config) => Ok(config),
+        Err(error) => {
+            vault.revoke_client(&client.id)?;
+            Err(error)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -137,6 +162,9 @@ mod tests {
             ClientFormat::Grok,
         ] {
             for allow_chats in [false, true] {
+                if matches!(format, ClientFormat::Generic) && allow_chats {
+                    continue;
+                }
                 let text = create_configuration(
                     &vault,
                     "Fictional client",
@@ -160,8 +188,22 @@ mod tests {
                     query: "garden".into(),
                     limit: None,
                     conversation_id: String::new(),
+                    curation: None,
                 };
                 assert_eq!(vault.clients().unwrap()[0].allow_chats, allow_chats);
+                let scoped = vault.clients().unwrap().remove(0);
+                assert_eq!(
+                    scoped.provider.as_deref(),
+                    if allow_chats {
+                        Some(match format {
+                            ClientFormat::Grok => "grok",
+                            _ => "chatgpt",
+                        })
+                    } else {
+                        None
+                    }
+                );
+                assert!(!scoped.can_curate);
                 if allow_chats {
                     assert_eq!(vault.agent_call(&request).unwrap(), json!([]));
                 } else {

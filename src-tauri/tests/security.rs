@@ -42,6 +42,7 @@ fn request(id: &str, token: &str, tool: &str) -> AgentRequest {
         query: "Pre-Drink".into(),
         limit: Some(10),
         conversation_id: String::new(),
+        curation: None,
     }
 }
 

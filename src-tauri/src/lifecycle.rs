@@ -294,6 +294,12 @@ impl Session {
         v.connection
             .execute("DELETE FROM agent_clients", [])
             .map_err(|_| "Cannot reset restored agent access.")?;
+        v.connection
+            .execute(
+                "UPDATE curation_policy SET publish_archive=0,publish_session=0",
+                [],
+            )
+            .map_err(|_| "Cannot reset restored publication policies.")?;
         v.verify()?;
         v.checkpoint()?;
         drop(v);

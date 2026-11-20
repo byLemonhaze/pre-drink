@@ -1,107 +1,93 @@
-# Product brief
-
-## Identity and purpose
+# Product definition
 
 **Pre-Drink — Your AI history, sober and ready.**
 
-A free, open-source, macOS-first local app that turns official AI chat exports into a private searchable archive and a curated knowledge layer other agents can query. The archive preserves evidence; reviewed memory and useful handoffs are the product.
+## What we are building
 
-The current implementation supports ChatGPT only. Claude and Grok are scheduled after the dependable ChatGPT, selective-sharing and recovery milestones; see EXECUTION_PLAN. Official exports are a product decision: no scraping, browser credentials, userscripts or live capture. Users import a newer export to refresh history. Exports may omit material unavailable from the provider, and media support is separate from text parsing.
+Pre-Drink is a free, MIT-licensed, macOS-first memory manager for people who use several AI products. It keeps their imported histories in an encrypted local vault, lets each authorized provider curate only its own history, and makes selected knowledge available as a shared memory layer. Useful context can move between agents without giving each agent the other providers’ raw archives.
 
-## Core principles
+This extends the existing app. The encrypted archive, search, manual notes, briefs, sharing preview and recovery system remain the foundation. It is an independent implementation informed by Loominary, not a fork; see [PROVENANCE](PROVENANCE.md). The repository remains private until the owner chooses public launch.
 
-1. Local by default: no application cloud sync, telemetry, hosted model, remote fonts, or required account.
-2. Preserve source material: curation does not rewrite original chat text.
-3. Deliberate memory: people decide what becomes durable knowledge.
-4. Sharing is an explicit permission boundary, not an automatic consequence of import.
-5. Encryption covers actual storage, search indexes and backups, rather than hiding rows only in the interface.
-6. Use maintained cryptographic implementations; never promise absolute or permanent security.
-7. Build working native flows with persistent data. Describe remaining release gates honestly.
+**Cloud curation is optional, never a requirement.** Import, search, manual memory editing, briefs, selected exports, encryption and backups work offline with no model, API key or account. A connected external agent can do the curation work if the owner authorizes it. The app contains no model runner or background inference service. A local-model curator is a desired future option, with an explicit access policy still to be designed.
 
-## Three-layer information model
+## Current support and intended audience
 
-### Archive: the whole available story
+The first release serves an individual who wants durable context across AI tools and control over what they share. Large archives make agent-assisted curation a core optional workflow: using it must not require reading the entire archive or approving thousands of individual notes.
 
-Stores official conversation JSON, searchable user/assistant text, timestamps, parent relationships and branches. Reimports retain earlier unique JSON snapshots and text branches, and preserve manual privacy flags. The newest imported snapshot defines the active path. It is evidence, including uncertainty and discarded ideas—not automatically trusted instruction.
+Official ZIP import currently supports **ChatGPT only**. Codex/ChatGPT-provider and Grok curator roles are implemented separately from import support. A Grok curator can save explicit session summaries now; it cannot import a Grok archive until that parser is added. Claude/Grok export adapters remain later work. A compatible local MCP client must be configured; this does not connect an arbitrary ChatGPT or Grok web chat automatically.
 
-The phrase “whole story” means the conversation material present in imported exports. This version does not separately import/render images, audio, attachments, tool outputs or reasoning channels. Keep original exports where those matter.
+Official exports are the deliberate historical input. No scraping, userscripts, browser credentials or live capture. Explicit end-of-session notes are a second input to memory, not a captured transcript. User exports and vault contents never belong in GitHub, even while the repository is private.
 
-### Memory: reviewed knowledge
+## Information layers
 
-A user selects a message and saves a rewritten **fact**, **decision**, or **project** note. Notes can also be authored independently. They can be edited, deleted, marked private, or explicitly approved. Saving always returns the note to draft. A separate review displays the saved version; approval is bound to that exact version and rejected if anything changes. Source-linked notes keep provenance and a route back to the conversation. Source restrictions propagate; approval never overrides privacy.
+| Layer                       | Contents                                                                                                                   | Who can read or change it                                                                                                      |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Provider archive            | Imported JSON snapshots, searchable text, timestamps and branches                                                          | Owner locally; an explicitly authorized matching-provider client can read eligible sources. Foreign-provider access is denied. |
+| Provider working memory     | Agent-authored facts, decisions and projects, evidence links, draft revisions and job progress                             | Owner and matching-provider curators. It is private until eligible publication.                                                |
+| Shared memory               | Current eligible contributions released after owner review or a separately enabled narrow rule, plus approved manual notes | Authorized clients can read it. Curators revise only contributions owned by their provider; every revision is re-evaluated.    |
+| Briefs and selected context | Owner-written specifications/handoffs assembled from eligible memory; exact Markdown exports                               | Owner controls composition, review and delivery. Source restrictions continue to apply.                                        |
 
-Example using invented project data: a long discussion about an offline notebook becomes “The first release stores notes locally and supports one owner.” The archive remains unchanged. The note is editable and unapproved until its owner reviews it.
+These are logical layers inside the existing encrypted database, not separate cloud accounts. Facts, decisions and projects remain the supported note types; broader knowledge fits those notes or freeform briefs. Shared does not mean public or uploaded: it means eligible for an authorized retrieval while the app is unlocked and agent sharing is on, or for a separately reviewed export.
 
-### Briefs: usable specifications and handoffs
+### Archive: evidence, not instructions
 
-A brief combines selected memories and original writing into editable Markdown. Suggested structures: problem, intended user, decisions, requirements, exclusions, acceptance criteria, unresolved questions. The current editor is freeform, not an automatic summarizer.
+Reimports retain unique JSON snapshots and alternate text branches, preserve manual privacy and set the active path from the newest imported snapshot. “Whole story” means material available in the official export. Images, audio, attachments, tool outputs and reasoning channels are not separately imported/rendered. Keep original exports when those assets matter.
 
-Adding memory records its reviewed version. Editing, deleting, restricting or unapproving that source blocks the brief from agents until eligible and reviewed again. A deleted source permanently blocks that provenance chain; create a new reviewed brief if needed. This prevents a previously approved document from silently outliving its evidence.
+Private or detected-sensitive source content is excluded from agent access without an override. Clearing a restriction locally never gives a foreign provider access. Imported instructions are untrusted source text, not permission to run commands or change sharing.
 
-Approval permits eligible clients to retrieve a brief. It does not publish it, make a network request or enable sharing. Current client grants cover all eligible approved notes/briefs; per-project and per-brief grants are future work.
+### Working memory: autonomous drafting under a boundary
 
-## Primary workflows
+An authorized curator can read allowed source chunks, create drafts, revise its provider’s contributions and resume a saved batch. It can consolidate repeated information and flag uncertainty; the model’s factual accuracy is not guaranteed by the database. Contributions retain origin, source versions, author/client attribution and revision history. Session summaries are labelled agent assertions and do not pretend the full chat was imported.
 
-1. **Initialize:** create a separate strong vault password, understand that it cannot be reset, then import an official ZIP.
-2. **Find:** search across active and alternative text branches; explicitly enable restricted local review when needed.
-3. **Curate:** keep a useful message as a note; rewrite, classify, review and approve it.
-4. **Synthesize:** assemble a specification from reviewed notes and edit the narrative.
-5. **Share deliberately:** authorize a named client, choose its scope, inspect context, and separately enable sharing.
-6. **Revoke and lock:** stop future access, lock the library, and retain encrypted backups.
+Writes use retry keys and expected revisions. Stale updates and fabricated/foreign source references fail. Existing evidence cannot be silently dropped. Jobs record progress; they do not start a model or prove every important idea was extracted. Multiple authorized clients of one provider share that provider’s workspace, with individual author IDs retained in history.
 
-## MCP and costs
+### Shared memory: publication is a separate decision
 
-MCP is the standard tool interface between an assistant and this vault. An agent can retrieve facts, decisions, projects, topic context or—only with additional permission—safe conversation matches. Agents cannot approve/edit memory, decrypt the database independently, or undo privacy flags.
+The default is private drafts and owner review of a complete selected batch. The owner can edit, resolve flags, restore earlier text as a new held revision or withdraw a contribution. Manual notes retain their existing separate save/review workflow.
 
-No model is needed for import, manual editing, encryption, search or context assembly; these incur no model API charges. The assistant consuming context may use subscription allowances or separately billed API tokens. OpenAI's ChatGPT and API billing are separate: [official billing explanation](https://help.openai.com/en/articles/9039756-managing-billing-for-chatgpt-and-the-api-platform).
+Optional automatic-publication rules are off by default, separated by provider and archive/session origin, and apply only to future eligible project/decision writes. Facts and recognized URLs/instruction-like text require review. Sensitive content, stale/missing evidence and flagged conflicts stay withheld. Automatic releases are labelled **automatic policy**, never described as human-reviewed. A project or decision is not inherently harmless; classification and detection are imperfect.
 
-Potential assistance later: an on-device model suggests clearer notes for human approval, or an explicitly enabled cloud provider assists selected text. Neither exists in this version. Cloud assistance must disclose data flow and estimated usage before sending content. The product is free and open source. Core local import, curation and controlled sharing must not require a subscription or hosted service. Optional third-party model usage could still incur that provider’s charges; it is not part of the current product.
+Agent edits revoke the previous release before the new revision is evaluated. Source changes/restrictions block derived delivery, including briefs and selected exports. Other providers cannot overwrite a contribution or settle its conflict by changing foreign private notes. The receiving agent must treat all shared text as reference data, never executable authority.
 
-## Privacy expectations
+### Briefs: useful specifications and handoffs
 
-New imports are not shared automatically. Agent scope defaults to approved memory/briefs. Raw conversations require a separate grant. Private/sensitive sources and derived content are excluded in the backend. Sharing starts off and resets on lock/restart. Authorization warns that a cloud client can send received context to its provider; a local connection does not make that provider local.
+The owner assembles selected memory and original writing into freeform Markdown. Suggested structure: problem, user, decisions, requirements, exclusions, acceptance criteria and unresolved questions. A brief records the versions of its supporting notes. Changes, withdrawal or source restrictions block delivery until the evidence is eligible and reviewed again. Agents do not edit briefs in this version.
 
-The repository contains source, generic product documents and synthetic fixtures only. No real exports, vaults, personal conversation transcripts, client credentials, signing keys or private screenshots belong in source control—even in a private repository.
+## Everyday workflows
 
-## Acceptance and release status
+1. **Offline use:** create a separate vault password, import a ChatGPT ZIP, search, manually save/review notes and build briefs. No cloud curator is needed.
+2. **Optional archive curation:** authorize a matching-provider curator, explicitly permit source access and writing, then ask it to process an eligible archive manifest in resumable batches. Review the resulting collection or separately enable a narrow publication rule.
+3. **Session handoff:** ask an already connected matching-provider agent to save useful context from the current session. It creates/revises its own session-origin contribution; shared delivery still follows owner policy.
+4. **Cross-agent continuity:** another authorized agent retrieves eligible shared facts, decisions, projects or topic context. It receives no foreign raw excerpts or private draft/history metadata.
+5. **Deliberate export:** choose notes/briefs in Share context, review the complete Markdown and copy/save exactly that selection. A plaintext copy is outside vault encryption.
+6. **Control and recovery:** revoke clients, withdraw contributions, lock, back up and use reviewed restore/password change. These remain owner operations.
 
-Implemented: encrypted persistent storage, ChatGPT import/search, memory CRUD, curated briefs, selected Markdown preview/copy/file export, source-aware privacy, encrypted backups, reviewed in-app restore/password change, conversation deletion/snapshot cleanup, authenticated local MCP and lock lifecycle. Automated checks use synthetic fixtures; an earlier native curation flow was exercised. The current separate-review and flag-recheck screens have basic synthetic native-flow evidence; full failure, lifecycle, representative-export and installed-client checks remain open.
+## Access, privacy and costs
 
-Public-release gates remain: representative real export validation, large-library behavior, physical drag-and-drop, individual client setup, independent security review, Developer ID signing and notarization. See the roadmap and review guide. “Real implementation” does not imply these gates have already passed.
+MCP is a tool connection, not a model or subscription. Default clients are shared-only. Provider-specific raw access and curation require additional owner grants. Provider identity is bound to the credential, not proved by model attestation: never give a Codex credential to Grok or reuse it across providers. Agents cannot change their grants or publication rules, unlock the vault, clear privacy flags or access the key.
 
-The agreed work ahead, dependencies, evidence requirements and owner actions are recorded in [EXECUTION_PLAN](EXECUTION_PLAN.md); [WORK_LOG](WORK_LOG.md) distinguishes implemented work from verification.
+Pre-Drink runs no cloud model and sends no archive to a provider itself. If the owner chooses a cloud-backed curator, the permitted context it receives may be processed by that provider and may consume its subscription/API allowance. Returning an archive to its originating provider is still a new processing event. Consent is explicit at registration; the app does not meter or guarantee external costs. Local model support is future work, not a claim that current cloud-agent inference is offline.
 
-## Future ideas, not current promises
+Agent sharing starts off and resets on lock/restart. A live client grant covers eligible shared notes/briefs broadly; a topic preview does not reduce it to one project. Per-project grants are future work. Locking or revocation stops future retrieval, not copies already received. Same-account malware, an unlocked compromised machine and receiving providers are outside vault encryption’s protection.
 
-- Claude/Grok adapters after representative official fixtures exist.
-- Tags, better topic matching, result pagination and branch visualization.
-- Per-brief/project client permissions and reusable export presets.
-- Superseded decisions, revision history, contradictions and stale-memory review.
-- Local drafting assistance with approval, never silent extraction.
-- Guided retained-generation cleanup and broader recovery/filesystem verification.
+## Persistence and migration
 
-No cloud sync, semantic/embedding search, automatic fact extraction, Gemini, mobile, live capture, or team features in the current scope.
+SQLCipher encrypts archive, memory, drafts, revision history, job progress, search indexes and backups; Argon2id derives keys from a separate vault password. There is no reset or hidden recovery key. Use maintained cryptographic libraries and never promise absolute security.
 
-## Public distribution
+Schema 4 extends the existing store, preserves manual notes/approvals and downgrades broad legacy chat grants to shared-only. New scoped registrations are required for source access/curation. In-app restore/password change preserves curated data/history, removes client registrations, resets automatic-publication rules and leaves sharing off. Old copies retain old passwords and may retain old grants/rules; see [RECOVERY](RECOVERY.md).
 
-A simple landing page explains the three layers, privacy boundaries and supported platform. Its primary download becomes available only after a signed/notarized release is published. Source stays available under MIT. Users run independent local vaults; there is no shared hosted database, required account, or upload to the project repository.
+## Acceptance and remaining work
 
-## Deliberate sharing
+Implemented and deterministically tested: scoped source reads and writes, retry/revision protection, private workspaces, provenance, resumable/incremental manifests, batch release, narrow optional automation, history/withdrawal and source-aware shared delivery. Fictional native checks cover review, editing, held undo, workspace separation and shared preview; compiled MCP tests exercise actual protocol writing. Earlier Codex/Grok model sessions tested retrieval, not this new model-driven curation workflow.
 
-The Share context screen assembles an explicit selection of memories and briefs, shows the entire outgoing Markdown and requires a review confirmation before copy or file save. Restricted/draft/source-blocked items are excluded and explained locally. Delivery uses the same backend assembly and revalidates the reviewed saved/source versions and unlock session. It exports no raw-chat metadata or automatic source excerpts. The owner chooses any subsequent destination app themselves. See [SHARING](SHARING.md).
+Still open: a fresh fictional model-led write/resume/quality run; representative owner-local export and upgrade acceptance when the requested ZIP arrives; broader scale, accessibility and filesystem failure coverage; fresh independent review; signed/notarized distribution and clean installation. See [VALIDATION](VALIDATION.md) for precise evidence, [AGENT_CURATION](AGENT_CURATION.md) for the contract and [EXECUTION_PLAN](EXECUTION_PLAN.md) for order.
 
-This creates plaintext outside the vault; clipboard history, synced folders and receiving products may retain it. A live MCP grant is broader than a selected export and is managed separately. Changing imported source text/role now returns derived memories to draft and blocks dependent briefs until reviewed again.
+## Future ideas and exclusions
 
-## Vault lifecycle
+Later candidates: Grok/Claude export adapters with observed-format fixtures and explicit provider roles; an on-device curator; per-project grants; note/brief full-text search and database pagination; tagging and branch visualization; richer supersession/conflict handling; reusable export presets. A future local agent must not become an implicit cross-provider bypass.
 
-Restore is available while locked or unlocked and does not require access to the old vault password. It inspects a standalone encrypted backup, shows its counts and impact, preserves the previous encrypted vault, and switches only after explicit review. Password change similarly verifies the current password and prepares a replacement under the new password. Both remove agent registrations and leave sharing off. Older recovery copies/backups keep their previous passwords and need separate cleanup after verification.
+No cloud sync, mandatory model subscription, live capture, semantic embeddings, Gemini, mobile, teams, monetization or demand-testing work is in the current plan. Automatic drafting through an explicitly authorized external agent is now in scope; an always-running background extraction service is not.
 
-Conversation deletion removes the archive record, its text/search entries and raw snapshots. Derived memories remain as blocked drafts with missing-source markers; briefs cannot silently share that deleted evidence. Snapshot retention is a separate explicit cleanup of older raw JSON versions, preserving the latest imported raw version and all message branches. No deletion claims secure erasure of independent copies. See RECOVERY and SECURITY.
+## Distribution and portfolio
 
-## Next core workflow: autonomous curation and session handoff
-
-The owner requires agents to do the large-archive curation work, not merely assist with thousands of manual review clicks. An authorized same-provider curator processes its allowed archive, consolidates high-signal knowledge and decisions, maintains revisions, and produces a coherent shared memory collection. The owner controls access/publication policy, reviews an overview and resolves meaningful exceptions. ChatGPT/Codex curates ChatGPT sources; Grok curates Grok sources. Other authorized agents may retrieve eligible shared contributions but cannot curate another provider's private source memory.
-
-The same connection should support an explicit end-of-chat instruction such as “Save the useful memory from this conversation to Pre-Drink.” These agent-authored session updates evolve curated memory without another full export or live scraping. Source provenance, provider isolation, idempotency, revision checks, privacy and undo must apply to both bulk and session updates. A local AI is a desired later curator, with an explicitly defined access rule.
-
-These are core requirements for the next workflow, not implemented MCP write access. Finish the current UI/checks batch first. See [AGENT_CURATION](AGENT_CURATION.md) for the detailed boundaries, sharing-policy decisions, implementation sequence and acceptance criteria. Current manual approval and sharing semantics remain in effect until the new workflow is implemented and verified.
+A simple landing page will explain provider-private histories, optional curation, controlled shared memory and offline use. Download remains disabled until a verified Developer ID signed/notarized artifact exists and the owner chooses publication. Apple enrollment stays at the end. Users run independent local vaults; no hosted vault or account is required. The demo uses fictional data and shows exact outgoing context, a curator revision returning to private state and a denied foreign-source request. Source/docs remain MIT-licensed and private until launch; no public-ready or independent-audit claim is implied by passing tests.

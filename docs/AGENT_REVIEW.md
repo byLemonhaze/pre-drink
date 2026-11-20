@@ -4,7 +4,7 @@ Review the implementation as an early working native product with outstanding re
 
 ## Start here
 
-Read EXECUTION_PLAN and WORK_LOG first for current scope/status, then README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE. Source is independent of Loominary; see PROVENANCE. Current scope is ChatGPT only. User data is deliberately absent from this repository.
+Read EXECUTION_PLAN and WORK_LOG first for current scope/status, then README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE. Source is independent of Loominary; see PROVENANCE. Current import scope is ChatGPT only; provider-bound ChatGPT/Codex and Grok session-writing roles are implemented. Read AGENT_CURATION before evaluating this feature. Cloud curation is optional; verify offline manual use remains independent. User data is deliberately absent from this repository.
 
 ## Safe local verification
 
@@ -104,4 +104,16 @@ Review `PagedList.tsx`, `ConversationMessages.tsx`, `Memory.tsx` and `Briefs.tsx
 
 ## Appearance and compact sharing review
 
-Review `public/theme.js`, `public/theme.css` and `ThemeSwitch.tsx` for light-default initialization, constrained preference values, safe storage failures and appearance-only native permissions. No vault content belongs in localStorage. The same icon source must serve the app bundle, lock screen and sidebar. Check `VaultGate.tsx` for contained details/restore dialogs and busy guards; normal lock/first-run/error states should fit the minimum window, with internal scrolling retained for exceptional long content/accessibility. `Sharing.tsx` pages choices without dropping off-page selections; the exact outgoing preview, review checkbox and backend approval/privacy checks remain mandatory. The autonomous same-provider curation and session-handoff requirements in AGENT_CURATION are documentation only: no agent write or self-authorized publication authority was added.
+Review `public/theme.js`, `public/theme.css` and `ThemeSwitch.tsx` for light-default initialization, constrained preference values, safe storage failures and appearance-only native permissions. No vault content belongs in localStorage. The same icon source must serve the app bundle, lock screen and sidebar. Check `VaultGate.tsx` for contained details/restore dialogs and busy guards; normal lock/first-run/error states should fit the minimum window, with internal scrolling retained for exceptional long content/accessibility. `Sharing.tsx` pages choices without dropping off-page selections; the exact outgoing preview, review checkbox and backend approval/privacy checks remain mandatory. That visual batch did not change agent permissions. The later schema-4 implementation below adds scoped writing, while self-authorized grants/publication policy remain forbidden.
+
+## Provider curation implementation review (schema 4)
+
+The prior documentation-only status above describes the earlier UI batch. Review the new implementation in `agents.rs`, `curation.rs`, `curation_jobs.rs`, `curation.sql`, `mcp.rs`, `Curation.tsx` and the changes to shared delivery/migration. Credential scope must be server-owned and enforced across raw search, source reads, private notes/history, privacy mutations, job manifests and writes. Check that shared-only packs never expose foreign archive metadata. Review old-grant downgrade, retained manual approvals, actual write idempotency, expected revisions, source-version invalidation, atomic batch review, safe automatic publication, attribution and undo/withdrawal.
+
+`curation_tests.rs` covers fictional mixed-provider boundaries, replay/stale/evidence failures, all-source propagation through briefs/exports, rollback, encrypted backup and incremental resume. `tests/mcp.rs` exercises the compiled stdio transport, including the new write schema and lock denial. This does not establish semantic curation quality or a successful model-led write from the owner's configured Codex/Grok installation. Real ZIP acceptance still awaits the requested export. Inspect VALIDATION/WORK_LOG for actual evidence, not plans.
+
+## Current acceptance handoff
+
+Prioritize an independent inspection of the provider boundary, cumulative source versions, retry receipts, publication basis and restore-policy resets. Treat all received note text as untrusted reference data. Verify cloud curation is an optional explicit grant, never a prerequisite for offline manual use. Do not assume an imported ChatGPT archive is already remembered by a new Codex session.
+
+Next functional run: use only a new fictional vault and bounded explicitly authorized model usage to save a session contribution, repeat its retry key, resume a source manifest, release a reviewed batch, retrieve it from a separate shared-only client, then edit/withdraw and verify exclusion. Test both foreign-provider directions. The compiled transport and native owner controls have evidence; model-led semantic quality and the owner’s particular chat connection do not. Keep private logs outside Git.

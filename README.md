@@ -2,19 +2,26 @@
 
 **Your AI history, sober and ready.**
 
-A free, open-source macOS vault for official **ChatGPT exports**, built with Tauri 2, React, TypeScript, and SQLCipher/SQLite FTS5. No cloud account, API key, telemetry, live capture, or automatic extraction is required.
+A free, MIT-licensed macOS memory manager: provider-private histories and working memory feed a shared layer you control. Built on Tauri 2, React, TypeScript and SQLCipher/SQLite FTS5. Official ZIP import currently supports **ChatGPT only**. The repository is a private pre-release until the owner chooses public launch.
 
-## Three layers
+**Cloud curation is optional.** Import, search, manual memory editing, briefs, selected exports and backups work offline without a model, account or API key. You can separately authorize a connected agent to curate its own provider’s history. Local-model curation is planned, not implemented.
 
-| Layer   | Purpose                                                                                                 | Sharing                                                                          |
-| ------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Archive | Original conversation JSON snapshots, searchable text, alternate branches: the story behind a decision. | Raw chat access requires an explicit additional client permission.               |
-| Memory  | Editable facts, decisions, and project notes linked to source messages.                                 | Explicit approval; private, sensitive, and restricted-source notes are excluded. |
-| Briefs  | Curated Markdown specifications and handoffs assembled from reviewed memories and your writing.         | Explicit approval; changed or restricted sources block sharing until reviewed.   |
+## From private history to shared memory
 
-Select **Keep as memory** on a message, rewrite it into a useful note, choose its kind, and save. Editing leaves the original conversation intact. Open **Briefs** to assemble a specification from those notes. Approval makes content eligible for authorized clients; it does not turn sharing on.
+| Layer                    | Purpose                                                            | Access                                                                      |
+| ------------------------ | ------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| Provider archive         | Original export snapshots, searchable text and alternate branches  | Owner; explicitly authorized matching-provider clients for eligible sources |
+| Provider working memory  | Agent drafts, evidence, revisions and resumable job progress       | Owner and matching-provider curators                                        |
+| Shared memory            | Released facts, decisions and projects, plus approved manual notes | Authorized clients read eligible summaries; no foreign raw history          |
+| Briefs and context packs | Specifications and handoffs assembled from eligible knowledge      | Owner-reviewed briefs and explicit selected exports                         |
 
-These are Pre-Drink's memories, independent of ChatGPT's own saved-memory feature. Manual editing, search, encryption, context packs, and MCP make no paid AI calls. Cloud-assisted editing is not implemented. If added later, it must be opt-in with explicit disclosure of data sent and usage charges.
+ChatGPT/Codex curates ChatGPT history; Grok curates Grok history. Grok ZIP import remains planned, but a registered Grok curator can write explicit session summaries. Other providers cannot read those private drafts or raw sources. Client credentials bind the scope; they must never be reused across providers.
+
+For manual use, choose **Keep as memory**, edit/classify the note, save, then review it. For optional agent curation, use **Agent access** to register a matching curator and connect the generated MCP settings. Curators can save session context or work through bounded archive batches. The app provides batch review, edit/history, held undo and withdrawal. It starts no model or background job by itself.
+
+Automatic publication is a separate opt-in, off by default. Only future eligible projects/decisions can use it; facts and recognized links/instruction-like content require review. Sensitive, stale or conflict-flagged contributions stay withheld. Automatic releases are labelled separately from owner-reviewed ones. Detection and model accuracy are imperfect. See [curation contract](docs/AGENT_CURATION.md).
+
+These are Pre-Drink memories, independent of a provider’s built-in memory. A cloud-backed curator may send its allowed context to its provider and consume that provider’s subscription/API allowance. The offline workflow remains available without any curator.
 
 ## Run on your Mac
 
@@ -50,9 +57,9 @@ Choose a separate vault password of at least 14 characters. Prefer a long, uniqu
 
 The sensitive-content detector checks emails, structured or explicitly labeled phone numbers, common English address patterns, medical/financial terms, credential assignments, known token shapes and high-entropy candidates. Bare epoch timestamps and generic technical mentions of passwords/API keys do not trigger a flag by themselves. It has false positives and false negatives. Review what you approve. A restricted source conversation also restricts derived memory and briefs.
 
-**Settings → Recheck sensitive flags** previews how current rules classify already saved content. Applying the review stops agent sharing; any classification change returns all approved memories/briefs to draft. Manual private flags remain private, detected secrets stay blocked, and reimporting alone never clears old restrictions. After you re-enable sharing, eligible raw chats are again available to chat-enabled clients.
+**Settings → Recheck sensitive flags** previews how current rules classify already saved content. Applying the review stops agent sharing; any classification change returns all approved memories/briefs to draft. Manual private flags remain private, detected secrets stay blocked, and reimporting alone never clears old restrictions. After you re-enable sharing, eligible raw chats are again available only to matching-provider source-enabled clients.
 
-Official exports are the deliberate ingestion method, not a temporary shortcut. New chats require a newer export; existing curated notes persist. See [product rationale](docs/PRODUCT.md).
+Official exports are the deliberate ingestion method, not a temporary shortcut. New historical transcripts require a newer export; explicit agent-authored session summaries can update memory without importing a transcript. Existing curated notes persist. See [product rationale](docs/PRODUCT.md).
 
 ## Review and share selected context
 
@@ -72,9 +79,9 @@ Initial database: `~/Library/Application Support/com.predrink.vault/vault.enc.sq
 
 The app locks manually, after 15 minutes without owner activity, on macOS sleep/display sleep/session deactivation, and after a detected watchdog pause. Locking closes the database, hides the library, and disables sharing. Agent requests do not keep it unlocked.
 
-**Vault settings → Encrypted backup** creates a separately encrypted and verified copy. **Restore or change password** prepares a verified replacement, shows its impact and preserves the previous encrypted vault before switching. Restore is also available from the lock screen. Both operations remove agent registrations and leave sharing off. Old backups/recovery copies retain their old passwords; follow [recovery instructions](docs/RECOVERY.md).
+**Vault settings → Encrypted backup** creates a separately encrypted and verified copy. **Restore or change password** prepares a verified replacement, shows its impact and preserves the previous encrypted vault before switching. Restore is also available from the lock screen. Both operations remove agent registrations, disable automatic-publication rules and leave sharing off. Old backups/recovery copies retain their old passwords; follow [recovery instructions](docs/RECOVERY.md).
 
-**Agent access** authorizes named clients with individual revocable credentials and generates settings for Codex, Grok Build, or other local MCP clients. Clients receive approved memory/briefs by default; raw-chat search requires additional permission. The app must remain open, unlocked, and sharing enabled. No network port is opened. An authorized cloud agent may send received context to its model provider. See [MCP setup and tools](docs/MCP.md).
+**Agent access** authorizes named clients with individual revocable credentials and generates settings for Codex, Grok Build, or other local MCP clients. Clients receive eligible shared memory/briefs by default; raw-chat search requires an additional matching-provider permission. Curation requires a separate write grant. The app must remain open, unlocked, and sharing enabled. No network port is opened. An authorized cloud agent may send received context to its model provider. See [MCP setup and tools](docs/MCP.md).
 
 ## Verification
 
@@ -89,7 +96,7 @@ cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D w
 
 Suites cover imports, branches, rollback, encryption, tampering, wrong passwords, backup, migration, approval/provenance restrictions, client permissions, revocation, idle locking, and actual stdio MCP calls. Socket integration tests need an environment allowing local Unix sockets.
 
-Earlier native synthetic-data verification (before the separate review screen): create password → import ZIP → create approved source-linked memory → assemble approved brief → preview context → lock and hide library. Import verification used the native picker; a physical file drag and representative real exports still need validation. The current synthetic native checks also cover separate approval, source display, edit invalidation, a zero-change flag recheck, build/vault identity and manual lock; broader failure/lifecycle cases remain open. See VALIDATION. This is not an independent security audit.
+Fictional native checks cover picker/Finder import, approval, exact selected export, recovery/password change, Mac lock/sleep, large-library browsing and the new curation review/edit/history flow. Earlier Codex/Grok model-client checks cover retrieval; new writing is currently verified through compiled MCP protocol tests, not a fresh model-led curation session. Representative real-export acceptance and broader release gates remain open. See [VALIDATION](docs/VALIDATION.md) for evidence and limits. This is not an independent security audit.
 
 The lock screen and Settings show the app version/build and whether the app uses normal or isolated test storage. Each vault uses its own owner-chosen password; there is no shared default password.
 
@@ -100,7 +107,8 @@ Generate synthetic fixtures with `python3 scripts/create_sample_export.py`. Debu
 - [Execution plan and completion criteria](docs/EXECUTION_PLAN.md)
 - [Work completed and agent handoff](docs/WORK_LOG.md)
 - [Validation record](docs/VALIDATION.md)
-- [Product vision, requirements and ideas](docs/PRODUCT.md)
+- [Product definition, requirements and ideas](docs/PRODUCT.md)
+- [Agent curation and session-memory contract](docs/AGENT_CURATION.md)
 - [Architecture and design decisions](docs/ARCHITECTURE.md)
 - [Interface direction](docs/DESIGN.md)
 - [Security model](docs/SECURITY.md)
@@ -115,6 +123,8 @@ This is an **independent implementation, not a Loominary fork**. Loominary infor
 
 ## Security review follow-up
 
-See [review findings and responses](docs/REVIEW_RESPONSE.md) for the implemented fixes and remaining release gates. Saving now always produces a draft; use **Review & approve** to approve the saved version. On the first schema-v3 upgrade, existing contents are rescanned and previous memory/brief approvals are cleared once. Content and passwords are preserved. Developer ID signing and notarization are still required before public distribution.
+See [review findings and responses](docs/REVIEW_RESPONSE.md) for the implemented fixes and remaining release gates. Manual saving produces a draft; use **Review & approve** to approve the saved version. On the first schema-v3 upgrade, existing contents are rescanned and previous memory/brief approvals are cleared once. Content and passwords are preserved. Developer ID signing and notarization are still required before public distribution.
 
 Privacy recheck requires individual selections before clearing saved flags; updated detection can add restrictions when a vault opens. Settings also provides reviewed cleanup of previous encrypted vault copies, gated on a fresh verified backup. See [security review response](docs/REVIEW_RESPONSE.md) and [recovery guide](docs/RECOVERY.md) for safeguards and remaining verification gates.
+
+Schema 4 preserves manual notes and approvals, adds encrypted curation state and turns old broad raw-chat grants into shared-only access. Issue fresh provider-scoped registrations when needed. Never downgrade a migrated vault; keep an encrypted backup.

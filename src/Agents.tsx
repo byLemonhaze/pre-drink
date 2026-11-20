@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import Curation from "./Curation";
 import { ShieldCheck } from "lucide-react";
 interface Client {
   id: string;
   name: string;
   allow_chats: boolean;
+  provider: "chatgpt" | "grok" | null;
+  can_curate: boolean;
 }
 type ClientFormat = "codex" | "grok" | "generic";
 const destinations: Record<
@@ -31,6 +34,7 @@ export default function Agents({ sharing }: { sharing: boolean }) {
   const [clients, setClients] = useState<Client[]>([]);
   const [name, setName] = useState("");
   const [allowChats, setAllowChats] = useState(false);
+  const [canCurate, setCanCurate] = useState(false);
   const [consent, setConsent] = useState(false);
   const [format, setFormat] = useState<ClientFormat>("codex");
   const [config, setConfig] = useState<{
@@ -58,6 +62,7 @@ export default function Agents({ sharing }: { sharing: boolean }) {
       const text = await invoke<string>("create_client", {
         name,
         allowChats,
+        canCurate,
         format,
       });
       setConfig({ format, text });
@@ -129,6 +134,7 @@ export default function Agents({ sharing }: { sharing: boolean }) {
           trust. Revocation cannot recall context already received.
         </p>
       </section>
+      <Curation />
       <section className="settings-card">
         <h2>Authorize a client</h2>
         <form onSubmit={register}>
@@ -139,6 +145,8 @@ export default function Agents({ sharing }: { sharing: boolean }) {
               disabled={busy}
               onChange={(e) => {
                 setFormat(e.target.value as ClientFormat);
+                setAllowChats(false);
+                setCanCurate(false);
                 setConsent(false);
               }}
             >
@@ -164,18 +172,36 @@ export default function Agents({ sharing }: { sharing: boolean }) {
             <input
               type="checkbox"
               checked={allowChats}
-              disabled={busy}
+              disabled={busy || format === "generic" || canCurate}
               onChange={(e) => {
                 setAllowChats(e.target.checked);
                 setConsent(false);
               }}
             />
-            Also allow searching safe raw conversations and marking them private
+            Allow access to safe {format === "grok" ? "Grok" : "ChatGPT"}{" "}
+            history only
+          </label>
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={canCurate}
+              disabled={busy || format === "generic"}
+              onChange={(e) => {
+                setCanCurate(e.target.checked);
+                if (e.target.checked) setAllowChats(true);
+                setConsent(false);
+              }}
+            />
+            Let this curator draft and revise its own provider’s memory
           </label>
           <p className="fine-print">
             By default, access is limited to approved memory and briefs. Private
-            or sensitive material is always excluded. Agents cannot edit notes,
-            approve content, unlock the vault, or remove privacy flags.
+            or sensitive source material is excluded. Curators can write only
+            their provider’s contributions. They cannot change sharing rules,
+            unlock the vault, or remove privacy flags. Other clients stay
+            shared-only. Provider identity is bound to this credential; never
+            give a Codex credential to Grok or another provider. Cloud curation
+            sends the permitted archive content to that provider.
           </p>
           <label className="checkbox-row">
             <input
@@ -224,7 +250,7 @@ export default function Agents({ sharing }: { sharing: boolean }) {
             <strong>{client.name}</strong>
             <p>
               {client.allow_chats
-                ? "Approved memory, briefs, and safe chat search"
+                ? `${client.provider === "grok" ? "Grok" : "ChatGPT"} history only${client.can_curate ? " + private curation" : ""}; eligible shared memory`
                 : "Approved memory and briefs only"}
             </p>
           </div>

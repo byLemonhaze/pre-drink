@@ -1954,3 +1954,32 @@ h1,
   width: 28px;
   height: 28px;
 }
+
+/* Provider workspaces reuse the app's light/dark semantic palette. */
+.curation-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+.curation-note {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line);
+}
+.curation-content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.curation-review {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+.curation-panel details {
+  margin: 18px 0;
+}
+.curation-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}

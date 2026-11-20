@@ -49,3 +49,11 @@ On first opening a schema-v2 vault with this version, the app rescans existing t
 - UI component cleanup and accessibility work.
 
 This patch does not add cloud sync, embeddings, automatic extraction, Claude/Grok import, public hosting or private test data.
+
+## Later provider-curation design feedback (2026-11-20)
+
+The owner supplied further product/security suggestions, not an independent audit. The implementation retains optional autonomous private drafting and separates publication: default owner batch review, with narrowly scoped automatic project/decision publication only after explicit opt-in. Facts/recognized links/instruction-like text require review; sensitivity, stale sources and flagged conflicts block delivery. Automatic releases carry an explicit basis rather than a “human-reviewed” claim.
+
+Source attribution, complete encrypted revisions, held undo and backend provider ownership address traceability and cross-provider mutation. Neither attribution nor the heuristic eliminates prompt injection; shared content remains untrusted reference data. Cloud curation is optional, separately disclosed at registration and not required for offline use. A local-model curator is a future option, not the current default implementation. The comparison with other products was not independently re-researched and is not used as an exclusivity claim.
+
+Schema 4 supersedes the older v3 target described above: v3’s reset still applies to older upgrades, while v3 → v4 preserves manual approvals and downgrades legacy raw grants. See AGENT_CURATION, SECURITY and VALIDATION for current behavior and remaining acceptance.

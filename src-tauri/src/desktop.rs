@@ -1,6 +1,6 @@
 use crate::{
     agents::AgentClient,
-    client_config::{create_configuration, ClientFormat},
+    client_config::{create_scoped_configuration, ClientFormat},
     db::Vault,
     import::read_chatgpt_zip,
     memory::{Memory, MemoryInput},
@@ -229,6 +229,7 @@ async fn list_clients(store: State<'_, Store>) -> Result<Vec<AgentClient>, Strin
 async fn create_client(
     name: String,
     allow_chats: bool,
+    can_curate: bool,
     format: ClientFormat,
     store: State<'_, Store>,
 ) -> Result<String, String> {
@@ -236,16 +237,107 @@ async fn create_client(
         let executable =
             std::env::current_exe().map_err(|_| "Cannot locate the Pre-Drink executable.")?;
         let socket = s.directory.join("agents.sock");
-        let config = create_configuration(
+        let config = create_scoped_configuration(
             s.access()?,
             &name,
             allow_chats,
+            can_curate,
             format,
             &executable,
             &socket,
         )?;
         s.touch();
         Ok(config)
+    })
+    .await
+}
+#[tauri::command]
+async fn list_curation(
+    provider: String,
+    after: String,
+    store: State<'_, Store>,
+) -> Result<Vec<crate::curation::CurationNote>, String> {
+    owner_op(store.inner().clone(), move |v| {
+        v.curation_notes(&provider, &after, true)
+    })
+    .await
+}
+#[tauri::command]
+async fn list_curation_jobs(
+    provider: String,
+    store: State<'_, Store>,
+) -> Result<serde_json::Value, String> {
+    owner_op(store.inner().clone(), move |v| {
+        v.curate(
+            &provider,
+            "owner",
+            &crate::curation::CurationOperation::Jobs {},
+        )
+    })
+    .await
+}
+#[tauri::command]
+async fn curation_policies(store: State<'_, Store>) -> Result<serde_json::Value, String> {
+    owner_op(store.inner().clone(), |v| v.curation_policies()).await
+}
+#[tauri::command]
+async fn set_curation_policy(
+    provider: String,
+    archive: bool,
+    session: bool,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    owner_op(store.inner().clone(), move |v| {
+        v.set_curation_policy(&provider, archive, session)
+    })
+    .await
+}
+#[tauri::command]
+async fn review_curation(
+    ids: Vec<String>,
+    store: State<'_, Store>,
+) -> Result<crate::curation::CurationReview, String> {
+    owner_op(store.inner().clone(), move |v| v.curation_review(&ids)).await
+}
+#[tauri::command]
+async fn publish_curation(
+    ids: Vec<String>,
+    review_hash: String,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    owner_op(store.inner().clone(), move |v| {
+        v.publish_curation_review(&ids, &review_hash)
+    })
+    .await
+}
+#[tauri::command]
+async fn edit_curation(
+    id: String,
+    revision: i64,
+    content: String,
+    conflict: bool,
+    store: State<'_, Store>,
+) -> Result<serde_json::Value, String> {
+    owner_op(store.inner().clone(), move |v| {
+        v.edit_curation(&id, revision, &content, conflict)
+    })
+    .await
+}
+#[tauri::command]
+async fn curation_history(
+    id: String,
+    store: State<'_, Store>,
+) -> Result<Vec<crate::curation::CurationNote>, String> {
+    owner_op(store.inner().clone(), move |v| v.curation_history(&id)).await
+}
+#[tauri::command]
+async fn withdraw_curation(
+    id: String,
+    revision: i64,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    owner_op(store.inner().clone(), move |v| {
+        v.withdraw_curation(&id, revision)
     })
     .await
 }
@@ -526,6 +618,15 @@ pub fn run() {
             copy_share,
             save_share,
             list_clients,
+            list_curation,
+            list_curation_jobs,
+            curation_policies,
+            set_curation_policy,
+            review_curation,
+            publish_curation,
+            withdraw_curation,
+            edit_curation,
+            curation_history,
             create_client,
             revoke_client,
             set_sharing,
