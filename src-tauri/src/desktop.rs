@@ -162,10 +162,11 @@ async fn preview_privacy_recheck(
 #[tauri::command]
 async fn apply_privacy_recheck(
     review_hash: String,
+    clear_ids: Vec<String>,
     store: State<'_, Store>,
 ) -> Result<crate::privacy_recheck::PrivacyRecheck, String> {
     session_op(store.inner().clone(), move |s| {
-        s.apply_privacy_recheck(&review_hash)
+        s.apply_privacy_recheck(&review_hash, &clear_ids)
     })
     .await
 }
@@ -269,8 +270,27 @@ async fn backup_vault(
     store: State<'_, Store>,
 ) -> Result<(), String> {
     let password = Zeroizing::new(password);
-    owner_op(store.inner().clone(), move |v| {
-        v.encrypted_backup(&PathBuf::from(path), &password)
+    session_op(store.inner().clone(), move |s| {
+        s.backup_with_receipt(&PathBuf::from(path), &password)
+    })
+    .await
+}
+
+#[tauri::command]
+async fn preview_retained_vaults(
+    store: State<'_, Store>,
+) -> Result<crate::retained_vaults::RetainedReview, String> {
+    session_op(store.inner().clone(), |s| s.preview_retained_vaults()).await
+}
+#[tauri::command]
+async fn remove_retained_vault(
+    id: String,
+    review_hash: String,
+    confirmation: String,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| {
+        s.remove_retained_vault(&id, &review_hash, &confirmation)
     })
     .await
 }
@@ -510,6 +530,8 @@ pub fn run() {
             revoke_client,
             set_sharing,
             backup_vault,
+            preview_retained_vaults,
+            remove_retained_vault,
             prepare_restore,
             prepare_password_change,
             apply_replacement,

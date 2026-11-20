@@ -72,3 +72,11 @@ Read `src-tauri/tests/fixtures/README.md` and the ChatGPT manifest. The golden e
 ## Client configuration review focus
 
 Review `client_config.rs`, `desktop::create_client`, and `Agents.tsx` together: selected format must match the returned configuration and destination instructions, failed formatting must roll back registration, paths must survive serialization without becoming shell expressions, and tokens must remain environment entries. Grok expands `${...}` in settings, so affected paths are rejected. Settings are shown locally and never written into another agent's files. Verify the native selector, consent reset, one-time display and hide/revoke distinction; compiled/read-only parser evidence does not replace that walkthrough.
+
+## Round 3 fixes to review first
+
+Review `privacy_recheck.rs` and `PrivacyRecheck.tsx`: explicit individual complete-item selections, limits, private/change staleness, conversation/message dependency, rollback and approval reset. Check `Vault::initialize` applies stronger detection before existing-vault agent access without automatically clearing old flags. The new tests exercise the reported plaintext shapes and opening an encrypted v3 vault with an existing chat-enabled client.
+
+Review `retained_vaults.rs`, `RetainedVaults.tsx` and the backup receipt in Session: backup outside storage, byte/identity verification, change/session binding, active/pending exclusion, canonical generation enumeration, links/unknown files, partial-failure wording and strictly enumerated deletion. `tests/retained_vaults.rs` uses disposable encrypted vaults only. Verify native selection/confirmation and failure UI separately; automated checks do not establish that walkthrough.
+
+Review macOS clipboard preparation in `sharing.rs`: current-host-only, confidential marker before plaintext, failure handling. The native API test uses a unique pasteboard; it is not cross-device or clipboard-manager acceptance evidence. No auto-clear timer is implemented. Keep Apple signing last and the repository private.

@@ -26,6 +26,7 @@ pub struct VaultStatus {
 pub struct Session {
     pub vault: Option<Vault>,
     pub(crate) pending_replacement: Option<crate::lifecycle::PendingReplacement>,
+    pub(crate) backup_receipt: Option<crate::retained_vaults::BackupReceipt>,
     pub directory: PathBuf,
     pub isolated_storage: bool,
     pub sharing: bool,
@@ -39,6 +40,7 @@ impl Session {
         Self {
             vault: None,
             pending_replacement: None,
+            backup_receipt: None,
             directory,
             isolated_storage: false,
             sharing: false,
@@ -74,6 +76,7 @@ impl Session {
         })
     }
     pub fn lock(&mut self) {
+        self.backup_receipt = None;
         let prepared = self.pending_replacement.is_some();
         self.cancel_replacement();
         if self.vault.is_none() && !self.sharing && !prepared {
@@ -100,9 +103,10 @@ impl Session {
     pub fn apply_privacy_recheck(
         &mut self,
         review_hash: &str,
+        clear_ids: &[String],
     ) -> Result<crate::privacy_recheck::PrivacyRecheck, String> {
         self.sharing = false;
-        let result = self.access()?.apply_privacy_recheck(review_hash);
+        let result = self.access()?.apply_privacy_recheck(review_hash, clear_ids);
         self.touch();
         result
     }

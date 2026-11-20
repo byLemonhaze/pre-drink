@@ -262,10 +262,11 @@ export default function Sharing() {
                 I reviewed this exact text and want to share it.
               </label>
               <p className="fine-print">
-                Copying or saving creates plaintext outside vault encryption. A
-                destination app, clipboard manager or synced folder may retain
-                it. Review before sending it to any AI product. Locking the
-                vault cannot retract a copy.
+                Copy stays on this Mac and is marked confidential for
+                cooperating clipboard managers. Copying or saving creates
+                plaintext outside vault encryption. A destination app, clipboard
+                manager or synced folder may retain it. Review before sending it
+                to any AI product. Locking the vault cannot retract a copy.
               </p>
               <div className="form-actions">
                 <button

@@ -219,15 +219,45 @@ pub fn save_markdown(path: &Path, markdown: &str) -> Result<(), String> {
 
 #[cfg(all(feature = "desktop", target_os = "macos"))]
 pub fn copy_markdown(markdown: &str) -> Result<(), String> {
-    use objc2_app_kit::{NSPasteboard, NSPasteboardTypeString};
+    write_private_clipboard(&objc2_app_kit::NSPasteboard::generalPasteboard(), markdown)
+}
+
+#[cfg(all(feature = "desktop", target_os = "macos"))]
+fn write_private_clipboard(
+    board: &objc2_app_kit::NSPasteboard,
+    markdown: &str,
+) -> Result<(), String> {
+    use objc2_app_kit::{NSPasteboardContentsOptions, NSPasteboardTypeString};
     use objc2_foundation::NSString;
-    let board = NSPasteboard::generalPasteboard();
-    board.clearContents();
+    board.prepareForNewContentsWithOptions(NSPasteboardContentsOptions::CurrentHostOnly);
+    // Set the confidentiality marker BEFORE the plaintext. Cooperating clipboard
+    // managers can then recognize it as soon as any text is available.
+    if !board.setString_forType(
+        &NSString::from_str(""),
+        &NSString::from_str("org.nspasteboard.ConcealedType"),
+    ) {
+        return Err("Couldn't mark the clipboard confidential. Use Save Markdown instead.".into());
+    }
     let copied =
         unsafe { board.setString_forType(&NSString::from_str(markdown), NSPasteboardTypeString) };
     if copied {
         Ok(())
     } else {
         Err("Couldn't write to the clipboard. Use Save Markdown instead.".into())
+    }
+}
+
+#[cfg(all(test, feature = "desktop", target_os = "macos"))]
+mod clipboard_tests {
+    #[test]
+    fn private_pasteboard_contains_confidential_marker_and_exact_text() {
+        // A unique pasteboard never reads or replaces the user's general clipboard.
+        let board = objc2_app_kit::NSPasteboard::pasteboardWithUniqueName();
+        super::write_private_clipboard(&board, "# Fictional garden brief\nNative plants.").unwrap();
+        let marker = objc2_foundation::NSString::from_str("org.nspasteboard.ConcealedType");
+        assert!(board.stringForType(&marker).is_some());
+        let text = unsafe { board.stringForType(objc2_app_kit::NSPasteboardTypeString) }.unwrap();
+        assert_eq!(text.to_string(), "# Fictional garden brief\nNative plants.");
+        board.clearContents();
     }
 }

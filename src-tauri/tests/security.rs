@@ -510,11 +510,13 @@ fn privacy_recheck_disables_sharing_even_if_the_preview_is_stale() {
     let mut s = Session::new(dir.path().into());
     s.vault = Some(Vault::memory().unwrap());
     s.sharing = true;
-    assert!(s.apply_privacy_recheck("stale-synthetic-preview").is_err());
+    assert!(s
+        .apply_privacy_recheck("stale-synthetic-preview", &[])
+        .is_err());
     assert!(!s.sharing);
     let preview = s.access().unwrap().privacy_recheck_preview().unwrap();
     s.sharing = true;
-    s.apply_privacy_recheck(&preview.review_hash).unwrap();
+    s.apply_privacy_recheck(&preview.review_hash, &[]).unwrap();
     assert!(!s.sharing);
 }
 

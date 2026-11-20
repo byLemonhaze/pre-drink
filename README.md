@@ -58,7 +58,7 @@ Official exports are the deliberate ingestion method, not a temporary shortcut. 
 
 **Share context** lets you choose memories and briefs, inspect the complete outgoing Markdown and explicitly copy or save that exact text. Private, sensitive, unapproved or source-blocked items are excluded; explanations stay in the app. Every delivery rechecks the saved versions and current session. A changed item/source or lock requires a fresh preview. Existing files are never overwritten.
 
-The file and clipboard are plaintext outside vault encryption. Nothing is sent to an AI provider automatically, and this selection does not narrow existing live MCP grants. See [sharing workflow and limits](docs/SHARING.md).
+The file and clipboard are plaintext outside vault encryption. Mac clipboard copies stay on the current device and are marked confidential for cooperating history managers. Nothing is sent to an AI provider automatically, and this selection does not narrow existing live MCP grants. See [sharing workflow and limits](docs/SHARING.md).
 
 If a newer import changes a source message's text or role, its linked memories return to draft and dependent briefs require source review again. An unchanged reimport preserves approvals.
 
@@ -116,3 +116,5 @@ This is an **independent implementation, not a Loominary fork**. Loominary infor
 ## Security review follow-up
 
 See [review findings and responses](docs/REVIEW_RESPONSE.md) for the implemented fixes and remaining release gates. Saving now always produces a draft; use **Review & approve** to approve the saved version. On the first schema-v3 upgrade, existing contents are rescanned and previous memory/brief approvals are cleared once. Content and passwords are preserved. Developer ID signing and notarization are still required before public distribution.
+
+Privacy recheck requires individual selections before clearing saved flags; updated detection can add restrictions when a vault opens. Settings also provides reviewed cleanup of previous encrypted vault copies, gated on a fresh verified backup. See [security review response](docs/REVIEW_RESPONSE.md) and [recovery guide](docs/RECOVERY.md) for safeguards and remaining verification gates.

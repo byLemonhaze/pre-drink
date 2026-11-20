@@ -40,6 +40,7 @@ import ArchiveRemoval from "./ArchiveRemoval";
 import VaultMaintenance from "./VaultMaintenance";
 import BuildInfo, { type VaultIdentity } from "./BuildInfo";
 import PrivacyRecheck from "./PrivacyRecheck";
+import RetainedVaults from "./RetainedVaults";
 import Sharing from "./Sharing";
 const native = isTauri();
 const emptyStats: Stats = {
@@ -997,6 +998,7 @@ function App({
               <BuildInfo identity={identity} />
             </section>
             <Backup />
+            <RetainedVaults />
             <section className="settings-card">
               <h2>Archive snapshot retention</h2>
               <p>

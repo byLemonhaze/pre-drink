@@ -5,6 +5,7 @@ interface Preview {
   cleared: number;
   approvals_to_reset: number;
   review_hash: string;
+  clear_candidates: { key: string; kind: string; content: string }[];
 }
 export default function PrivacyRecheck({
   onApplied,
@@ -12,12 +13,14 @@ export default function PrivacyRecheck({
   onApplied: () => void;
 }) {
   const [preview, setPreview] = useState<Preview | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   async function inspect() {
     setBusy(true);
     setMessage("");
     setPreview(null);
+    setSelected([]);
     try {
       setPreview(await invoke<Preview>("preview_privacy_recheck"));
     } catch (e) {
@@ -33,6 +36,7 @@ export default function PrivacyRecheck({
     try {
       await invoke("apply_privacy_recheck", {
         reviewHash: preview.review_hash,
+        clearIds: selected,
       });
       setPreview(null);
       setMessage(
@@ -64,7 +68,8 @@ export default function PrivacyRecheck({
       {preview && (
         <div role="region" aria-label="Flag recheck preview">
           <p>
-            {preview.cleared} flags would clear · {preview.flagged} new flags ·{" "}
+            {preview.cleared} possible false flags · {selected.length} selected
+            to clear · {preview.flagged} new flags ·{" "}
             {preview.approvals_to_reset} approvals would return to draft.
           </p>
           <p className="fine-print">
@@ -74,6 +79,41 @@ export default function PrivacyRecheck({
             Cleared conversations may become available to chat-enabled clients
             if you later turn sharing back on.
           </p>
+          <p>
+            Nothing is selected automatically. Read every item before clearing
+            it. Clear flagged messages before (or together with) their
+            conversation. Up to 100 complete items are shown per review; items
+            over 16 KB stay restricted.
+          </p>
+          {preview.clear_candidates.map((item) => (
+            <div key={item.key} className="settings-card">
+              <label>
+                <input
+                  type="checkbox"
+                  disabled={busy}
+                  checked={selected.includes(item.key)}
+                  onChange={(event) =>
+                    setSelected((ids) =>
+                      event.target.checked
+                        ? [...ids, item.key]
+                        : ids.filter((id) => id !== item.key),
+                    )
+                  }
+                />
+                Clear this {item.kind} flag
+              </label>
+              <pre
+                style={{
+                  whiteSpace: "pre-wrap",
+                  overflowWrap: "anywhere",
+                  maxHeight: 280,
+                  overflow: "auto",
+                }}
+              >
+                {item.content}
+              </pre>
+            </div>
+          ))}
           <div className="form-actions">
             <button
               className="button secondary"

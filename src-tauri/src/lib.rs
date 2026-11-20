@@ -28,3 +28,5 @@ mod mac_lock;
 pub mod lifecycle;
 
 pub mod retention;
+
+pub mod retained_vaults;

@@ -4,7 +4,7 @@ use std::{path::Path, time::Duration};
 
 pub struct Vault {
     pub(crate) connection: Connection,
-    path: String,
+    pub(crate) path: String,
 }
 
 impl Vault {
@@ -115,7 +115,9 @@ impl Vault {
                 .execute_batch("COMMIT;")
                 .map_err(|e| e.to_string())?;
         }
-        Ok(Self { connection, path })
+        let mut vault = Self { connection, path };
+        vault.enforce_sensitive_rules()?;
+        Ok(vault)
     }
 
     pub fn checkpoint(&self) -> Result<(), String> {

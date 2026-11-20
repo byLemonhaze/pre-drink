@@ -23,7 +23,7 @@ Locking/reopening invalidates the preview. A copy already completed cannot be re
 
 ## Where protection ends
 
-The clipboard and `.md` file are plaintext outside the encrypted vault. Clipboard managers, other apps, cloud-synced folders and receiving AI providers may retain copies. New files have owner-only permissions on macOS, but that does not encrypt them. No automatic clipboard clearing or remote deletion is promised.
+The clipboard and `.md` file are plaintext outside the encrypted vault. On macOS, copying uses [Apple’s current-host-only option](https://developer.apple.com/documentation/appkit/nspasteboard/contentsoptions/currenthostonly) and first writes the [confidential clipboard marker](https://nspasteboard.org/). This limits Universal Clipboard transfer and asks cooperating managers to treat the content as confidential; it cannot enforce every manager’s behavior. Clipboard managers, other apps, cloud-synced folders and receiving AI providers may retain copies. New files have owner-only permissions on macOS, but that does not encrypt them. No automatic clipboard clearing or remote deletion is promised.
 
 This selection has no effect on **Agent access**. Existing MCP grants can query all eligible memories/briefs in their scope, and optionally raw chats. Previewing one brief or topic does not narrow those permissions. Manage or revoke clients separately.
 

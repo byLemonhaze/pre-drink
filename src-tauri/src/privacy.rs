@@ -9,6 +9,7 @@ static SENSITIVE: LazyLock<RegexSet> = LazyLock::new(|| {
         r"(?:\b\d{3}[ .-]|\(\d{3}\)[ ]?)\d{3}[ .-]?\d{4}\b",
         r"\+\d(?:[ ().-]?\d){7,14}\b",
         r"(?i)\b(?:phone|telephone|tel|mobile|fax|whatsapp|call)\s*(?:number\s*)?(?:is\s*)?[:=]?\s*\d{9,15}\b",
+        r"(?i)\b(?:call|text|reach|contact)\s+(?:me|us)\s+(?:at|on)\s*[:=]?\s*\d{9,15}\b",
         r"(?i)\b\d{1,6}\s+(?:[\p{L}]+\s+){1,4}(?:street|avenue|road|boulevard|lane|drive|st|ave|rd)\b",
         r"(?i)\b(diagnosis|diagnosed|prescription|medical|medication|patient|social security|ssn|bank account|credit card|routing number)\b",
         r#"(?i)\b(?:password|passwd|api[_ -]?key|secret[_ -]?key)\b["']?\s*[:=]\s*["']?[^\s"']{6,}"#,
@@ -19,6 +20,10 @@ static SENSITIVE: LazyLock<RegexSet> = LazyLock::new(|| {
 // "password". A match cannot be overridden by approval or chat scope.
 static SECRETS: LazyLock<RegexSet> = LazyLock::new(|| {
     RegexSet::new([
+        // Contextual assignments include short passcodes and ordinary words.
+        r#"(?i)\b(?:password|passwd|passcode|pin|api[_ -]?key|secret[_ -]?key)\b["']?\s*(?:[:=]|is\b)\s*["']?[^\s"']+"#,
+        // Bare assignments with a digit, while avoiding normal technical prose.
+        r#"(?i)\b(?:password|passwd|passcode|pin)\s+["']?[^\s"']*\d[^\s"']*"#,
         r"\bsk-(?:proj-|ant-|svcacct-)?[A-Za-z0-9_-]{20,}",
         r"\bgh[pousr]_[A-Za-z0-9]{20,}\b",
         r"\bgithub_pat_[A-Za-z0-9_]{20,}\b",
@@ -96,6 +101,12 @@ mod tests {
             "phone: 5145551234",
             "mobile number is 447911123456",
             "password = synthetic-secret",
+            "my wifi password is fictional-lilac",
+            "password Demo42!",
+            "PIN: 42",
+            "passcode is 1234",
+            "call me at 2025550147",
+            "text us on 2025550147",
             r#"{"api_key": "synthetic-secret"}"#,
         ] {
             assert!(is_sensitive(text), "missed: {text}");

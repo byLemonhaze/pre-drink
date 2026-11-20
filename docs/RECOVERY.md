@@ -43,9 +43,19 @@ An unreadable, malformed or missing-target selector fails closed; a missing sele
 2. Keep that complete preserved folder while investigating. If recovery from a verified standalone backup is needed, move the old application folder aside, create a fresh `com.predrink.vault` folder, and copy the backup into it as `vault.enc.sqlite3`. Do not copy the old selector, layout marker or unrelated journals into this fresh folder.
 3. Open a current app build and unlock with the backup password. The app applies private directory permissions. Verify the data, revoke restored registrations before enabling sharing (manual copying does not perform in-app registration cleanup), and make an independent backup.
 4. If selecting a retained generation manually, preserve its database **and matching journals together**; do not copy only a potentially incomplete main file. Prefer opening an isolated copy with a current build and making a verified standalone backup before restoring it.
-5. For cleanup, first record the active path from Build details and verify the current vault and an independent backup. Quit the app. Remove only a specifically identified inactive generation folder, or an identified old root database with its matching journals. Never remove the active folder, active selector, entire app folder or unknown files as a space-saving guess. There is no automatic retained-generation purge in this version.
+5. Prefer the reviewed in-app cleanup below. For manual recovery only, first record the active path from Build details and verify the current vault and an independent backup. Quit the app. Remove only a specifically identified inactive generation folder, or an identified old root database with its matching journals. Never remove the active folder, active selector, entire app folder or unknown files as a space-saving guess. There is no automatic purge.
 
 Deletion is not secure erasure on SSDs. Original ZIPs, copied Markdown, clipboard histories, backups, filesystem snapshots and Time Machine can retain data. Password changes and archive deletion cannot revoke those copies.
+
+## Reviewed previous-copy cleanup
+
+1. Unlock the current vault after restore/password change and inspect its contents.
+2. Make a **fresh encrypted backup outside the vault folder** using the app's backup form. The app decrypts/verifies it and remembers a receipt only for this unlocked session. No backup password is kept. Locking, data changes or backup changes require a new backup before cleanup.
+3. Open **Vault settings → Previous encrypted vault copies → Review previous copies**. The list excludes the active vault. Each row shows its identifier, total file size, last modification time and exact database/journal filenames. Modification time is not necessarily creation time.
+4. Review one selected copy. Confirm that you no longer need it and type `REMOVE PREVIOUS VAULT`. A current-vault backup might not contain data that existed only in that older copy; preserve a separate recovery copy if necessary.
+5. Submit removal. Sharing turns off; the backend checks the live session, current integrity, backup receipt and complete selected-file fingerprint again. Changed reviews, links and unknown files are rejected. No automatic purge occurs.
+
+Cleanup only removes the selected known files (and an empty generation directory). It never targets the active database, selector, layout marker, unrelated root files or external backups. A filesystem failure can leave a partially removed old copy; the error says so. Refresh the review to inspect remaining files before retrying. Unrecognized contents block cleanup for manual investigation. Files over 8 GiB require manual recovery guidance. Normal deletion does not securely erase SSD blocks or remove Time Machine/APFS snapshots.
 
 ## Forgotten password
 
