@@ -92,3 +92,9 @@ Export a fresh encrypted database, verify it, then publish without overwrite. Ex
 - A failed old-file cleanup preserves the verified encrypted migration result.
 
 Tests and pending validation are documented in AGENT_REVIEW.md. No remote AI provider, embedding pipeline, or synchronization service is present.
+
+## Explicit sensitivity reclassification
+
+Current rules distinguish structured/labeled phone numbers from bare timestamps and distinguish assigned credentials from general technical discussion. Existing stored restrictions persist until the owner previews and applies a recheck. The backend computes a deterministic content/flag snapshot, revalidates it, updates all classifications in one transaction, preserves manual privacy and provenance, and clears memory/brief approvals when anything changes. The session wrapper disables sharing before applying, including on failure. Reimports retain existing sensitivity so they cannot bypass this review path. No schema or encryption-format change is required.
+
+Build identity (package version, source revision/local-change marker, build time and profile) and storage mode are exposed only to the local owner UI, including the locked screen. Test storage requires the explicit debug-only override; release builds always use ordinary application storage. Displaying a release profile does not claim Developer ID signing or notarization.

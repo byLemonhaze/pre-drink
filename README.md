@@ -48,7 +48,9 @@ Choose a separate vault password of at least 14 characters. Prefer a long, uniqu
 - Attachments, audio, images, tool results, and reasoning channels are not rendered or separately imported. Keep the original ZIP if you need those assets.
 - Imports are atomic per ZIP, limited to 256 MiB of uncompressed conversation JSON and 100,000 ZIP entries. Earlier successful ZIPs remain if a later ZIP in a batch fails.
 
-The basic sensitive-content detector checks emails, phone-like sequences, common English address patterns, and selected medical, financial, and credential keywords. It has false positives and false negatives. Review what you approve. A restricted source conversation also restricts derived memory and briefs.
+The sensitive-content detector checks emails, structured or explicitly labeled phone numbers, common English address patterns, medical/financial terms, credential assignments, known token shapes and high-entropy candidates. Bare epoch timestamps and generic technical mentions of passwords/API keys do not trigger a flag by themselves. It has false positives and false negatives. Review what you approve. A restricted source conversation also restricts derived memory and briefs.
+
+**Settings → Recheck sensitive flags** previews how current rules classify already saved content. Applying the review stops agent sharing; any classification change returns all approved memories/briefs to draft. Manual private flags remain private, detected secrets stay blocked, and reimporting alone never clears old restrictions. After you re-enable sharing, eligible raw chats are again available to chat-enabled clients.
 
 Official exports are the deliberate ingestion method, not a temporary shortcut. New chats require a newer export; existing curated notes persist. See [product rationale](docs/PRODUCT.md).
 
@@ -75,12 +77,16 @@ cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D w
 
 Suites cover imports, branches, rollback, encryption, tampering, wrong passwords, backup, migration, approval/provenance restrictions, client permissions, revocation, idle locking, and actual stdio MCP calls. Socket integration tests need an environment allowing local Unix sockets.
 
-Native synthetic-data verification: create password → import ZIP → create approved source-linked memory → assemble approved brief → preview context → lock and hide library. Import verification used the native picker; a physical file drag and representative real exports still need validation. This is not an independent security audit.
+Earlier native synthetic-data verification (before the separate review screen): create password → import ZIP → create approved source-linked memory → assemble approved brief → preview context → lock and hide library. Import verification used the native picker; a physical file drag and representative real exports still need validation. The current synthetic native checks also cover separate approval, source display, edit invalidation, a zero-change flag recheck, build/vault identity and manual lock; broader failure/lifecycle cases remain open. See VALIDATION. This is not an independent security audit.
+
+The lock screen and Settings show the app version/build and whether the app uses normal or isolated test storage. Each vault uses its own owner-chosen password; there is no shared default password.
 
 Generate synthetic fixtures with `python3 scripts/create_sample_export.py`. Debug builds allow `PRE_DRINK_DATA_DIR=/tmp/pre-drink-check` for isolated verification. Release builds ignore this override.
 
 ## Documentation
 
+- [Execution plan and completion criteria](docs/EXECUTION_PLAN.md)
+- [Work completed and agent handoff](docs/WORK_LOG.md)
 - [Validation record](docs/VALIDATION.md)
 - [Product vision, requirements and ideas](docs/PRODUCT.md)
 - [Architecture and design decisions](docs/ARCHITECTURE.md)

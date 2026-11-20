@@ -4,11 +4,11 @@ Review the implementation as an early working native product with outstanding re
 
 ## Start here
 
-Read README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE in that order. Source is independent of Loominary; see PROVENANCE. Current scope is ChatGPT only. User data is deliberately absent from this repository.
+Read EXECUTION_PLAN and WORK_LOG first for current scope/status, then README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE. Source is independent of Loominary; see PROVENANCE. Current scope is ChatGPT only. User data is deliberately absent from this repository.
 
 ## Safe local verification
 
-Use synthetic fixtures and a new temporary data directory. Never open a personal vault or request passwords/exports in a GitHub issue. Release builds ignore the data-directory override; use debug builds for isolation.
+Use synthetic fixtures and a new temporary data directory. Never use a live personal vault for tests or request passwords/exports in a GitHub issue. Owner-directed representative-data verification may use an isolated encrypted copy after a verified backup; do not commit its contents, paths, counts, screenshots or logs. Destructive recovery tests use synthetic data only. Release builds ignore the data-directory override; use debug builds for isolation.
 
 ```sh
 npm ci
@@ -38,6 +38,10 @@ Report findings with severity, exact code path, reproduction, impact, and a prop
 
 ## Evidence and limitations
 
-35 automated cases cover importer behavior, storage and privacy boundaries, encryption/backups/migration, and one real stdio MCP integration. Native synthetic-data verification covered creating a vault, picker import, approved memory, approved brief, context preview and manual lock. See VALIDATION for final command results and dependency warnings.
+The baseline at `589967e` had 35 automated cases covering importer behavior, storage and privacy boundaries, encryption/backups/migration, and one real stdio MCP integration. Earlier native synthetic-data verification covered creating a vault, picker import, approved memory, approved brief, context preview and manual lock. A later M1 native run verifies basic separate approval, source display, edit invalidation, zero-change flag recheck, identity and lock; see the explicit scope in VALIDATION. See VALIDATION for final command results and dependency warnings.
 
 Not yet verified: representative real exports, actual file drag, large-library performance, every supported OS/hardware, external client setup screens, full sleep/lock-screen behavior, independent security audit. In-app restore, password rotation, dedicated Markdown file export, per-brief grants and tagging UI remain roadmap items.
+
+## Immediate review focus
+
+M1 starts with structured phone/context detection, atomic owner-reviewed reclassification, persistent manual privacy and prevention of silent sharing after a flag clears. Check reimport behavior too. Verify that applying even a stale recheck turns sharing off and that source-derived briefs return to draft after a classification change. Verify build/vault identity against the actual launched binary rather than assuming similarly named bundles use the same storage. See EXECUTION_PLAN for M1's remaining native/export/client/upgrade gates.

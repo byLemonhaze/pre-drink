@@ -153,6 +153,22 @@ async fn approve_review(
     .await
 }
 #[tauri::command]
+async fn preview_privacy_recheck(
+    store: State<'_, Store>,
+) -> Result<crate::privacy_recheck::PrivacyRecheck, String> {
+    owner_op(store.inner().clone(), |v| v.privacy_recheck_preview()).await
+}
+#[tauri::command]
+async fn apply_privacy_recheck(
+    review_hash: String,
+    store: State<'_, Store>,
+) -> Result<crate::privacy_recheck::PrivacyRecheck, String> {
+    session_op(store.inner().clone(), move |s| {
+        s.apply_privacy_recheck(&review_hash)
+    })
+    .await
+}
+#[tauri::command]
 async fn delete_memory(id: String, store: State<'_, Store>) -> Result<(), String> {
     owner_op(store.inner().clone(), move |v| v.delete_memory(&id)).await
 }
@@ -246,6 +262,8 @@ pub fn run() {
             })?;
             app.manage(instance);
             let mut session = Session::new(data.clone());
+            session.isolated_storage =
+                cfg!(debug_assertions) && std::env::var_os("PRE_DRINK_DATA_DIR").is_some();
             let handle = app.handle().clone();
             session.on_lock = Some(Box::new(move || {
                 let _ = handle.emit("vault-locked", ());
@@ -273,6 +291,8 @@ pub fn run() {
             save_memory,
             approval_review,
             approve_review,
+            preview_privacy_recheck,
+            apply_privacy_recheck,
             delete_memory,
             preview_context,
             list_clients,

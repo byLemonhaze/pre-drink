@@ -5,6 +5,7 @@ pub mod import;
 pub mod memory;
 pub mod model;
 pub mod privacy;
+pub mod privacy_recheck;
 pub mod review;
 
 pub mod agents;

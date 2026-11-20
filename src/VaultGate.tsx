@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { GlassWater, LockKeyhole, ShieldCheck } from "lucide-react";
 import App from "./App";
+import BuildInfo, { type VaultIdentity } from "./BuildInfo";
 import { listen } from "@tauri-apps/api/event";
 
-interface Status {
+interface Status extends VaultIdentity {
   unlocked: boolean;
   exists: boolean;
   legacy_exists: boolean;
@@ -112,7 +113,13 @@ export default function VaultGate() {
     }
   }
   if (status?.unlocked)
-    return <App onLock={() => void lock()} sharing={status.sharing} />;
+    return (
+      <App
+        onLock={() => void lock()}
+        sharing={status.sharing}
+        identity={status}
+      />
+    );
   const create = status && !status.exists;
   return (
     <div className="vault-gate">
@@ -207,6 +214,7 @@ export default function VaultGate() {
             ? "Use at least 14 characters; a unique phrase of several random words is better. There is no password reset or recovery key. Keep your password and encrypted backups safe."
             : "Your password stays on this Mac. Locking also stops agent access. There is no password reset."}
         </p>
+        {status && <BuildInfo identity={status} />}
         {!isTauri() && (
           <p className="fine-print">
             Interface preview. Open the Mac app to create or unlock a vault.

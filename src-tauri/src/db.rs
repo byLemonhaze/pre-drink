@@ -262,7 +262,7 @@ impl Vault {
             tx.execute("INSERT INTO conversations(id,platform,title,created_at,updated_at,sensitive,raw_json)
                 VALUES (?1,'chatgpt',?2,?3,?4,?5,?6) ON CONFLICT(id) DO UPDATE SET
                 title=excluded.title, created_at=excluded.created_at, updated_at=excluded.updated_at,
-                sensitive=excluded.sensitive, raw_json=excluded.raw_json",
+                sensitive=conversations.sensitive OR excluded.sensitive, raw_json=excluded.raw_json",
                 params![c.id,c.title,c.created_at,c.updated_at,c.sensitive,c.raw_json]).map_err(|e| e.to_string())?;
             use sha2::{Digest, Sha256};
             let snapshot_id = hex::encode(Sha256::digest(c.raw_json.as_bytes()));
@@ -278,7 +278,7 @@ impl Vault {
                     VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10) ON CONFLICT(id) DO UPDATE SET
                     role=excluded.role,content=excluded.content,timestamp=excluded.timestamp,
                     branch_id=excluded.branch_id,parent_id=excluded.parent_id,is_active=excluded.is_active,
-                    sensitive=excluded.sensitive,position=excluded.position").map_err(|e| e.to_string())?;
+                    sensitive=messages.sensitive OR excluded.sensitive,position=excluded.position").map_err(|e| e.to_string())?;
                 for m in &c.messages {
                     insert
                         .execute(params![

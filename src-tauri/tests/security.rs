@@ -503,3 +503,30 @@ fn old_vaults_are_rescanned_before_sharing_and_approvals_survive_later_reopens()
     let v = Vault::open(&path, PASSWORD).unwrap();
     assert_eq!(v.memories(None, "", true).unwrap().len(), 1);
 }
+
+#[test]
+fn privacy_recheck_disables_sharing_even_if_the_preview_is_stale() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut s = Session::new(dir.path().into());
+    s.vault = Some(Vault::memory().unwrap());
+    s.sharing = true;
+    assert!(s.apply_privacy_recheck("stale-synthetic-preview").is_err());
+    assert!(!s.sharing);
+    let preview = s.access().unwrap().privacy_recheck_preview().unwrap();
+    s.sharing = true;
+    s.apply_privacy_recheck(&preview.review_hash).unwrap();
+    assert!(!s.sharing);
+}
+
+#[test]
+fn build_and_storage_identity_are_explicit_without_exposing_passwords() {
+    let dir = tempfile::tempdir().unwrap();
+    let mut s = Session::new(dir.path().into());
+    let status = s.status();
+    assert_eq!(status.app_version, env!("CARGO_PKG_VERSION"));
+    assert!(!status.build_revision.is_empty());
+    assert!(status.built_at.parse::<u64>().is_ok());
+    assert!(!status.isolated_storage);
+    s.isolated_storage = true;
+    assert!(s.status().isolated_storage);
+}

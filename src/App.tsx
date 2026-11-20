@@ -35,6 +35,8 @@ import { MemoryEditor, MemoryView } from "./Memory";
 import Briefs from "./Briefs";
 import Agents from "./Agents";
 import Backup from "./Backup";
+import BuildInfo, { type VaultIdentity } from "./BuildInfo";
+import PrivacyRecheck from "./PrivacyRecheck";
 const native = isTauri();
 const emptyStats: Stats = {
   conversations: 0,
@@ -53,7 +55,15 @@ const date = (value: number | null) =>
       });
 const format = (value: number) => value.toLocaleString();
 
-function App({ onLock, sharing }: { onLock: () => void; sharing: boolean }) {
+function App({
+  onLock,
+  sharing,
+  identity,
+}: {
+  onLock: () => void;
+  sharing: boolean;
+  identity: VaultIdentity;
+}) {
   const [page, setPage] = useState<
     "library" | "imports" | "settings" | "memory" | "briefs" | "agents"
   >("library");
@@ -383,7 +393,11 @@ function App({ onLock, sharing }: { onLock: () => void; sharing: boolean }) {
             Lock to stop agent access.
           </p>
           <div className="version">
-            PRE-DRINK <span>ENCRYPTED VAULT · 0.2</span>
+            PRE-DRINK{" "}
+            <span>
+              {identity.app_version} ·{" "}
+              {identity.isolated_storage ? "TEST STORAGE" : "LOCAL VAULT"}
+            </span>
           </div>
         </div>
       </aside>
@@ -944,6 +958,11 @@ function App({ onLock, sharing }: { onLock: () => void; sharing: boolean }) {
                 Original export ZIPs and old Mac backups are outside this
                 protection.
               </p>
+            </section>
+            <PrivacyRecheck onApplied={() => setRevision((r) => r + 1)} />
+            <section className="settings-card">
+              <h2>App &amp; vault identity</h2>
+              <BuildInfo identity={identity} />
             </section>
             <Backup />
             <section className="settings-card">

@@ -4,9 +4,14 @@ use std::sync::LazyLock;
 static SENSITIVE: LazyLock<RegexSet> = LazyLock::new(|| {
     RegexSet::new([
         r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b",
-        r"\b(?:\d[ .()-]?){9,}\d\b",
+        // Formatted North American numbers, international + prefixes, or explicit labels.
+        // Bare epoch timestamps / identifiers are not evidence of a phone number.
+        r"(?:\b\d{3}[ .-]|\(\d{3}\)[ ]?)\d{3}[ .-]?\d{4}\b",
+        r"\+\d(?:[ ().-]?\d){7,14}\b",
+        r"(?i)\b(?:phone|telephone|tel|mobile|fax|whatsapp|call)\s*(?:number\s*)?(?:is\s*)?[:=]?\s*\d{9,15}\b",
         r"(?i)\b\d{1,6}\s+(?:[\p{L}]+\s+){1,4}(?:street|avenue|road|boulevard|lane|drive|st|ave|rd)\b",
-        r"(?i)\b(diagnosis|diagnosed|prescription|medical|medication|patient|social security|ssn|bank account|credit card|routing number|password|api[_ -]?key|secret[_ -]?key)\b",
+        r"(?i)\b(diagnosis|diagnosed|prescription|medical|medication|patient|social security|ssn|bank account|credit card|routing number)\b",
+        r#"(?i)\b(?:password|passwd|api[_ -]?key|secret[_ -]?key)\b["']?\s*[:=]\s*["']?[^\s"']{6,}"#,
     ]).expect("valid built-in privacy rules")
 });
 
@@ -57,4 +62,43 @@ pub fn contains_secret(text: &str) -> bool {
 
 pub fn is_sensitive(text: &str) -> bool {
     contains_secret(text) || SENSITIVE.is_match(text)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn timestamps_and_technical_discussion_are_not_personal_data_by_themselves() {
+        for text in [
+            "created_at: 1795132800",
+            "updated_at: 1795132800123",
+            "1795132800.123456",
+            "Build identifier 12345678901234567890",
+            "2026-11-19 17:04:49",
+            "How do I hash a password in Django?",
+            "Store an API key in an environment variable.",
+        ] {
+            assert!(!is_sensitive(text), "false flag: {text}");
+        }
+    }
+
+    #[test]
+    fn phone_shapes_and_assigned_credentials_remain_restricted() {
+        for text in [
+            "514-555-1234",
+            "(514) 555-1234",
+            "514.555.1234",
+            "514 555 1234",
+            "+1 514 555 1234",
+            "+442079460958",
+            "+33 1 23 45 67 89",
+            "phone: 5145551234",
+            "mobile number is 447911123456",
+            "password = synthetic-secret",
+            r#"{"api_key": "synthetic-secret"}"#,
+        ] {
+            assert!(is_sensitive(text), "missed: {text}");
+        }
+    }
 }

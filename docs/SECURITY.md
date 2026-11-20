@@ -31,6 +31,12 @@ Schema-v3 migration rescans older vault content and clears old approvals once; s
 
 Owners may write independent notes/briefs without sources. The app cannot infer where manually pasted text came from. Credential-shaped patterns and a conservative high-entropy heuristic supplement the personal-data rules. Detected credentials are restricted with no sharing override. Detection has false positives and false negatives; approval requires human review. MCP arguments cannot override private/sensitive exclusions. Local restricted-view toggles affect the owner's viewer only.
 
+## Sensitive classification and recheck
+
+Bare digit strings (including epoch timestamps) and technical mentions of passwords/API keys are not sufficient by themselves to flag content. Structured or explicitly labeled telephone numbers, personal-data terms, credential assignments, recognizable secrets and high-entropy candidates remain restricted. Rules are heuristic; unformatted/unlabeled personal numbers and unfamiliar secret formats may be missed. This change does not add an owner override for detected credentials.
+
+Old restrictions are not cleared just by opening the app or importing again. The owner may preview a recheck in Settings. Its hash binds the saved contents and prior flags; a changed vault requires a new preview. Applying stops agent sharing, atomically updates classifications, and clears all memory/brief approvals if any classification changes. Manual private flags, source links and raw contents remain unchanged. Retained/inactive branches participate in conversation restrictions. If the owner later enables sharing, cleared conversations may be returned to already chat-enabled clients; the confirmation explains this.
+
 ## Agent boundary
 
 The executable's `--mcp` mode uses the official Rust SDK over stdio and forwards calls through a Unix socket in the private app directory. No HTTP/TCP listener exists. The socket cannot unlock or independently open the vault.

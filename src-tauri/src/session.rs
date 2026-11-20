@@ -16,11 +16,17 @@ pub struct VaultStatus {
     pub legacy_exists: bool,
     pub sharing: bool,
     pub database_path: String,
+    pub app_version: &'static str,
+    pub build_revision: &'static str,
+    pub built_at: &'static str,
+    pub build_profile: &'static str,
+    pub isolated_storage: bool,
 }
 
 pub struct Session {
     pub vault: Option<Vault>,
     pub directory: PathBuf,
+    pub isolated_storage: bool,
     pub sharing: bool,
     pub generation: u64,
     pub last_activity: SystemTime,
@@ -32,6 +38,7 @@ impl Session {
         Self {
             vault: None,
             directory,
+            isolated_storage: false,
             sharing: false,
             generation: 0,
             last_activity: SystemTime::now(),
@@ -52,6 +59,15 @@ impl Session {
             legacy_exists: self.legacy_path().exists(),
             sharing: self.sharing,
             database_path: self.path().to_string_lossy().into_owned(),
+            app_version: env!("CARGO_PKG_VERSION"),
+            build_revision: env!("PRE_DRINK_BUILD_REVISION"),
+            built_at: env!("PRE_DRINK_BUILT_AT"),
+            build_profile: if cfg!(debug_assertions) {
+                "Development build"
+            } else {
+                "Release build"
+            },
+            isolated_storage: self.isolated_storage,
         }
     }
     pub fn lock(&mut self) {
@@ -75,6 +91,15 @@ impl Session {
         self.vault
             .as_mut()
             .ok_or_else(|| "Your vault is locked. Unlock it in Pre-Drink.".into())
+    }
+    pub fn apply_privacy_recheck(
+        &mut self,
+        review_hash: &str,
+    ) -> Result<crate::privacy_recheck::PrivacyRecheck, String> {
+        self.sharing = false;
+        let result = self.access()?.apply_privacy_recheck(review_hash);
+        self.touch();
+        result
     }
     pub fn touch(&mut self) {
         self.last_activity = SystemTime::now();

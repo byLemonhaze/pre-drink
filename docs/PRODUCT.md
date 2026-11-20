@@ -6,7 +6,7 @@
 
 A free, open-source, macOS-first local app that turns official AI chat exports into a private searchable archive and a curated knowledge layer other agents can query. The archive preserves evidence; reviewed memory and useful handoffs are the product.
 
-The first version supports ChatGPT only. Claude and Grok remain future ingestion adapters. Official exports are a product decision: no scraping, browser credentials, userscripts or live capture. Users import a newer export to refresh history. Exports may omit material unavailable from the provider, and media support is separate from text parsing.
+The current implementation supports ChatGPT only. Claude and Grok are scheduled after the dependable ChatGPT, selective-sharing and recovery milestones; see EXECUTION_PLAN. Official exports are a product decision: no scraping, browser credentials, userscripts or live capture. Users import a newer export to refresh history. Exports may omit material unavailable from the provider, and media support is separate from text parsing.
 
 ## Core principles
 
@@ -65,9 +65,11 @@ The repository contains source, generic product documents and synthetic fixtures
 
 ## Acceptance and release status
 
-Implemented: encrypted persistent storage, ChatGPT import/search, memory CRUD, curated briefs, source-aware privacy, encrypted backups, authenticated local MCP and lock lifecycle. Automated checks use synthetic fixtures; the native curation flow was exercised.
+Implemented: encrypted persistent storage, ChatGPT import/search, memory CRUD, curated briefs, source-aware privacy, encrypted backups, authenticated local MCP and lock lifecycle. Automated checks use synthetic fixtures; an earlier native curation flow was exercised. The current separate-review and flag-recheck screens have basic synthetic native-flow evidence; full failure, lifecycle, representative-export and installed-client checks remain open.
 
 Public-release gates remain: representative real export validation, large-library behavior, physical drag-and-drop, individual client setup, independent security review, Developer ID signing and notarization. See the roadmap and review guide. “Real implementation” does not imply these gates have already passed.
+
+The agreed work ahead, dependencies, evidence requirements and owner actions are recorded in [EXECUTION_PLAN](EXECUTION_PLAN.md); [WORK_LOG](WORK_LOG.md) distinguishes implemented work from verification.
 
 ## Future ideas, not current promises
 

@@ -250,7 +250,7 @@ fn privacy_rules_cover_basic_sensitive_patterns() {
         "123 Maple Street",
         "prescription refill",
         "credit card",
-        "api_key",
+        "api_key=synthetic-value",
     ] {
         assert!(is_sensitive(text), "not detected: {text}");
     }

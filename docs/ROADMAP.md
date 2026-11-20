@@ -1,33 +1,27 @@
 # Roadmap
 
-Current scope: **ChatGPT only**, local and offline by default. Encrypted archive → reviewed memory → approved briefs, with controlled agent access.
+The detailed agreed order and exit criteria are in [EXECUTION_PLAN](EXECUTION_PLAN.md). Completed work and open verification are in [WORK_LOG](WORK_LOG.md); checks are in [VALIDATION](VALIDATION.md).
 
-## Implemented
+## Current implementation
 
-- Tauri 2 + React; official ZIP import; branch-aware reader; repeat imports; JSON snapshots; FTS5.
-- Separate-password SQLCipher vault; Argon2id derivation; plaintext-v0.1 migration; verified encrypted backups.
-- Locked startup; manual/idle/macOS lifecycle locking; sharing resets on lock/restart.
-- Editable facts/decisions/projects with source navigation, deletion, explicit approval, and privacy inheritance.
-- Editable Markdown briefs with linked memories; source changes/restrictions block sharing pending review.
-- Official SDK stdio MCP server; authenticated private socket; revocable clients; default memory/brief scope; optional safe chat access; six tools.
-- Context preview and backend privacy enforcement.
-- Importer/security/MCP integration checks and native synthetic curation-flow verification.
+ChatGPT-only official ZIP import; branch/snapshot archive; FTS5; separate-password SQLCipher vault; editable memory and briefs; source-aware sharing rules; local authenticated MCP; encrypted backups; manual/idle/macOS lifecycle locking. Saves produce drafts and require a separate saved-version review before approval. The dark native interface and static landing assets exist.
 
-## Remaining release and usability gates
+This is a working private pre-release. The current review UI, representative real exports, real-client setup and distribution gates still need evidence. Claude and Grok are not yet supported.
 
-- Developer ID signing and Apple notarization require the owner's credentials. Workflow prepared; public signing not completed.
-- Independent security review before stronger assurance claims.
-- Representative real ChatGPT exports, physical native file drag, large-library performance/cancellation.
-- Individual installed Codex/Claude Code/Cursor setup verification; standard stdio protocol integration is tested.
-- In-app backup restore and password rotation (restore currently documented/manual).
-- Dedicated selective Markdown file export and per-brief client grants. Current grants cover all eligible approved memory/briefs; topics are searches, not access boundaries.
-- Pagination for larger agent result sets and better topic matching.
-- Conversation tagging UI (schema exists).
+## Agreed execution order
 
-Review findings, implemented fixes, and retained product ideas are tracked in [REVIEW_RESPONSE](REVIEW_RESPONSE.md). Signing remains a release blocker.
+1. **M1, in progress:** dependable ChatGPT workflow; contextual sensitivity detection and safe reclassification; build/vault identity; native approval, isolated upgrade, real export and MCP checks.
+2. **M2, planned:** make exact sharing preview the centerpiece; selective copy and Markdown export with privacy/staleness enforcement.
+3. **M3, planned:** in-app restore, password change, conversation deletion/snapshot retention; full disposable wipe-and-restore test.
+4. **M4, planned:** Claude first, then Grok; synthetic fixtures by provider and observed format; cross-provider provenance/privacy verification.
+5. **M5, planned:** signed/notarized release, clean installation test, fictional-data demo, strong README and owner-approved public launch.
 
-## Explicitly later
+Apple enrollment starts as an owner-managed parallel track alongside M1, not after M4. Enrollment is not confirmed. No account/legal/payment action is automatic.
 
-Claude and Grok official-export parsers. Optional local-model assistance if requested. No automatic extraction, cloud sync, semantic embeddings, Gemini, mobile, live capture, or team features in current scope.
+## Retained backlog
 
-A successful local build is not equivalent to a publicly audited, signed release. Track these gates honestly.
+Per-project/brief agent grants; direct brief retrieval; note/brief FTS and pagination; tagging/branch views; encrypted access metadata and revoke-all; signed-app Keychain client integration; broader backup-filesystem support; superseded decisions and suggested-memory inbox. These require explicit scheduling and must not silently expand a milestone.
+
+No cloud sync, live capture, automatic extraction, paid model dependency, semantic embeddings, Gemini, mobile, teams, monetization or demand-testing work in this plan.
+
+Keep the repository private and public download disabled until the owner explicitly chooses publication after the release gates pass.
