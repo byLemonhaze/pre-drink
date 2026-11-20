@@ -61,3 +61,7 @@ The local server makes no AI calls and has no per-use charge. Your assistant may
 ## Selected exports versus live grants
 
 **Share context** is an owner-only selection → full Markdown preview → copy/save workflow. Its saved-version and session checks apply at delivery. It does not issue a client credential, call a provider or narrow existing MCP access. The six MCP tools remain unchanged; clients cannot invoke `prepare_share`, `copy_share` or `save_share`. Agent access's topic preview remains an illustration of a dynamic query, not an access-control boundary. See [SHARING](SHARING.md).
+
+## Next workflow, not implemented
+
+The owner requires autonomous same-provider archive curation and explicit session-to-memory updates. These need bounded source retrieval and restricted, revision-aware write operations beyond the current six tools. See [AGENT_CURATION](AGENT_CURATION.md). Do not assume existing client credentials permit writing, that CLI retrieval acceptance proves this workflow, or that a particular chat is connected. The current manual approval and source-privacy checks remain unchanged.
