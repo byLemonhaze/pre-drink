@@ -145,7 +145,7 @@ impl Session {
         review_hash: &str,
         generation: u64,
     ) -> Result<(), String> {
-        self.sharing = false;
+        self.stop_sharing();
         if generation != self.generation {
             return Err("The vault session changed. Review the deletion again.".into());
         }

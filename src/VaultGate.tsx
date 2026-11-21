@@ -8,11 +8,15 @@ import VaultMaintenance from "./VaultMaintenance";
 import BuildInfo, { type VaultIdentity } from "./BuildInfo";
 import { listen } from "@tauri-apps/api/event";
 
+import type { AgentSessionStatus, PrivacyUpdate } from "./types";
+
 interface Status extends VaultIdentity {
   unlocked: boolean;
   exists: boolean;
   legacy_exists: boolean;
   sharing: boolean;
+  agent_session: AgentSessionStatus | null;
+  privacy_on_open: PrivacyUpdate;
   database_path: string;
 }
 export default function VaultGate() {
@@ -143,6 +147,8 @@ export default function VaultGate() {
         onLock={() => void lock()}
         onVaultChanged={changed}
         sharing={status.sharing}
+        agentSession={status.agent_session}
+        privacyUpdate={status.privacy_on_open}
         identity={status}
       />
     );

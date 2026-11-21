@@ -4,11 +4,22 @@ use std::{
     collections::HashSet,
     path::PathBuf,
     sync::{Arc, Mutex},
-    time::{Duration, SystemTime},
+    time::{Duration, Instant, SystemTime},
 };
 
 pub type Store = Arc<Mutex<Session>>;
 pub const IDLE_TIMEOUT: Duration = Duration::from_secs(15 * 60);
+
+pub struct AgentWorkSession {
+    started: Instant,
+    duration: Option<Duration>,
+}
+
+#[derive(Serialize)]
+pub struct AgentSessionStatus {
+    /// None means the owner's explicit "until Mac locks" choice.
+    pub remaining_seconds: Option<u64>,
+}
 
 #[derive(Serialize)]
 pub struct VaultStatus {
@@ -16,6 +27,8 @@ pub struct VaultStatus {
     pub exists: bool,
     pub legacy_exists: bool,
     pub sharing: bool,
+    pub agent_session: Option<AgentSessionStatus>,
+    pub privacy_on_open: crate::privacy_recheck::PrivacyUpdate,
     pub database_path: String,
     pub app_version: &'static str,
     pub build_revision: &'static str,
@@ -38,6 +51,7 @@ pub struct Session {
     pub directory: PathBuf,
     pub isolated_storage: bool,
     pub sharing: bool,
+    agent_session: Option<AgentWorkSession>,
     pub generation: u64,
     pub last_activity: SystemTime,
     pub on_lock: Option<Box<dyn Fn() + Send + Sync>>,
@@ -53,6 +67,7 @@ impl Session {
             directory,
             isolated_storage: false,
             sharing: false,
+            agent_session: None,
             generation: 0,
             last_activity: SystemTime::now(),
             on_lock: None,
@@ -72,6 +87,19 @@ impl Session {
             exists: path.exists(),
             legacy_exists: self.legacy_path().exists(),
             sharing: self.sharing,
+            agent_session: self
+                .agent_session
+                .as_ref()
+                .map(|session| AgentSessionStatus {
+                    remaining_seconds: session
+                        .duration
+                        .map(|d| d.saturating_sub(session.started.elapsed()).as_secs()),
+                }),
+            privacy_on_open: self
+                .vault
+                .as_ref()
+                .map(|v| v.privacy_on_open.clone())
+                .unwrap_or_default(),
             database_path: path.to_string_lossy().into_owned(),
             app_version: env!("CARGO_PKG_VERSION"),
             build_revision: env!("PRE_DRINK_BUILD_REVISION"),
@@ -85,6 +113,7 @@ impl Session {
         })
     }
     pub fn lock(&mut self) {
+        self.agent_session = None;
         self.successful_clients.clear();
         self.backup_receipt = None;
         let prepared = self.pending_replacement.is_some();
@@ -95,14 +124,49 @@ impl Session {
         if let Some(callback) = &self.on_lock {
             callback();
         }
-        self.sharing = false;
+        self.stop_sharing();
         self.generation = self.generation.wrapping_add(1);
         self.vault.take();
     }
     pub fn expire(&mut self) {
+        if !self.sharing {
+            self.agent_session = None;
+        }
+        if let Some(work) = &self.agent_session {
+            if work.duration.is_some_and(|d| work.started.elapsed() >= d) {
+                self.lock();
+            }
+            return;
+        }
         if self.last_activity.elapsed().unwrap_or(IDLE_TIMEOUT) >= IDLE_TIMEOUT {
             self.lock();
         }
+    }
+    /// Owner-only command. Agents cannot start, extend, or restore this grant.
+    pub fn start_agent_session(&mut self, mode: &str) -> Result<(), String> {
+        let duration = match mode {
+            "one_hour" => Some(Duration::from_secs(3600)),
+            "four_hours" => Some(Duration::from_secs(4 * 3600)),
+            "until_lock" => None,
+            _ => return Err("Choose a supported agent session duration.".into()),
+        };
+        self.access()?;
+        if self.pending_replacement.is_some() {
+            return Err(
+                "Finish or cancel vault maintenance before starting an agent session.".into(),
+            );
+        }
+        self.agent_session = Some(AgentWorkSession {
+            started: Instant::now(),
+            duration,
+        });
+        self.sharing = true;
+        self.touch();
+        Ok(())
+    }
+    pub fn stop_sharing(&mut self) {
+        self.sharing = false;
+        self.agent_session = None;
     }
     pub fn access(&mut self) -> Result<&mut Vault, String> {
         self.expire();
@@ -115,7 +179,7 @@ impl Session {
         review_hash: &str,
         clear_ids: &[String],
     ) -> Result<crate::privacy_recheck::PrivacyRecheck, String> {
-        self.sharing = false;
+        self.stop_sharing();
         let result = self.access()?.apply_privacy_recheck(review_hash, clear_ids);
         self.touch();
         result
@@ -185,7 +249,7 @@ impl Session {
         self.vault = Some(vault);
         self.touch();
         self.generation = self.generation.wrapping_add(1);
-        self.sharing = false;
+        self.stop_sharing();
         Ok(())
     }
 }
@@ -206,4 +270,58 @@ pub fn watchdog(store: Store) {
             last_tick = SystemTime::now();
         }
     });
+}
+
+#[cfg(test)]
+mod agent_session_tests {
+    use super::*;
+    fn unlocked() -> Session {
+        let mut s = Session::new(PathBuf::new());
+        s.vault = Some(Vault::memory().unwrap());
+        s
+    }
+    #[test]
+    fn longer_session_is_explicit_bounded_and_not_extended_by_activity() {
+        let mut s = unlocked();
+        assert!(s.start_agent_session("forever").is_err());
+        assert!(!s.sharing);
+        s.start_agent_session("one_hour").unwrap();
+        s.last_activity = SystemTime::now() - Duration::from_secs(1800);
+        assert!(s.access().is_ok());
+        s.agent_session.as_mut().unwrap().started = Instant::now() - Duration::from_secs(3601);
+        s.touch(); // Owner activity also cannot silently extend the explicit deadline.
+        assert!(s.access().is_err());
+        assert!(!s.sharing);
+        assert!(s.agent_session.is_none());
+        assert!(s.start_agent_session("four_hours").is_err());
+    }
+    #[test]
+    fn lock_and_stop_sharing_cancel_until_lock_session() {
+        let mut s = unlocked();
+        s.start_agent_session("until_lock").unwrap();
+        s.last_activity = SystemTime::now() - Duration::from_secs(86400);
+        assert!(s.access().is_ok());
+        s.stop_sharing();
+        assert!(s.agent_session.is_none());
+        assert!(s.access().is_err()); // Normal idle protection is restored immediately.
+        let mut s = unlocked();
+        s.start_agent_session("until_lock").unwrap();
+        s.lock(); // Also used by macOS sleep and screen-lock observers.
+        assert!(s.agent_session.is_none());
+        assert!(s.vault.is_none());
+        assert!(!s.sharing);
+    }
+    #[test]
+    fn ordinary_sharing_keeps_default_idle_limit_and_status_is_not_activity() {
+        let mut s = unlocked();
+        s.sharing = true;
+        s.last_activity = SystemTime::now() - IDLE_TIMEOUT;
+        assert!(s.access().is_err());
+        let mut s = unlocked();
+        s.start_agent_session("four_hours").unwrap();
+        let before = s.last_activity;
+        let status = s.status().unwrap();
+        assert!(status.agent_session.unwrap().remaining_seconds.unwrap() <= 14400);
+        assert_eq!(before, s.last_activity);
+    }
 }

@@ -60,7 +60,7 @@ Choose a separate vault password of at least 14 characters. Prefer a long, uniqu
 
 The sensitive-content detector checks emails, structured or explicitly labeled phone numbers, common English address patterns, medical/financial terms, credential assignments, known token shapes and high-entropy candidates. Bare epoch timestamps and generic technical mentions of passwords/API keys do not trigger a flag by themselves. It has false positives and false negatives. Review what you approve. A restricted source conversation also restricts derived memory and briefs.
 
-**Settings → Recheck sensitive flags** previews how current rules classify already saved content. Applying the review stops agent sharing; any classification change returns all approved memories/briefs to draft. Manual private flags remain private, detected secrets stay blocked, and reimporting alone never clears old restrictions. After you re-enable sharing, eligible raw chats are again available only to matching-provider source-enabled clients.
+**Settings → Recheck sensitive flags** previews how current rules classify already saved content. Applying the review stops agent sharing; classification changes return only affected memories and their dependent briefs to draft; unrelated approvals remain intact. Opening with stronger rules reports the added restrictions and reset count. Manual private flags remain private, detected secrets stay blocked, and reimporting alone never clears old restrictions. After you re-enable sharing, eligible raw chats are again available only to matching-provider source-enabled clients.
 
 Official exports are the deliberate ingestion method, not a temporary shortcut. New historical transcripts require a newer export; explicit agent-authored session summaries can update memory without importing a transcript. Existing curated notes persist. See [product rationale](docs/PRODUCT.md).
 
@@ -80,7 +80,7 @@ The conversation viewer offers **Delete conversation…**, with an impact previe
 
 Initial database: `~/Library/Application Support/com.predrink.vault/vault.enc.sqlite3`. After restore/password change, `active-vault.json` selects a private generation folder under the same app directory. Build details show the active path. Do not downgrade to a build that ignores this selection. SQLCipher 4.20 encrypts archive, memory, briefs, search index, and database journal pages. Password keys use Argon2id. Read [security design and limits](docs/SECURITY.md).
 
-The app locks manually, after 15 minutes without owner activity, on macOS sleep/display sleep/session deactivation, and after a detected watchdog pause. Locking closes the database, hides the library, and disables sharing. Agent requests do not keep it unlocked.
+The app normally locks after 15 minutes without owner activity. **Agent access → Start agent work session** explicitly enables sharing and keeps the vault unlocked for one hour, four hours, or until the Mac locks. A timed session locks at its deadline even if the app is active. Agents cannot start or extend it. Manual lock, macOS screen lock/sleep/display sleep/session deactivation, and a detected watchdog pause still close the database and disable sharing. Stopping sharing cancels the session; unlocking never resumes it.
 
 **Vault settings → Encrypted backup** creates a separately encrypted and verified copy. **Restore or change password** prepares a verified replacement, shows its impact and preserves the previous encrypted vault before switching. Restore is also available from the lock screen. Both operations remove agent registrations, disable automatic-publication rules and leave sharing off. Old backups/recovery copies retain their old passwords; follow [recovery instructions](docs/RECOVERY.md).
 
@@ -136,4 +136,4 @@ Schema 4 preserves manual notes and approvals, adds encrypted curation state and
 
 ## Verification cost policy
 
-Development checks run locally. GitHub Actions is manual-only to preserve the owner's included allowance and avoid extra costs. Do not dispatch it or enable automatic triggers without explicit owner approval. The repository stays private until the owner chooses launch. See [execution plan](docs/EXECUTION_PLAN.md) for the current verification baseline and cost constraints.
+Run `npm run verify:local` after staging new source files, then `npm run hooks:install` once to enable the exact-source pre-push guard. Development checks run locally. GitHub Actions is manual-only to preserve the owner's included allowance and avoid extra costs. Do not dispatch it or enable automatic triggers without explicit owner approval. The repository stays private until the owner chooses launch. See [execution plan](docs/EXECUTION_PLAN.md) for the current verification baseline and cost constraints.

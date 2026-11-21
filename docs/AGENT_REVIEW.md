@@ -2,6 +2,17 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
+## Latest review targets — 2026-11-20
+
+The evening-review implementation adds schema-7 owner holds, deliberate long agent work sessions, targeted privacy resets and local verification automation. Start with these boundaries:
+
+- Try to clear an owner hold through agent write, retry, undo, automatic publication and schema-6 upgrade. Only an explicit owner edit may clear it; that edit remains a draft.
+- Check `Session::expire`, native callbacks and every sharing-stop/maintenance path. Requests must not create or renew work sessions; monotonic timed expiry must lock even while activity continues. Until-lock mode is an explicit owner choice and must never resume after unlock/restart.
+- Reclassify direct memory, curated session labels and imported evidence. Only linked approvals should reset; unrelated approvals should survive. Clearing flags must not restore old linked approvals. Verify current rules again at publication.
+- Review `scripts/verify_local.py` and `.githooks/pre-push`: exact implementation/tool fingerprint, clean-tree/HEAD restriction, documentation-only narrow checks, and no remote jobs or model calls. This is a local guard, not cryptographically trusted attestation.
+
+Use `npm run verify:local` with installed dependencies (stage new source files first). Install the optional repository hook with `npm run hooks:install`; it refuses existing custom hooks. GitHub Actions remains manual-only. Do not trigger paid usage, publish the repo, or repeat model-led checks without the owner's explicit usage approval.
+
 ## Start here
 
 Read EXECUTION_PLAN and WORK_LOG first for current scope/status, then README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE. Source is independent of Loominary; see PROVENANCE. Current adapters and own-provider curator roles cover ChatGPT, Grok and Claude with fictional contracts; representative exports remain open. Read AGENT_CURATION before evaluating this feature. Cloud curation is optional; verify offline manual use remains independent. User data is deliberately absent from this repository.

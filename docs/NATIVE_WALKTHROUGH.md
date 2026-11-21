@@ -151,3 +151,15 @@ Used newly generated fictional encrypted storage from `native_reading_fixture`, 
 - Inspected light and dark setup/choice screens at minimum window size. Expanded choices scroll within the modal; the initial setup and verification actions remain reachable. Selected values appear in accessibility labels. This is focused functional evidence, not screen-reader certification or a comprehensive accessibility audit.
 
 Returned the preview to light mode, locked it, quit it and confirmed the process was no longer running. No screenshots, credentials or fictional vault files are committed.
+
+## Owner holds and work sessions — 2026-11-20
+
+Used a freshly generated disposable fictional vault and the separately named **Pre-Drink — Reading Preview** debug bundle, at its 980×640 minimum window. No personal storage, installed model calls, generated client credentials or GitHub builds were used.
+
+- One-hour session enabled sharing and displayed approximately 60 minutes remaining. Ending it showed sharing off and restored the start control.
+- Keyboard selection reached **Until my Mac locks**. Starting showed the corresponding active state; manual Lock vault returned to the locked screen. Unlocking showed sharing off; the session was not resumed. Full app quit/relaunch likewise started locked with sharing off after unlock.
+- The fixture's held contribution displayed **Held by you**, with selection/review disabled. The editor showed the checked owner-hold control. Explicitly clearing and saving produced revision 3 as a **Private draft**, not a publication.
+- The walkthrough discovered a narrow unstyled curation textarea. A dedicated full-width field was added and the rebuilt native modal was visually checked in light and dark modes at minimum window size. Its label, content, hold control and action buttons remained visible.
+- Finished with sharing off, vault locked and the preview process confirmed stopped. Temporary fictional data was kept outside Git.
+
+This did not wait a real hour/four hours or repeat owner-assisted physical Mac lock/sleep. Deadline/idle transitions are covered by controlled-clock regressions; the existing native notification test now starts an until-lock work session before exercising its callback. Prior physical Mac lock/sleep observations remain separate historical evidence. The new privacy-on-open count is backend-tested; a native changed-rules upgrade notice is still an acceptance case for a future isolated fixture.

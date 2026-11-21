@@ -377,11 +377,16 @@ async fn revoke_client(id: String, store: State<'_, Store>) -> Result<(), String
 async fn set_sharing(enabled: bool, store: State<'_, Store>) -> Result<(), String> {
     session_op(store.inner().clone(), move |s| {
         s.access()?;
+        s.stop_sharing();
         s.sharing = enabled;
         s.touch();
         Ok(())
     })
     .await
+}
+#[tauri::command]
+async fn start_agent_session(mode: String, store: State<'_, Store>) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| s.start_agent_session(&mode)).await
 }
 #[tauri::command]
 async fn backup_vault(
@@ -660,6 +665,7 @@ pub fn run() {
             create_client,
             revoke_client,
             set_sharing,
+            start_agent_session,
             backup_vault,
             preview_retained_vaults,
             remove_retained_vault,

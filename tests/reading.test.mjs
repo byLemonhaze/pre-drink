@@ -213,3 +213,29 @@ test("all choice surfaces avoid detached native select popups", () => {
     );
   }
 });
+
+test("agent work sessions are opt-in and display the current bounded grant", () => {
+  const Agents = component("Agents").default;
+  const inactive = renderToStaticMarkup(
+    React.createElement(Agents, { sharing: false, agentSession: null }),
+  );
+  assert.match(inactive, /Start agent work session/);
+  assert.match(inactive, /1 hour/);
+  assert.doesNotMatch(inactive, /End session/);
+  const active = renderToStaticMarkup(
+    React.createElement(Agents, {
+      sharing: true,
+      agentSession: { remaining_seconds: 120 },
+    }),
+  );
+  assert.match(active, /2 minutes left/);
+  assert.match(active, /End session/);
+  assert.doesNotMatch(active, /Start agent work session/);
+  const untilLock = renderToStaticMarkup(
+    React.createElement(Agents, {
+      sharing: true,
+      agentSession: { remaining_seconds: null },
+    }),
+  );
+  assert.match(untilLock, /Active until your Mac locks/);
+});

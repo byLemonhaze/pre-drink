@@ -66,9 +66,15 @@ CREATE TABLE IF NOT EXISTS curation_jobs (
   status TEXT NOT NULL DEFAULT 'running' CHECK(status IN ('running','paused','completed','cancelled')),
   updated_at REAL NOT NULL
 );
+-- Separate owner authority: agent inputs never update this table.
+CREATE TABLE IF NOT EXISTS curation_owner_holds (
+  note_id TEXT PRIMARY KEY REFERENCES curation_notes(id) ON DELETE CASCADE
+);
 -- Checked at every delivery, including briefs and owner sharing previews.
-CREATE VIEW IF NOT EXISTS curation_blocked AS
+DROP VIEW IF EXISTS curation_blocked;
+CREATE VIEW curation_blocked AS
 SELECT n.id FROM curation_notes n WHERE n.withdrawn=1 OR n.conflict=1 OR n.sensitive=1
+OR EXISTS(SELECT 1 FROM curation_owner_holds h WHERE h.note_id=n.id)
 OR (n.origin='archive' AND NOT EXISTS(SELECT 1 FROM curation_sources s WHERE s.note_id=n.id))
 OR EXISTS(SELECT 1 FROM curation_sources s
  LEFT JOIN messages m ON m.id=s.message_id

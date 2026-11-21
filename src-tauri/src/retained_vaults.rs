@@ -235,7 +235,7 @@ impl Session {
         review_hash: &str,
         confirmation: &str,
     ) -> Result<(), String> {
-        self.sharing = false;
+        self.stop_sharing();
         if confirmation != CONFIRMATION {
             return Err(format!("Type {CONFIRMATION} to confirm this deletion."));
         }

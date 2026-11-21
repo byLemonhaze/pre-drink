@@ -36,3 +36,12 @@ export interface ImportReport {
   skipped_messages: number;
   warnings: string[];
 }
+
+export interface AgentSessionStatus {
+  remaining_seconds: number | null;
+}
+
+export interface PrivacyUpdate {
+  flagged: number;
+  approvals_reset: number;
+}

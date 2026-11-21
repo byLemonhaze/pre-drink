@@ -1,14 +1,18 @@
 //! Validate the packaged fictional corpus through each production import path.
 use pre_drink::{db::Vault, import::read_export_zip};
-use std::path::Path;
+use std::path::PathBuf;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let corpus: serde_json::Value = serde_json::from_str(include_str!(
         "../tests/fixtures/curation/quality-v1/cases.json"
     ))?;
     let cases = corpus["cases"].as_array().unwrap();
+    let directory = std::env::args_os()
+        .nth(1)
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from("artifacts/curation-quality-v1"));
     for provider in ["chatgpt", "grok", "claude"] {
-        let path = format!("artifacts/curation-quality-v1/fictional-{provider}-quality.zip");
-        let (conversations, report) = read_export_zip(Path::new(&path))?;
+        let path = directory.join(format!("fictional-{provider}-quality.zip"));
+        let (conversations, report) = read_export_zip(&path)?;
         assert_eq!(conversations.len(), cases.len());
         assert_eq!(report.skipped_messages, 0);
         for (conversation, case) in conversations.iter().zip(cases) {

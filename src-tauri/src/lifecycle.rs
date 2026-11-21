@@ -201,7 +201,7 @@ impl Session {
     ) -> Result<LifecyclePreview, String> {
         self.expire();
         self.cancel_replacement();
-        self.sharing = false;
+        self.stop_sharing();
         if password.len() > 1024 {
             return Err("Password is too long.".into());
         }
@@ -226,7 +226,7 @@ impl Session {
         next: &str,
     ) -> Result<LifecyclePreview, String> {
         self.cancel_replacement();
-        self.sharing = false;
+        self.stop_sharing();
         self.access()?;
         crypto::validate_password(next)?;
         if current == next {
@@ -317,7 +317,7 @@ impl Session {
         password: &str,
     ) -> Result<LifecycleResult, String> {
         self.expire();
-        self.sharing = false;
+        self.stop_sharing();
         let mut pending = self
             .pending_replacement
             .take()

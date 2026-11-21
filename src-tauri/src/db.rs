@@ -5,6 +5,7 @@ use std::{path::Path, time::Duration};
 pub struct Vault {
     pub(crate) connection: Connection,
     pub(crate) path: String,
+    pub(crate) privacy_on_open: crate::privacy_recheck::PrivacyUpdate,
 }
 
 impl Vault {
@@ -62,7 +63,7 @@ impl Vault {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .map_err(|e| e.to_string())?;
-        if version > 6 {
+        if version > 7 {
             return Err("This vault needs a newer Pre-Drink version.".into());
         }
         if version == 1 {
@@ -163,10 +164,20 @@ impl Vault {
             tx.execute("UPDATE agent_clients SET allow_chats=0", [])
                 .map_err(|e| e.to_string())?;
         }
-        tx.execute_batch("PRAGMA user_version=6;")
+        if version < 7 {
+            // Older revisions used one conflict bit for agents and owner holds.
+            // Preserve all existing holds conservatively; only the owner can clear.
+            tx.execute("INSERT OR IGNORE INTO curation_owner_holds SELECT id FROM curation_notes WHERE conflict=1", [])
+                .map_err(|e| e.to_string())?;
+        }
+        tx.execute_batch("PRAGMA user_version=7;")
             .map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
-        let mut vault = Self { connection, path };
+        let mut vault = Self {
+            connection,
+            path,
+            privacy_on_open: Default::default(),
+        };
         vault.enforce_sensitive_rules()?;
         Ok(vault)
     }
@@ -208,7 +219,7 @@ impl Vault {
                 .map_err(|_| "Couldn't create encrypted backup.")?;
             let exported = self
                 .connection
-                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=6;");
+                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=7;");
             let detached = self.connection.execute_batch("DETACH DATABASE backup;");
             exported
                 .and(detached)
@@ -538,7 +549,7 @@ mod provider_upgrade_tests {
             v.connection
                 .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
-            6
+            7
         );
         assert_eq!(
             v.connection

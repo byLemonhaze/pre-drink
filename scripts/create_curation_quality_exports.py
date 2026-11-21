@@ -3,13 +3,16 @@
 Only sources go into ZIPs. The separate expected/must_not rubric must stay out
 of the curator prompt to avoid teaching the answer. Outputs are ignored locally.
 """
+import argparse
 import json
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
 root = Path(__file__).resolve().parents[1]
 corpus = json.loads((root / "src-tauri/tests/fixtures/curation/quality-v1/cases.json").read_text())
-out = root / "artifacts/curation-quality-v1"
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--output", type=Path, default=root / "artifacts/curation-quality-v1")
+out = parser.parse_args().output
 out.mkdir(parents=True, exist_ok=True)
 for provider in ("chatgpt", "grok", "claude"):
     records = []
@@ -37,4 +40,4 @@ for provider in ("chatgpt", "grok", "claude"):
     with ZipFile(target, "x", ZIP_DEFLATED) as archive:
         entry = "prod-grok-backend.json" if provider == "grok" else "conversations.json"
         archive.writestr(entry, json.dumps({"conversations": records} if provider == "grok" else records, ensure_ascii=False))
-    print(target.relative_to(root))
+    print(f"Packaged fictional {provider} quality input")

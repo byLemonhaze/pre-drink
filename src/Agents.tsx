@@ -1,9 +1,18 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import ChoiceSelect from "./ChoiceSelect";
+import type { AgentSessionStatus } from "./types";
 import Curation from "./Curation";
 import { ShieldCheck } from "lucide-react";
 import AgentSetup, { type Client } from "./AgentSetup";
-export default function Agents({ sharing }: { sharing: boolean }) {
+export default function Agents({
+  sharing,
+  agentSession,
+}: {
+  sharing: boolean;
+  agentSession: AgentSessionStatus | null;
+}) {
+  const [duration, setDuration] = useState("one_hour");
   const [clients, setClients] = useState<Client[]>([]);
   const [settingUp, setSettingUp] = useState(false);
   const [error, setError] = useState("");
@@ -18,10 +27,26 @@ export default function Agents({ sharing }: { sharing: boolean }) {
     void refresh();
   }, []);
   async function toggleSharing() {
+    if (busy) return;
+    setBusy(true);
     try {
       await invoke("set_sharing", { enabled: !sharing });
     } catch (e) {
       setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function startWorkSession() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await invoke("start_agent_session", { mode: duration });
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
     }
   }
   async function revoke(id: string) {
@@ -64,6 +89,7 @@ export default function Agents({ sharing }: { sharing: boolean }) {
           </div>
           <button
             className={`switch ${sharing ? "on" : ""}`}
+            disabled={busy}
             role="switch"
             aria-checked={sharing}
             aria-label="Enable agent sharing"
@@ -77,6 +103,60 @@ export default function Agents({ sharing }: { sharing: boolean }) {
           The connection to Pre-Drink is local. A cloud-powered agent may send
           the context it receives to its AI provider. Only authorize clients you
           trust. Revocation cannot recall context already received.
+        </p>
+      </section>
+      <section className="settings-card">
+        <h2>Let your agents work</h2>
+        <p>
+          Start a work session to enable sharing and keep this vault unlocked,
+          even while you are away from the app. Only your registered clients get
+          access, with their existing permissions. This does not run a model or
+          purchase any usage.
+        </p>
+        {agentSession ? (
+          <>
+            <p role="status">
+              <strong>
+                {agentSession.remaining_seconds == null
+                  ? "Active until your Mac locks"
+                  : `Active — about ${Math.ceil(agentSession.remaining_seconds / 60)} minutes left`}
+              </strong>
+            </p>
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => void toggleSharing()}
+            >
+              End session &amp; stop sharing
+            </button>
+          </>
+        ) : (
+          <>
+            <ChoiceSelect
+              label="Agent work session duration"
+              value={duration}
+              onChange={setDuration}
+              disabled={busy}
+              options={[
+                { value: "one_hour", label: "1 hour" },
+                { value: "four_hours", label: "4 hours" },
+                { value: "until_lock", label: "Until my Mac locks" },
+              ]}
+            />
+            <button
+              className="button primary"
+              disabled={busy}
+              onClick={() => void startWorkSession()}
+            >
+              Start agent work session
+            </button>
+          </>
+        )}
+        <p className="fine-print">
+          The vault locks when the chosen time ends. Locking or sleeping your
+          Mac ends every session immediately. Agents cannot extend it. Ending
+          sharing restores the normal 15-minute idle lock; use Lock vault to
+          lock immediately.
         </p>
       </section>
       <section className="settings-card">

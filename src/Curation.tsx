@@ -13,6 +13,7 @@ interface Note {
   session_label: string;
   revision: number;
   conflict: boolean;
+  owner_hold: boolean;
   sensitive: boolean;
   withdrawn: boolean;
   blocked: boolean;
@@ -309,9 +310,17 @@ export default function Curation() {
               ? `${n.sources.length} imported source(s)`
               : `Agent-authored session summary: ${n.session_label}`}
             {n.needs_review && !n.published ? " · Requires review" : ""}
-            {n.conflict ? " · Conflict flagged" : ""}
+            {n.owner_hold
+              ? " · Held by you"
+              : n.conflict
+                ? " · Conflict flagged"
+                : ""}
             {n.sensitive ? " · Sensitive content" : ""}
-            {n.blocked && !n.sensitive && !n.conflict && !n.withdrawn
+            {n.blocked &&
+            !n.sensitive &&
+            !n.conflict &&
+            !n.owner_hold &&
+            !n.withdrawn
               ? " · Source unavailable, restricted, or changed"
               : ""}
           </p>
@@ -321,7 +330,7 @@ export default function Curation() {
               className="button secondary"
               disabled={loading || busy || n.withdrawn}
               onClick={() => {
-                setEditing({ ...n });
+                setEditing({ ...n, conflict: n.conflict || n.owner_hold });
                 setHistory([]);
               }}
             >
@@ -336,7 +345,7 @@ export default function Curation() {
                   setHistory(
                     await invoke<Note[]>("curation_history", { id: n.id }),
                   );
-                  setEditing({ ...n });
+                  setEditing({ ...n, conflict: n.conflict || n.owner_hold });
                 })
               }
             >
@@ -398,7 +407,7 @@ export default function Curation() {
             Saving creates a private revision. Existing evidence stays attached.
             Review it again before sharing.
           </p>
-          <label>
+          <label className="curation-edit-content">
             Content
             <textarea
               rows={6}
@@ -419,7 +428,7 @@ export default function Curation() {
                 setEditing({ ...editing, conflict: e.target.checked })
               }
             />
-            Unresolved conflict — keep withheld
+            Owner hold — keep withheld until I clear it
           </label>
           {history.map((h) => (
             <div className="curation-note" key={h.revision}>

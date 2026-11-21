@@ -84,6 +84,8 @@ pub struct CurationNote {
     pub session_label: String,
     pub revision: i64,
     pub conflict: bool,
+    #[serde(default)]
+    pub owner_hold: bool,
     pub sensitive: bool,
     pub withdrawn: bool,
     pub updated_at: f64,
@@ -229,7 +231,7 @@ impl Vault {
     }
 
     fn note(&self, id: &str) -> Result<CurationNote, String> {
-        let mut note=self.connection.query_row("SELECT n.id,n.provider,n.kind,n.content,n.origin,n.session_label,n.revision,n.conflict,n.sensitive,n.withdrawn,n.updated_at,EXISTS(SELECT 1 FROM curation_blocked b WHERE b.id=n.id),EXISTS(SELECT 1 FROM memory m WHERE m.id=n.id AND m.approved=1 AND m.private=0 AND m.sensitive=0) FROM curation_notes n WHERE n.id=?1",[id],|r|Ok(CurationNote{id:r.get(0)?,provider:r.get(1)?,kind:r.get(2)?,content:r.get(3)?,origin:r.get(4)?,session_label:r.get(5)?,revision:r.get(6)?,conflict:r.get(7)?,sensitive:r.get(8)?,withdrawn:r.get(9)?,updated_at:r.get(10)?,blocked:r.get(11)?,published:r.get(12)?,sources:vec![],needs_review:false,publication_basis:None})).map_err(|_|"Contribution is unavailable.".to_string())?;
+        let mut note=self.connection.query_row("SELECT n.id,n.provider,n.kind,n.content,n.origin,n.session_label,n.revision,n.conflict,n.sensitive,n.withdrawn,n.updated_at,EXISTS(SELECT 1 FROM curation_blocked b WHERE b.id=n.id),EXISTS(SELECT 1 FROM memory m WHERE m.id=n.id AND m.approved=1 AND m.private=0 AND m.sensitive=0),EXISTS(SELECT 1 FROM curation_owner_holds h WHERE h.note_id=n.id) FROM curation_notes n WHERE n.id=?1",[id],|r|Ok(CurationNote{id:r.get(0)?,provider:r.get(1)?,kind:r.get(2)?,content:r.get(3)?,origin:r.get(4)?,session_label:r.get(5)?,revision:r.get(6)?,conflict:r.get(7)?,sensitive:r.get(8)?,withdrawn:r.get(9)?,updated_at:r.get(10)?,blocked:r.get(11)?,published:r.get(12)?,owner_hold:r.get(13)?,sources:vec![],needs_review:false,publication_basis:None})).map_err(|_|"Contribution is unavailable.".to_string())?;
         let mut stmt=self.connection.prepare("SELECT message_id,version FROM curation_sources WHERE note_id=?1 ORDER BY message_id").map_err(|e|e.to_string())?;
         note.sources = stmt
             .query_map([id], |r| {
@@ -343,7 +345,7 @@ impl Vault {
     }
 
     fn publish_note(&self, n: &CurationNote, reviewed: bool) -> Result<(), String> {
-        if n.blocked {
+        if n.blocked || is_sensitive(&n.content) || is_sensitive(&n.session_label) {
             return Err("This contribution is withheld.".into());
         }
         // Never bypass an owner-applied private flag on a published contribution.
@@ -419,6 +421,18 @@ impl Vault {
         let timestamp = now();
         let sensitive = is_sensitive(&input.content) || is_sensitive(&input.session_label);
         tx.execute("INSERT INTO curation_notes(id,provider,kind,content,origin,session_label,revision,conflict,sensitive,updated_at) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10) ON CONFLICT(id) DO UPDATE SET kind=excluded.kind,content=excluded.content,session_label=excluded.session_label,revision=excluded.revision,conflict=excluded.conflict,sensitive=excluded.sensitive,updated_at=max(curation_notes.updated_at+0.000001,excluded.updated_at)",params![id,provider,input.kind,input.content.trim(),input.origin,input.session_label,revision,input.conflict,sensitive,timestamp]).map_err(|e|e.to_string())?;
+        if client == "owner" {
+            if input.conflict {
+                tx.execute(
+                    "INSERT OR IGNORE INTO curation_owner_holds VALUES (?1)",
+                    [&id],
+                )
+                .map_err(|e| e.to_string())?;
+            } else {
+                tx.execute("DELETE FROM curation_owner_holds WHERE note_id=?1", [&id])
+                    .map_err(|e| e.to_string())?;
+            }
+        }
         for source in &input.sources {
             tx.execute("INSERT INTO curation_sources VALUES (?1,?2,?3) ON CONFLICT(note_id,message_id) DO UPDATE SET version=excluded.version",params![id,source.message_id,source.version]).map_err(|e|e.to_string())?;
         }
@@ -559,7 +573,7 @@ impl Vault {
             CurationOperation::Write { input } => self.write_contribution(provider, client, input),
             CurationOperation::History { id } => {
                 let n = self.own_note(provider, id)?;
-                if n.blocked {
+                if n.blocked || is_sensitive(&n.content) || is_sensitive(&n.session_label) {
                     return Err("Contribution is currently withheld.".into());
                 }
                 let mut stmt=self.connection.prepare("SELECT revision,snapshot FROM curation_revisions WHERE note_id=?1 ORDER BY revision DESC LIMIT 20").map_err(|e|e.to_string())?;

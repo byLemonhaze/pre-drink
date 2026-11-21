@@ -793,3 +793,129 @@ fn password_rotation_resets_curation_grants_and_automatic_publication() {
         assert_eq!(policy["publish_session"], false);
     }
 }
+
+#[test]
+fn owner_hold_survives_agent_revision_and_undo_until_owner_clears_it() {
+    let (v, a, _, reader) = setup();
+    v.set_curation_policy("chatgpt", false, true).unwrap();
+    let created = write(&v, &a, session("held-original"));
+    let note_id = id(&created);
+    assert_eq!(created["published"], true);
+    v.edit_curation(&note_id, 1, "Garden uses ceramic planters.", true)
+        .unwrap();
+    let revised = write(
+        &v,
+        &a,
+        WriteMemory {
+            id: Some(note_id.clone()),
+            expected_revision: 2,
+            ..session("held-revision")
+        },
+    );
+    assert_eq!(revised["published"], false);
+    assert_eq!(revised["withheld"], true);
+    assert!(v
+        .agent_call(&request(&reader, "get_projects"))
+        .unwrap()
+        .as_array()
+        .unwrap()
+        .is_empty());
+    let review = v.curation_review(std::slice::from_ref(&note_id)).unwrap();
+    assert!(v
+        .publish_curation_review(std::slice::from_ref(&note_id), &review.review_hash)
+        .is_err());
+    call(
+        &v,
+        &a,
+        Op::Undo {
+            id: note_id.clone(),
+            revision: 1,
+            expected_revision: 3,
+            request_key: "held-undo".into(),
+        },
+    )
+    .unwrap();
+    let again = write(
+        &v,
+        &a,
+        WriteMemory {
+            id: Some(note_id.clone()),
+            expected_revision: 4,
+            ..session("held-after-undo")
+        },
+    );
+    assert_eq!(again["withheld"], true);
+    v.edit_curation(&note_id, 5, "Garden uses ceramic planters.", false)
+        .unwrap();
+    publish(&v, &note_id);
+    assert_eq!(
+        v.agent_call(&request(&reader, "get_projects"))
+            .unwrap()
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[test]
+fn publication_rechecks_content_even_when_saved_sensitive_bit_is_stale() {
+    let (v, a, _, _) = setup();
+    let note = write(
+        &v,
+        &a,
+        WriteMemory {
+            content: "Email fictional@example.invalid".into(),
+            ..session("stale-rules")
+        },
+    );
+    v.connection
+        .execute(
+            "UPDATE curation_notes SET sensitive=0 WHERE id=?1",
+            [id(&note)],
+        )
+        .unwrap();
+    let ids = vec![id(&note)];
+    let review = v.curation_review(&ids).unwrap();
+    assert!(!review.notes[0].blocked);
+    assert!(v
+        .publish_curation_review(&ids, &review.review_hash)
+        .is_err());
+}
+
+#[test]
+fn version_six_conflicts_become_owner_holds_on_upgrade() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("fictional-vault.db");
+    let v = Vault::create(&path, "fictional migration garden phrase").unwrap();
+    let c = v
+        .create_scoped_client("Fictional Codex", Some("chatgpt"), true)
+        .unwrap();
+    let note = write(
+        &v,
+        &c,
+        WriteMemory {
+            conflict: true,
+            ..session("legacy-hold")
+        },
+    );
+    v.connection
+        .execute_batch(
+            "DROP VIEW curation_blocked; DROP TABLE curation_owner_holds; PRAGMA user_version=6;",
+        )
+        .unwrap();
+    drop(v);
+    let v = Vault::open(&path, "fictional migration garden phrase").unwrap();
+    let review = v.curation_review(&[id(&note)]).unwrap();
+    assert!(review.notes[0].owner_hold);
+    let updated = write(
+        &v,
+        &c,
+        WriteMemory {
+            id: Some(id(&note)),
+            expected_revision: 1,
+            ..session("legacy-clear-attempt")
+        },
+    );
+    assert_eq!(updated["withheld"], true);
+}

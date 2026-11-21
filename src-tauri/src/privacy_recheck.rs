@@ -1,6 +1,6 @@
 //! Owner-initiated reclassification. Merely opening/updating never clears old flags.
 use crate::{db::Vault, privacy::is_sensitive};
-use rusqlite::params;
+use rusqlite::{params, Connection};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::HashSet;
@@ -24,6 +24,74 @@ struct Change {
     id: String,
     sensitive: bool,
 }
+/// Follow only saved provenance. Unrelated approvals retain their meaning.
+fn affected_approvals(
+    connection: &Connection,
+    changes: &[Change],
+) -> Result<Vec<(String, String)>, String> {
+    let mut memories = HashSet::new();
+    let mut briefs = HashSet::new();
+    for change in changes {
+        let mut stmt = connection.prepare("SELECT m.id FROM memory m WHERE
+            (?1 IN ('memory','curation_notes') AND m.id=?2)
+            OR (?1='messages' AND (m.source_message_id=?2 OR EXISTS(SELECT 1 FROM curation_sources s WHERE s.note_id=m.id AND s.message_id=?2)))
+            OR (?1='conversations' AND (m.source_message_id IN (SELECT id FROM messages WHERE conversation_id=?2)
+                OR EXISTS(SELECT 1 FROM curation_sources s JOIN messages msg ON msg.id=s.message_id WHERE s.note_id=m.id AND msg.conversation_id=?2)))")
+            .map_err(|e| e.to_string())?;
+        for row in stmt
+            .query_map(params![change.table, change.id], |r| r.get::<_, String>(0))
+            .map_err(|e| e.to_string())?
+        {
+            memories.insert(row.map_err(|e| e.to_string())?);
+        }
+        if change.table == "briefs" {
+            briefs.insert(change.id.clone());
+        }
+    }
+    for id in &memories {
+        let mut stmt = connection
+            .prepare("SELECT brief_id FROM brief_sources WHERE memory_id=?1")
+            .map_err(|e| e.to_string())?;
+        for row in stmt
+            .query_map([id], |r| r.get::<_, String>(0))
+            .map_err(|e| e.to_string())?
+        {
+            briefs.insert(row.map_err(|e| e.to_string())?);
+        }
+    }
+    let mut approved = Vec::new();
+    for (table, ids) in [("memory", memories), ("briefs", briefs)] {
+        for id in ids {
+            let is_approved: bool = connection
+                .query_row(
+                    &format!("SELECT approved FROM {table} WHERE id=?1"),
+                    [&id],
+                    |r| r.get(0),
+                )
+                .map_err(|e| e.to_string())?;
+            if is_approved {
+                approved.push((table.into(), id));
+            }
+        }
+    }
+    approved.sort();
+    Ok(approved)
+}
+fn reset_approvals(connection: &Connection, affected: &[(String, String)]) -> Result<(), String> {
+    for (table, id) in affected {
+        connection
+            .execute(&format!("UPDATE {table} SET approved=0 WHERE id=?1"), [id])
+            .map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[derive(Default, Clone, Serialize)]
+pub struct PrivacyUpdate {
+    pub flagged: usize,
+    pub approvals_reset: usize,
+}
+
 impl Vault {
     fn privacy_recheck_plan(&self) -> Result<(PrivacyRecheck, Vec<Change>), String> {
         let mut changes = Vec::new();
@@ -93,7 +161,7 @@ impl Vault {
                 }
             }
         }
-        let approved: i64 = self.connection.query_row("SELECT (SELECT count(*) FROM memory WHERE approved=1)+(SELECT count(*) FROM briefs WHERE approved=1)", [], |r| r.get(0)).map_err(|e| e.to_string())?;
+        let approved = affected_approvals(&self.connection, &changes)?.len() as i64;
         digest.update(approved.to_be_bytes());
         Ok((
             PrivacyRecheck {
@@ -110,22 +178,44 @@ impl Vault {
     /// Updated rules can add restrictions on open, never silently remove them.
     pub(crate) fn enforce_sensitive_rules(&mut self) -> Result<(), String> {
         let (_, changes) = self.privacy_recheck_plan()?;
+        let mut changes: Vec<_> = changes.into_iter().filter(|c| c.sensitive).collect();
+        {
+            let mut stmt = self.connection.prepare("SELECT id FROM conversations WHERE sensitive=0 AND EXISTS(SELECT 1 FROM messages WHERE conversation_id=conversations.id AND sensitive=1)").map_err(|e| e.to_string())?;
+            for row in stmt
+                .query_map([], |r| r.get::<_, String>(0))
+                .map_err(|e| e.to_string())?
+            {
+                let id = row.map_err(|e| e.to_string())?;
+                if !changes
+                    .iter()
+                    .any(|c| c.table == "conversations" && c.id == id)
+                {
+                    changes.push(Change {
+                        table: "conversations",
+                        id,
+                        sensitive: true,
+                    });
+                }
+            }
+        }
+        let affected = affected_approvals(&self.connection, &changes)?;
         let tx = self.connection.transaction().map_err(|e| e.to_string())?;
-        let mut changed = 0;
-        for change in changes.into_iter().filter(|c| c.sensitive) {
-            changed += tx
-                .execute(
-                    &format!("UPDATE {} SET sensitive=1 WHERE id=?1", change.table),
-                    [change.id],
-                )
-                .map_err(|e| e.to_string())?;
+        for change in &changes {
+            tx.execute(
+                &format!("UPDATE {} SET sensitive=1 WHERE id=?1", change.table),
+                [&change.id],
+            )
+            .map_err(|e| e.to_string())?;
         }
-        changed += tx.execute("UPDATE conversations SET sensitive=1 WHERE sensitive=0 AND EXISTS(SELECT 1 FROM messages WHERE conversation_id=conversations.id AND sensitive=1)", []).map_err(|e| e.to_string())?;
-        if changed > 0 {
-            tx.execute_batch("UPDATE memory SET approved=0; UPDATE briefs SET approved=0;")
-                .map_err(|e| e.to_string())?;
-        }
-        tx.commit().map_err(|e| e.to_string())
+        // Existing flagged branches must keep their whole conversation restricted.
+        tx.execute("UPDATE conversations SET sensitive=1 WHERE sensitive=0 AND EXISTS(SELECT 1 FROM messages WHERE conversation_id=conversations.id AND sensitive=1)", []).map_err(|e| e.to_string())?;
+        reset_approvals(&tx, &affected)?;
+        tx.commit().map_err(|e| e.to_string())?;
+        self.privacy_on_open = PrivacyUpdate {
+            flagged: changes.len(),
+            approvals_reset: affected.len(),
+        };
+        Ok(())
     }
 
     pub fn privacy_recheck_preview(&self) -> Result<PrivacyRecheck, String> {
@@ -154,11 +244,8 @@ impl Vault {
             .filter(|c| c.sensitive || selected.contains(&format!("{}:{}", c.table, c.id)))
             .collect();
         review.cleared = changes.iter().filter(|c| !c.sensitive).count();
-        review.approvals_to_reset = if changes.is_empty() {
-            0
-        } else {
-            review.approvals_to_reset
-        };
+        let affected = affected_approvals(&self.connection, &changes)?;
+        review.approvals_to_reset = affected.len() as i64;
         let tx = self.connection.transaction().map_err(|e| e.to_string())?;
         for change in &changes {
             if change.table == "conversations" && !change.sensitive {
@@ -176,8 +263,7 @@ impl Vault {
         if !changes.is_empty() {
             // Clearing an inherited restriction must not make an old approval live.
             // Manual private flags and original content/provenance are never modified.
-            tx.execute_batch("UPDATE memory SET approved=0; UPDATE briefs SET approved=0;")
-                .map_err(|e| e.to_string())?;
+            reset_approvals(&tx, &affected)?;
         }
         tx.commit().map_err(|e| e.to_string())?;
         Ok(review)
@@ -297,8 +383,40 @@ mod tests {
         assert_eq!(v.stats().unwrap().sensitive, 2);
         assert!(v.messages("c", true).unwrap()[0].sensitive);
         assert!(v.messages("new", true).unwrap()[0].sensitive);
-        assert!(!v.memories(None, "", false).unwrap()[0].approved);
+        assert!(v.memories(None, "", false).unwrap()[0].approved);
         assert!(v.list("", false, 0).unwrap().is_empty());
+    }
+
+    #[test]
+    fn new_flags_reset_only_linked_approvals_and_report_the_change() {
+        let mut v = legacy_fixture();
+        v.connection.execute_batch("UPDATE conversations SET private=0,sensitive=0; UPDATE messages SET sensitive=0;
+            INSERT INTO memory(id,type,content,approved,created_at,updated_at) VALUES ('independent','fact','Garden uses clay.',1,1,1);
+            INSERT INTO briefs(id,title,content,approved,updated_at) VALUES ('independent-brief','Garden','Garden uses clay.',1,1);
+            INSERT INTO brief_sources(brief_id,memory_id,reviewed_at) VALUES ('independent-brief','independent',1);
+            UPDATE messages SET content='my number is 2025550147' WHERE id='m';
+            UPDATE memory SET approved=1 WHERE id='note';").unwrap();
+        v.enforce_sensitive_rules().unwrap();
+        assert_eq!(v.privacy_on_open.flagged, 2);
+        assert_eq!(v.privacy_on_open.approvals_reset, 2);
+        for (id, expected) in [("note", false), ("independent", true)] {
+            assert_eq!(
+                v.connection
+                    .query_row("SELECT approved FROM memory WHERE id=?1", [id], |r| r
+                        .get::<_, bool>(0))
+                    .unwrap(),
+                expected
+            );
+        }
+        for (id, expected) in [("brief", false), ("independent-brief", true)] {
+            assert_eq!(
+                v.connection
+                    .query_row("SELECT approved FROM briefs WHERE id=?1", [id], |r| r
+                        .get::<_, bool>(0))
+                    .unwrap(),
+                expected
+            );
+        }
     }
 
     #[test]

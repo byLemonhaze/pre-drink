@@ -69,15 +69,16 @@ export default function PrivacyRecheck({
         <div role="region" aria-label="Flag recheck preview">
           <p>
             {preview.cleared} possible false flags · {selected.length} selected
-            to clear · {preview.flagged} new flags ·{" "}
-            {preview.approvals_to_reset} approvals would return to draft.
+            to clear · {preview.flagged} new flags · up to{" "}
+            {preview.approvals_to_reset} linked approvals would return to draft.
           </p>
           <p className="fine-print">
             Counts include conversations, messages, notes and briefs. Applying
-            stops agent sharing. If classifications change, all approved notes
-            and briefs return to draft. Manual private flags stay private.
-            Cleared conversations may become available to chat-enabled clients
-            if you later turn sharing back on.
+            stops agent sharing. Only changed notes and briefs, and those linked
+            to changed sources, return to draft. Unrelated approvals stay
+            intact. Manual private flags stay private. Cleared conversations may
+            become available to chat-enabled clients if you later turn sharing
+            back on.
           </p>
           <p>
             Nothing is selected automatically. Read every item before clearing

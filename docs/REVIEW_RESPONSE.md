@@ -85,3 +85,16 @@ Read the [full evening review](https://pre-drink-full-review-nov-20-evening-zzo6
 - **Local verification:** add a reproducible local verification entry point and an explicit local pre-push policy; cloud CI remains manual-only under the owner's zero-extra-cost constraint. Signing remains a later owner-funded distribution decision, not an immediate purchase.
 
 Next implementation order: owner hold regression/fix; deliberate agent-session controls; local verification automation; targeted privacy corrections. Real-export and broader model-quality evidence stay separately gated. Competitor convenience claims in the review have not been independently verified.
+
+## Evening-review implementation follow-up — 2026-11-20
+
+The prior triage is superseded by this implementation where specified:
+
+- **R5-1:** independent owner hold in schema 7; agent revisions and undo preserve it. Original failing regression reproduced unwanted auto-release, then passed after the fix. Prior conflicts migrate conservatively to holds.
+- **Agent interruption:** explicit one-hour/four-hour/until-lock sessions replace repeated unlocking for deliberate long work. They do not rely on agent polling to renew a grant; timed sessions expire even under activity. Native lock/sleep and revocation remain authoritative.
+- **R4-2:** privacy reclassification targets only changed items and provenance-linked dependents. An unlock notice reports new restrictions/reset approvals. Unrelated approvals remain intact; clearing a restriction cannot resurrect linked old approvals.
+- **R5-6:** drafts were already included in reclassification. Publication now additionally re-evaluates current content and session-label sensitivity.
+- **R4-1 / R5-2:** narrow technical-status exceptions, hardware-pin false-positive correction, contextual phone labels and SIN detection/checksum fixtures. Heuristics still have limits.
+- **R5-4:** offline verification command, exact-source receipt and guarded pre-push hook. Remote CI remains manual-only; no new paid or cloud model runs.
+
+Per-client ownership, OS credential storage/peer identity, access logging, versioned KDF metadata and the dependency warnings remain separate follow-ups; this batch does not claim they are resolved. Model-quality scoring and representative-export acceptance require their own evidence. See VALIDATION and WORK_LOG for verification rather than treating this response as an audit certificate.

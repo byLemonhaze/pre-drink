@@ -29,7 +29,14 @@ import {
   Share2,
   X,
 } from "lucide-react";
-import type { Conversation, ImportReport, Message, Stats } from "./types";
+import type {
+  AgentSessionStatus,
+  PrivacyUpdate,
+  Conversation,
+  ImportReport,
+  Message,
+  Stats,
+} from "./types";
 
 import { MemoryEditor, MemoryView } from "./Memory";
 import Briefs from "./Briefs";
@@ -63,11 +70,15 @@ function App({
   onLock,
   onVaultChanged,
   sharing,
+  agentSession,
+  privacyUpdate,
   identity,
 }: {
   onLock: () => void;
   onVaultChanged: (message: string) => void;
   sharing: boolean;
+  agentSession: AgentSessionStatus | null;
+  privacyUpdate: PrivacyUpdate;
   identity: VaultIdentity;
 }) {
   const [page, setPage] = useState<
@@ -390,13 +401,25 @@ function App({
           </div>
           <div className="offline-badge">
             <ShieldCheck size={14} />
-            {sharing ? "Agent sharing on" : "Agent sharing off"}
+            {agentSession
+              ? "Agent work session active"
+              : sharing
+                ? "Agent sharing on"
+                : "Agent sharing off"}
           </div>
           <button className="button secondary lock-button" onClick={onLock}>
             <LockKeyhole size={14} />
             Lock vault
           </button>
         </header>
+        {privacyUpdate.flagged > 0 && (
+          <div className="preview-banner" role="status">
+            Privacy rules added {privacyUpdate.flagged} restrictions when this
+            vault opened. {privacyUpdate.approvals_reset} linked approvals
+            returned to draft. Unrelated approvals were preserved. Review
+            sensitive flags in Settings.
+          </div>
+        )}
         {!native && (
           <div className="preview-banner">
             <CircleHelp size={16} />
@@ -455,7 +478,9 @@ function App({
         )}
         {page === "briefs" && <Briefs />}
         {page === "sharing" && <Sharing />}
-        {page === "agents" && <Agents sharing={sharing} />}
+        {page === "agents" && (
+          <Agents sharing={sharing} agentSession={agentSession} />
+        )}
         {page === "library" && (
           <>
             <section className="page-heading">
@@ -871,10 +896,11 @@ function App({
                 Archive, memory, briefs, and search index are encrypted with
                 SQLCipher AES-256 and authenticated pages. Argon2id derives the
                 key from your password. No password or database key is saved.
-                Automatic locking follows 15 minutes without activity in this
-                app, and system/display sleep or user-session switching.
-                Original export ZIPs and old Mac backups are outside this
-                protection.
+                Normally locks after 15 minutes without activity in this app. An
+                explicit agent work session keeps it unlocked for your chosen
+                period. Mac lock, system/display sleep, and user-session
+                switching still lock the vault. Original export ZIPs and old Mac
+                backups are outside this protection.
               </p>
             </section>
             <PrivacyRecheck onApplied={() => setRevision((r) => r + 1)} />

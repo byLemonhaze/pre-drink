@@ -102,6 +102,7 @@ fn handle(mut stream: UnixStream, store: Store) -> Result<(), String> {
     let mut encoded = serde_json::to_vec(&reply).map_err(|_| "Couldn't encode reply.")?;
     let within_limit = encoded.len() <= 256_000;
     if !within_limit {
+        encoded.zeroize();
         encoded = br#"{"ok":false,"error":"Result is too large. Use a narrower context topic."}"#
             .to_vec();
     }

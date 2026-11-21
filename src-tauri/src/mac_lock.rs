@@ -110,7 +110,7 @@ mod tests {
             .unwrap();
         let mut session = Session::new(std::path::PathBuf::new());
         session.vault = Some(vault);
-        session.sharing = true;
+        session.start_agent_session("until_lock").unwrap();
         let selection = ShareSelection {
             items: vec![ShareItem {
                 kind: ShareKind::Memory,

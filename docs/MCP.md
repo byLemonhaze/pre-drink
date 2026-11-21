@@ -98,3 +98,9 @@ All operations use the existing sharing/lock/revocation boundary. Client names a
 Choose **Claude (local MCP)** for `mcpServers` JSON and a Claude-bound grant. Merge the entry into a compatible local Claude client’s private settings; never upload it to a chat or repository. This does not create web connectivity or establish tested Claude model execution. Its source/write scope is Claude only; shared summaries are available under the same delivery rules.
 
 An optional cross-provider delegate is planned, not implemented. No current format, client name or `curate_memory` argument grants it. The owner must separately select source archives and acknowledge the model destination when that feature exists. Cloud curation is always optional.
+
+## Owner holds and uninterrupted work
+
+An owner-applied hold is independent of an agent's conflict flag. Agents may keep revising their own provider's draft but cannot clear the hold or release it. The owner clears it in **Edit / resolve**, then reviews the new saved version. Existing conflict flags from older vaults migrate conservatively to owner holds. The shared layer remains controlled by the owner; longer sessions do not broaden scopes or publication policy.
+
+**Agent access → Let your agents work** offers one hour, four hours, or until Mac lock. Starting explicitly enables sharing and keeps the vault unlocked for that period, including while idle. A timed session locks at its deadline. Agents cannot renew it. Stopping sharing cancels it; manual lock, Mac lock and sleep still lock immediately, and unlocking/restarting never resumes it. The control does not launch a model or buy usage. External clients still have their own usage costs; this project's current policy prohibits further paid calls.

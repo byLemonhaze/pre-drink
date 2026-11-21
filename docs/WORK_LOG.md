@@ -263,3 +263,18 @@ Next: the requested official export and isolated real-data import/upgrade accept
 ## Zero-extra-cost constraint — 2026-11-20
 
 The owner reported nearing the account's included Actions allowance and explicitly has no money for additional charges. The last automatic run for `6b8784a` passed all stages in 6m26s. Removed push, pull-request and weekly triggers; the workflow is manual-only. Future verification runs locally unless the owner explicitly authorizes use of included cloud capacity. No account billing setting was changed, and no repository visibility change is a substitute for the owner's private-until-ready requirement. The workflow/documentation-only cost-policy commit is checked locally and pushed with a CI-skip marker; it deliberately has no new GitHub run.
+
+## Evening review implementation — 2026-11-20
+
+Implemented the four immediate review follow-ups on the existing product, without new provider/API usage or remote CI:
+
+1. Independent encrypted owner holds in schema 7. Agent updates/undo cannot clear them; old conflicts migrate conservatively. Fresh publication rechecks note content and session labels.
+2. Explicit owner-started one-hour/four-hour/until-Mac-lock work sessions. Monotonic timed expiry, status/stop controls, existing provider permissions and authoritative lock/sleep/revocation remain. Ordinary sharing retains normal idle locking; grants never resume on unlock/restart.
+3. One-command offline verification and a repository-local pre-push guard, installed without replacing other hooks. Receipts bind implementation, documentation and tool versions; Markdown-only changes get narrow fresh checks. No automatic Actions triggers were restored.
+4. Targeted privacy reclassification with linked-only approval resets and an unlock count notice. Narrow status-prose/PIN false-positive fixes and contextual phone/SIN coverage. Broader regex/privacy limits remain documented.
+
+Native fictional checks caught and fixed the curation editor's cramped textarea, then verified both themes, session start/stop, manual locking and hold clearance staying private. The isolated preview was locked and quit. The personal vault was never opened or modified.
+
+Evidence: 119 Rust + 15 frontend + 5 Python cases passed, one optional benchmark ignored; production build, formatting, Clippy and fictional provider packaging/import checks passed. The first receipt correctly rejected documentation changes made during verification; final frozen-source verification then passed and wrote the receipt. Review, product, architecture, security, recovery, MCP, quick-start and execution documentation were reconciled. Repo visibility was read back as PRIVATE; latest remote CI remains the previous successful `6b8784a` run.
+
+Remaining: representative official export checks when the requested ZIP arrives; broader quality/Claude installed-model acceptance subject to explicit usage authorization; larger memory/brief IPC and accessibility/OS coverage; review of current source; fictional demo and release packaging. Retained nonblocking backlog includes OS credential integration/peer identity, minimal access metadata, KDF-format evolution and dependency warnings. Apple enrollment/signing/notarization stays at the final distribution stage. Public visibility/downloads still require the owner's launch decision.
