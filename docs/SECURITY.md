@@ -106,3 +106,7 @@ Restoration/password rotation resets publication automation as well as client re
 Claude joins ChatGPT/Grok as a separately bound provider; the same denial rules apply to every raw read, write, manifest and private-history route. ZIP normalization persists the actual recognized provider instead of hard-coding ChatGPT. Cross-provider source IDs do not collide. The provider-table migration checks references and restores FK enforcement before opening a session; it grants no existing client additional access.
 
 The owner approved an optional future delegate allowed to read explicitly selected multiple-provider sources. That is a product direction, not an implemented bypass. It needs independent source grants, destination consent and delegated provenance/ownership tests. Current tools cannot opt into it. Cloud curation remains optional, with offline manual use unchanged.
+
+### Interrupted vault selection
+
+The replacement-generation layout guard is validated and flushed before publishing a new active selector. If the first switch is interrupted between those steps, the app requires explicit recovery instead of silently treating the old root as current. Both encrypted generations are retained after process termination. Existing selectors continue to select the previous generation until atomic replacement; normal precommit errors attempt guard cleanup. Process-kill regressions cover the before/after publication boundary, not physical power-loss durability. See RECOVERY for the preserved-folder procedure.

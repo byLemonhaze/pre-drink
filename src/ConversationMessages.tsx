@@ -3,6 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Brain, ShieldCheck } from "lucide-react";
 import PagedList from "./PagedList";
+import LargeMessageReader, { MARKDOWN_LIMIT } from "./LargeMessageReader";
 import type { Message } from "./types";
 
 function MessageBody({ content }: { content: string }) {
@@ -13,6 +14,8 @@ function MessageBody({ content }: { content: string }) {
       <div className="markdown">
         {long && !expanded ? (
           <p className="long-message-preview">{content.slice(0, 2000)}…</p>
+        ) : content.length > MARKDOWN_LIMIT ? (
+          <LargeMessageReader content={content} />
         ) : (
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}

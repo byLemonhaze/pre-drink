@@ -80,7 +80,9 @@ Schema 4 extends the existing store, preserves manual notes/approvals and downgr
 
 Implemented and deterministically tested: scoped source reads and writes, retry/revision protection, private workspaces, provenance, resumable/incremental manifests, batch release, narrow optional automation, history/withdrawal and source-aware shared delivery. Fictional native checks cover review, editing, held undo, workspace separation and shared preview; compiled MCP tests exercise actual protocol writing. Codex additionally passed three fresh fictional model sessions covering writing, retries, backend restart/resume and reviewed shared retrieval (27 MCP calls). The small summary correctly distinguished owner decisions, suggestions and uncertainty; this is bounded evidence, not a general quality guarantee. See [CURATION_ACCEPTANCE](CURATION_ACCEPTANCE.md).
 
-Still open: broader curation quality and Grok/Claude model-led writing; representative owner-local export and upgrade acceptance when the requested ZIP arrives; broader scale, accessibility and filesystem failure coverage; fresh independent review; signed/notarized distribution and clean installation. See [VALIDATION](VALIDATION.md) for precise evidence, [AGENT_CURATION](AGENT_CURATION.md) for the contract and [EXECUTION_PLAN](EXECUTION_PLAN.md) for order.
+Grok Build additionally passed three fictional provider-matched sessions and 29 MCP calls. Context packs match words in the saved summary; they do not infer topic associations. Curators should retain recognizable project names.
+
+Still open: broader curation quality and Claude model-led writing; representative owner-local export and upgrade acceptance when the requested ZIP arrives; broader scale, accessibility and filesystem failure coverage; fresh independent review; signed/notarized distribution and clean installation. See [VALIDATION](VALIDATION.md) for precise evidence, [AGENT_CURATION](AGENT_CURATION.md) for the contract and [EXECUTION_PLAN](EXECUTION_PLAN.md) for order.
 
 ## Future ideas and exclusions
 

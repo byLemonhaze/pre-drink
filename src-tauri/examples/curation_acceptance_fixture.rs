@@ -33,10 +33,11 @@ fn configuration(
     name: &str,
     executable: &Path,
     client: &NewClient,
+    provider: &str,
 ) -> std::io::Result<PathBuf> {
     let path = root.join(format!("{name}.json"));
     let encoded = Zeroizing::new(serde_json::to_vec(&json!({
-        "command": executable, "args": ["--mcp"], "env": {
+        "fixture_provider":provider, "command": executable, "args": ["--mcp"], "env": {
             "PRE_DRINK_SOCKET": root.join("agents.sock"),
             "PRE_DRINK_CLIENT_ID": client.client.id,
             "PRE_DRINK_CLIENT_TOKEN": client.token,
@@ -61,6 +62,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     .canonicalize()?;
     if !executable.is_file() {
         return Err("MCP binary is not a file".into());
+    }
+    let provider = std::env::args().nth(2).unwrap_or_else(|| "chatgpt".into());
+    if !matches!(provider.as_str(), "chatgpt" | "grok" | "claude") {
+        return Err("Choose chatgpt, grok or claude for fictional storage".into());
     }
     let directory = tempfile::Builder::new()
         .prefix("pd-curator-client-")
@@ -90,20 +95,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         {"id":"fictional-courtyard","title":"Fictional courtyard","current_node":"04","mapping":mapping},
         {"id":"fictional-hidden","title":"Private fictional garden","mapping":{"hidden":{"message":{"author":{"role":"user"},"content":{"parts":["hidden-garden-canary: private imaginary design"]}}}}}
     ]);
+    // Generate the same invented story in each provider's actual adapter contract.
+    let grok_story = json!({"conversations":chats.as_array().unwrap().iter().map(|c| {
+        json!({"conversation":{"id":c["id"],"title":c["title"]},"responses":c["mapping"].as_object().unwrap().iter().map(|(id,n)|{
+            json!({"response":{"_id":id,"parent_response_id":n["parent"],"sender":if n["message"]["author"]["role"]=="user" {"human"} else {"assistant"},"message":n["message"]["content"]["parts"][0]}})
+        }).collect::<Vec<_>>()})
+    }).collect::<Vec<_>>()});
+    let claude_story = json!(chats.as_array().unwrap().iter().map(|c| {
+        json!({"uuid":c["id"],"name":c["title"],"chat_messages":c["mapping"].as_object().unwrap().iter().map(|(id,n)|{
+            json!({"uuid":id,"parent_message_uuid":n["parent"],"sender":if n["message"]["author"]["role"]=="user" {"human"} else {"assistant"},"text":n["message"]["content"]["parts"][0]})
+        }).collect::<Vec<_>>()})
+    }).collect::<Vec<_>>());
+    let foreign_chatgpt = json!([{"id":"fictional-foreign","title":"Foreign fictional garden","mapping":{"q":{"message":{"author":{"role":"user"},"content":{"parts":["foreign-chatgpt-canary: owner-only imaginary garden"]}}}}}]);
     let mut zip = zip::ZipWriter::new(Cursor::new(Vec::new()));
     for (name, value) in [
-        ("conversations.json", chats),
+        (
+            "conversations.json",
+            if provider == "chatgpt" {
+                chats
+            } else {
+                foreign_chatgpt
+            },
+        ),
         (
             "prod-grok-backend.json",
-            serde_json::from_str::<Value>(include_str!(
-                "../tests/fixtures/grok/account-v1/garden.input.json"
-            ))?,
+            if provider == "grok" {
+                grok_story
+            } else {
+                serde_json::from_str::<Value>(include_str!(
+                    "../tests/fixtures/grok/account-v1/garden.input.json"
+                ))?
+            },
         ),
         (
             "conversations-001.json",
-            serde_json::from_str::<Value>(include_str!(
-                "../tests/fixtures/claude/messages-v1/garden.input.json"
-            ))?,
+            if provider == "claude" {
+                claude_story
+            } else {
+                serde_json::from_str::<Value>(include_str!(
+                    "../tests/fixtures/claude/messages-v1/garden.input.json"
+                ))?
+            },
         ),
     ] {
         zip.start_file(name, zip::write::SimpleFileOptions::default())?;
@@ -118,21 +150,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .clone();
     let foreign: Vec<_> = items
         .iter()
-        .filter(|c| c.platform != "chatgpt")
+        .filter(|c| c.platform != provider)
         .map(|c| c.messages[0].id.clone())
         .collect();
+    let primary = items
+        .iter()
+        .find(|c| c.title == "Fictional courtyard")
+        .ok_or("Missing primary fixture")?
+        .id
+        .clone();
     vault.import(&items, report)?;
     vault.mark_private(&hidden, true)?;
     let mut curator =
-        vault.create_scoped_client("Fictional writing acceptance", Some("chatgpt"), true)?;
+        vault.create_scoped_client("Fictional writing acceptance", Some(&provider), true)?;
     let mut reader = vault.create_scoped_client("Fictional shared reader", None, false)?;
-    let curator_config = configuration(root, "curator", &executable, &curator)?;
-    let reader_config = configuration(root, "reader", &executable, &reader)?;
+    let curator_config = configuration(root, "curator", &executable, &curator, &provider)?;
+    let reader_config = configuration(root, "reader", &executable, &reader, &provider)?;
     let store = Arc::new(Mutex::new(session));
     broker::serve(&root.join("agents.sock"), store.clone())?;
     println!(
         "{}",
-        json!({"curator":curator_config,"reader":reader_config,"work":work,"foreign_sources":foreign,"sharing":false})
+        json!({"curator":curator_config,"reader":reader_config,"work":work,"foreign_sources":foreign,"provider":provider,"sharing":false})
     );
     std::io::stdout().flush()?;
     for line in std::io::stdin().lock().lines() {
@@ -148,12 +186,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 "inspect" => {
                     let v = session.access()?;
-                    json!({"notes":v.curation_notes("chatgpt", "", true)?,"jobs":v.agent_call(&request(&curator,CurationOperation::Jobs{}))?,"policies":v.curation_policies()?})
+                    json!({"notes":v.curation_notes(&provider, "", true)?,"jobs":v.agent_call(&request(&curator,CurationOperation::Jobs{}))?,"policies":v.curation_policies()?})
                 }
                 "publish" => {
                     let v = session.access()?;
                     let ids: Vec<_> = v
-                        .curation_notes("chatgpt", "", true)?
+                        .curation_notes(&provider, "", true)?
                         .into_iter()
                         .map(|n| n.id)
                         .collect();
@@ -164,7 +202,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "revise" => {
                     let v = session.access()?;
                     let note = v
-                        .curation_notes("chatgpt", "", true)?
+                        .curation_notes(&provider, "", true)?
                         .into_iter()
                         .find(|n| n.origin == "archive")
                         .ok_or("No archive contribution")?;
@@ -176,7 +214,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     )?
                 }
                 "restrict" => {
-                    session.access()?.mark_private(&items[0].id, true)?;
+                    session.access()?.mark_private(&primary, true)?;
                     json!(true)
                 }
                 "lock" => {

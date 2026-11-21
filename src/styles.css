@@ -841,9 +841,20 @@ h1 {
   border-radius: 3px;
   padding: 7px 9px;
 }
-.long-message-preview {
+.long-message-preview,
+.large-message-text {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+.large-message-explanation {
+  color: var(--muted);
+  font-size: 12px;
+}
+.large-message-reader .page-controls {
+  flex-wrap: wrap;
+}
+.large-message-text {
+  line-height: 1.65;
 }
 .message {
   padding: 25px 0;

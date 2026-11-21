@@ -360,6 +360,8 @@ impl Session {
         let temporary = self
             .directory
             .join(format!(".active-{}.partial", uuid::Uuid::new_v4()));
+        let marker = self.directory.join(LAYOUT_MARKER);
+        let mut new_marker = false;
         let publication = (|| -> Result<bool, String> {
             let mut options = fs::OpenOptions::new();
             options.write(true).create_new(true);
@@ -377,29 +379,58 @@ impl Session {
             .and_then(|_| file.sync_all())
             .map_err(|_| "Cannot flush the vault switch. Original vault preserved.")?;
             sync_directory(&self.directory)?;
+            // Persist the no-fallback guard BEFORE publishing the selector.
+            // A crash before the first selector now requires explicit recovery;
+            // it can never silently make an old root vault current again.
+            match fs::symlink_metadata(&marker) {
+                Ok(metadata) => {
+                    if !metadata.file_type().is_file()
+                        || metadata.len() != 2
+                        || fs::read(&marker).map_err(|_| "Cannot read vault recovery guard.")?
+                            != b"1\n"
+                    {
+                        return Err("Invalid vault recovery guard. Preserve this folder and follow the recovery guide.".into());
+                    }
+                    fs::File::open(&marker)
+                        .and_then(|f| f.sync_all())
+                        .map_err(|_| "Cannot flush vault recovery guard.")?;
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                    let mut guard = options.open(&marker).map_err(|_| {
+                        "Cannot prepare vault recovery guard. Original vault preserved."
+                    })?;
+                    new_marker = true;
+                    guard
+                        .write_all(b"1\n")
+                        .and_then(|_| guard.sync_all())
+                        .map_err(|_| {
+                            "Cannot flush vault recovery guard. Original vault preserved."
+                        })?;
+                }
+                Err(_) => return Err("Cannot inspect vault recovery guard.".into()),
+            }
+            sync_directory(&self.directory)?;
             let generation = self.generation;
             self.lock();
             if generation == self.generation {
                 self.generation = self.generation.wrapping_add(1);
             }
+            #[cfg(test)]
+            publication_checkpoint(&self.directory, "before");
             fs::rename(&temporary, self.directory.join(POINTER))
                 .map_err(|_| "Could not switch vaults. Unlock the original vault to continue.")?;
             // Never remove the active generation after commit.
             pending.keep = true;
-            // Once published, losing the selector must not expose the old root
-            // vault as if it were current. This marker contains no private data.
-            let marker = self.directory.join(LAYOUT_MARKER);
-            let marker_result = if marker.exists() {
-                Ok(())
-            } else {
-                options.open(marker).and_then(|mut file| {
-                    file.write_all(b"1\n")?;
-                    file.sync_all()
-                })
-            };
-            let flushed = sync_directory(&self.directory);
-            Ok(marker_result.is_err() || flushed.is_err())
+            #[cfg(test)]
+            publication_checkpoint(&self.directory, "after");
+            Ok(sync_directory(&self.directory).is_err())
         })();
+        // Ordinary precommit failures can undo a newly created guard. If that
+        // cleanup fails, leave recovery explicit rather than guessing a vault.
+        if publication.is_err() && new_marker && !pending.keep {
+            let _ = fs::remove_file(marker);
+            let _ = sync_directory(&self.directory);
+        }
         let _ = fs::remove_file(temporary);
         let durability_warning = publication?;
         Ok(LifecycleResult {
@@ -479,5 +510,136 @@ mod selector_tests {
         assert!(s.status().is_err());
         assert!(s.unlock(old, false, false).is_err());
         assert!(Vault::open(&original, old).is_ok());
+    }
+}
+
+// Only the isolated child-test executable can stop at publication boundaries.
+// No fault-injection environment variable is read by production builds.
+#[cfg(test)]
+fn publication_checkpoint(root: &Path, stage: &str) {
+    if std::env::var_os("PD_SWITCH_CHILD_ROOT").as_deref() == Some(root.as_os_str())
+        && std::env::var("PD_SWITCH_CHILD_STAGE").as_deref() == Ok(stage)
+    {
+        fs::write(root.join("child-ready"), stage).unwrap();
+        loop {
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+    }
+}
+
+#[cfg(test)]
+mod interrupted_switch_tests {
+    use super::*;
+    use std::{
+        process::{Child, Command, Stdio},
+        time::{Duration, Instant},
+    };
+    const OLD: &str = "fictional switch original phrase";
+    const NEW: &str = "fictional switch replacement phrase";
+    struct ChildGuard(Child);
+    impl Drop for ChildGuard {
+        fn drop(&mut self) {
+            let _ = self.0.kill();
+            let _ = self.0.wait();
+        }
+    }
+    fn check(stage: &str, test_name: &str) {
+        if let Some(root) = std::env::var_os("PD_SWITCH_CHILD_ROOT") {
+            let mut s = Session::new(root.into());
+            s.unlock(OLD, false, false).unwrap();
+            let preview = s.prepare_password_change(OLD, NEW).unwrap();
+            s.apply_replacement(&preview.review_id, NEW).unwrap();
+            panic!("Missed publication checkpoint");
+        }
+        let root = tempfile::tempdir().unwrap();
+        let original = root.path().join(DATABASE);
+        let mut s = Session::new(root.path().into());
+        s.unlock(OLD, true, false).unwrap();
+        let v = s.access().unwrap();
+        v.save_memory(crate::memory::MemoryInput {
+            id: None,
+            kind: "project".into(),
+            content: "Fictional cedar planters".into(),
+            source_message_id: None,
+            private: false,
+        })
+        .unwrap();
+        v.create_scoped_client("Fictional prior reader", None, false)
+            .unwrap();
+        v.checkpoint().unwrap();
+        s.lock();
+        let mut child = ChildGuard(
+            Command::new(std::env::current_exe().unwrap())
+                .args(["--exact", test_name, "--nocapture"])
+                .env("PD_SWITCH_CHILD_ROOT", root.path())
+                .env("PD_SWITCH_CHILD_STAGE", stage)
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .spawn()
+                .unwrap(),
+        );
+        let deadline = Instant::now() + Duration::from_secs(60);
+        while !root.path().join("child-ready").exists() {
+            assert!(
+                child.0.try_wait().unwrap().is_none(),
+                "Child exited before switch boundary"
+            );
+            assert!(Instant::now() < deadline, "Child missed switch boundary");
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        child.0.kill().unwrap();
+        child.0.wait().unwrap();
+        assert!(
+            root.path().join(LAYOUT_MARKER).exists(),
+            "Recovery guard must precede commit"
+        );
+        let old = Vault::open(&original, OLD).unwrap();
+        old.verify().unwrap();
+        assert_eq!(old.memories(None, "", false).unwrap().len(), 1);
+        if stage == "before" {
+            let staged = fs::read_dir(root.path())
+                .unwrap()
+                .map(|e| e.unwrap().path())
+                .find(|p| {
+                    p.is_dir()
+                        && p.file_name()
+                            .unwrap()
+                            .to_string_lossy()
+                            .starts_with("vault-")
+                })
+                .unwrap();
+            let replacement = Vault::open(&staged.join(DATABASE), NEW).unwrap();
+            replacement.verify().unwrap();
+            assert_eq!(replacement.memories(None, "", false).unwrap().len(), 1);
+            // The first switch is interrupted: preserve both generations and
+            // require explicit recovery, never guess which one is current.
+            assert!(!root.path().join(POINTER).exists());
+            assert!(active_path(root.path()).is_err());
+        } else {
+            let selected = active_path(root.path()).unwrap();
+            assert_ne!(selected, original);
+            let restored = Vault::open(&selected, NEW).unwrap();
+            restored.verify().unwrap();
+            assert_eq!(restored.memories(None, "", false).unwrap().len(), 1);
+            let clients: i64 = restored
+                .connection
+                .query_row("SELECT count(*) FROM agent_clients", [], |r| r.get(0))
+                .unwrap();
+            assert_eq!(clients, 0);
+            drop(restored);
+            fs::remove_file(root.path().join(POINTER)).unwrap();
+            assert!(
+                active_path(root.path()).is_err(),
+                "Never silently reopen the old root"
+            );
+        }
+    }
+    #[test]
+    fn killed_before_selector_commit_preserves_recoverable_generations() {
+        check("before", "lifecycle::interrupted_switch_tests::killed_before_selector_commit_preserves_recoverable_generations");
+    }
+    #[test]
+    fn killed_after_selector_commit_never_falls_back_to_old_vault() {
+        check("after", "lifecycle::interrupted_switch_tests::killed_after_selector_commit_never_falls_back_to_old_vault");
     }
 }

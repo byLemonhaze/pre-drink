@@ -133,3 +133,33 @@ test("assistant labels follow the imported provider", () => {
       assert.ok(!html.includes("<strong>ChatGPT</strong>"));
   }
 });
+
+test("huge expanded messages render bounded inert text, with lossless Unicode parts", () => {
+  const {
+    default: LargeReader,
+    textPart,
+    TEXT_PART_SIZE,
+  } = component("LargeMessageReader");
+  const text =
+    "x".repeat(TEXT_PART_SIZE - 1) +
+    "🌿" +
+    "<script>fictional()</script>\n".repeat(20000) +
+    "tail-orchid";
+  const count = Math.ceil(text.length / TEXT_PART_SIZE);
+  const parts = Array.from({ length: count }, (_, i) => textPart(text, i));
+  assert.equal(parts.join(""), text);
+  assert.ok(parts.every((p) => p.length <= TEXT_PART_SIZE + 1));
+  assert.ok(
+    parts.every(
+      (p) => !/[\uD800-\uDBFF]$/.test(p) && !/^[\uDC00-\uDFFF]/.test(p),
+    ),
+  );
+  const html = renderToStaticMarkup(
+    React.createElement(LargeReader, { content: text }),
+  );
+  assert.match(html, /shown in parts as plain text/);
+  assert.match(html, /Last part/);
+  assert.doesNotMatch(html, /<script>|tail-orchid/);
+  assert.ok(html.length < 22000);
+  assert.ok(parts.at(-1).endsWith("tail-orchid"));
+});

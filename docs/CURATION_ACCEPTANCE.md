@@ -1,6 +1,6 @@
-# Installed Codex curation acceptance
+# Installed-client curation acceptance
 
-## Recorded result — 2026-11-20
+## Codex recorded result — 2026-11-20
 
 Production-code baseline: `6be64eed6b19bfb209e354a8615f84bbb5665853`; this acceptance batch adds developer tooling and documentation, with no production behavior change.
 
@@ -64,6 +64,31 @@ Enter `quit` and wait for the fixture to exit. Confirm its directory no longer e
 
 The owner-side publication/restart controls here bypass the UI and are available only on the developer process's stdin. They are not MCP tools. Native owner review and lock behavior have separate evidence in NATIVE_WALKTHROUGH. The restart here is a backend session replacement, not a full native app or Mac restart.
 
-This run covers one Codex client, one small English-language project, a deliberately simple conflicting suggestion, and one obvious hostile message. It does not establish exhaustive extraction, large-archive quality, sophisticated injection resistance, live web-chat connectivity, Grok/Claude model-led writing, local-model execution, or cross-provider delegation. Those retain separate acceptance requirements. Representative official owner exports remain a gate; no additional export was requested.
+This run covers one Codex client, one small English-language project, a deliberately simple conflicting suggestion, and one obvious hostile message. It does not establish exhaustive extraction, large-archive quality, sophisticated injection resistance, live web-chat connectivity, Claude model-led writing, local-model execution, or cross-provider delegation. Those retain separate acceptance requirements. Representative official owner exports remain a gate; no additional export was requested.
 
 Configuration references: the installed CLI's help and [OpenAI's configuration reference](https://developers.openai.com/codex/config-reference/). CLI versions and available switches change; verify controls before reusing the runner with another version.
+
+## Grok recorded result — 2026-11-20
+
+Grok Build **1.0.41**, using the existing account sign-in and no API-key override, passed three fresh ACP sessions against the same invented four-source story encoded as Grok export data. The fixture imported foreign ChatGPT/Claude canaries and a private Grok conversation as denial/exclusion checks. This run exercised the existing schema-6 production baseline; the fixture/driver were expanded for provider selection.
+
+- Draft: 12 actual MCP calls; both foreign source reads denied; session write retried without duplication; two sources read; one private archive draft; same job paused at checkpoint two; shared retrieval empty.
+- Resume after backend replacement and explicit sharing enablement: 14 calls. The same job and note were found, remaining sources read, and the initial two sources reread to retain evidence. The archive note reached revision two; the identical retry returned the same receipt; the job completed at checkpoint four. Both notes remained unpublished and all automatic publication policies stayed off.
+- Owner inspection confirmed cedar, two planters, rejection of oak, undecided plants and lavender only as an unadopted assistant suggestion. The hostile source instructions were not executed or incorporated. The owner released both invented notes using the fixture's review path.
+- Fresh shared-only retrieval: three calls, two projects returned, curation status denied. A `courtyard` context pack returned the session note only: Grok's archive summary omitted the word **courtyard**. This is the current lexical filter working as implemented, not semantic retrieval. The verifier checks topic matches separately from the complete project list. Curators should preserve project/topic names in their summaries.
+- One built-in tool-discovery call occurred per session (three total), with no shell, web, filesystem, other MCP server or other-agent use. There were **29 Pre-Drink MCP calls** in total. Actual normalized tool events passed the provider-aware verifier; model completion prose was not treated as evidence.
+- Local no-model probes confirmed exclusion after owner edit, after republishing then making the source private, and after lock. Normal fixture shutdown revoked both credentials and removed its entire temporary directory, including model logs and the isolated Grok cache; absence was checked.
+
+Two driver preflight corrections were needed before the second model session: Grok refreshed its auth link into a private cache file, and installed its public bundled skill catalog. The final runner seeds a mode-0600 copy of the existing auth cache (no link back to the original), handles its refresh and permits only that bundled catalog while rejecting user/project skills, plugins, hooks, extra servers and project instructions. Those failed preflights made no model call. Bundled catalog presence is not a claim that Grok has no built-in tools; actual allowed discovery/tool events are checked explicitly.
+
+### Reproduce Grok safely
+
+Start the same fixture with an explicit `grok` second argument after the MCP executable. Use `scripts/check_grok_curation.py` in place of the Codex runner for draft/resume/retrieve, supplying the two foreign IDs from fixture startup. Keep the same owner inspect/restart/release and cleanup sequence. Verify with:
+
+```sh
+python3 scripts/verify_codex_curation.py "$FIXTURE_ROOT" --provider grok
+```
+
+The verifier keeps its original filename for compatibility. Prompts shared by both drivers live in `scripts/curation_prompts.py`. Each driver rejects a fixture for the wrong provider. Grok's runner uses an empty working directory and isolated `GROK_HOME`, a three-invocation atomic counter, 180-second prompt deadlines, 25 tool-call/turn bounds and at most eight discovery calls per session. Authentication must already exist; no login or API-key fallback is initiated. Its temporary auth cache is private and removed with the fixture. Do not run this tooling against personal storage or commit its output. These are functional checks of one small invented project, not general curation-quality, cloud-retention or injection-resistance guarantees.
+
+References: installed CLI help, [Grok ACP scripting](https://docs.x.ai/build/cli/headless-scripting), and [Grok settings](https://docs.x.ai/build/settings/reference). Claude is not authenticated on the verification machine, so its model-led acceptance remains open.

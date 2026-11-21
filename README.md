@@ -23,6 +23,8 @@ Automatic publication is a separate opt-in, off by default. Only future eligible
 
 These are Pre-Drink memories, independent of a provider’s built-in memory. A cloud-backed curator may send its allowed context to its provider and consume that provider’s subscription/API allowance. The offline workflow remains available without any curator.
 
+See [the quickstart](docs/QUICKSTART.md) for the first useful memory and optional agent setup.
+
 ## Run on your Mac
 
 Requirements: macOS 12+, Xcode command-line tools, Node.js 22.12+ (or a compatible newer release), and Rust 1.93+. Native verification used Apple Silicon.
@@ -51,6 +53,7 @@ Choose a separate vault password of at least 14 characters. Prefer a long, uniqu
 - Recognizes ChatGPT/Claude `conversations.json` and numbered `conversations-N.json`, and Grok `prod-grok-backend.json`, including nested paths, without extracting files to disk.
 - Preserves JSON snapshots and text branches across repeat imports. The latest imported snapshot sets the displayed branch; when the provider has no confirmed active leaf, a warned latest-leaf fallback is used. Manual privacy flags survive imports.
 - FTS5 searches titles and text across branches using literal words combined with AND within a title or message.
+- Messages over 12,000 characters start collapsed. Expanding messages over 48,000 UTF-16 code units uses plain-text parts of about 16,000 units, keeping very large Markdown out of the renderer. Stored text and search remain complete.
 - Markdown supports code, lists, and tables. HTML execution, remote images, and clickable external links are disabled.
 - Attachments, audio, images, tool results, and reasoning channels are not rendered or separately imported. Keep the original ZIP if you need those assets.
 - Imports are atomic per ZIP, limited to 256 MiB of uncompressed conversation JSON and 100,000 ZIP entries. Earlier successful ZIPs remain if a later ZIP in a batch fails.
@@ -96,7 +99,7 @@ cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D w
 
 Suites cover imports, branches, rollback, encryption, tampering, wrong passwords, backup, migration, approval/provenance restrictions, client permissions, revocation, idle locking, and actual stdio MCP calls. Socket integration tests need an environment allowing local Unix sockets.
 
-Fictional native checks cover picker/Finder import, approval, exact selected export, recovery/password change, Mac lock/sleep, large-library browsing and the new curation review/edit/history flow. Codex now also passed a three-session fictional write/retry/resume/reviewed-retrieval check (27 MCP calls); see [curation acceptance](docs/CURATION_ACCEPTANCE.md). Grok's earlier model-client evidence covers retrieval, not the new writing workflow. Representative real-export acceptance and broader release gates remain open. See [VALIDATION](docs/VALIDATION.md) for evidence and limits. This is not an independent security audit.
+Fictional native checks cover picker/Finder import, approval, exact selected export, recovery/password change, Mac lock/sleep, large-library browsing and the new curation review/edit/history flow. Codex now also passed a three-session fictional write/retry/resume/reviewed-retrieval check (27 MCP calls); see [curation acceptance](docs/CURATION_ACCEPTANCE.md). Grok Build also passed three provider-matched writing/resume/retrieval sessions (29 MCP calls), with no personal data. Representative real-export acceptance and broader release gates remain open. See [VALIDATION](docs/VALIDATION.md) for evidence and limits. This is not an independent security audit.
 
 The lock screen and Settings show the app version/build and whether the app uses normal or isolated test storage. Each vault uses its own owner-chosen password; there is no shared default password.
 
@@ -109,6 +112,7 @@ Generate synthetic fixtures with `python3 scripts/create_sample_export.py`. Debu
 - [Validation record](docs/VALIDATION.md)
 - [Product definition, requirements and ideas](docs/PRODUCT.md)
 - [Agent curation and session-memory contract](docs/AGENT_CURATION.md)
+- [Curation quality and owner-effort acceptance](docs/CURATION_QUALITY.md)
 - [Provider import formats and support matrix](docs/PROVIDERS.md)
 - [Architecture and design decisions](docs/ARCHITECTURE.md)
 - [Interface direction](docs/DESIGN.md)
