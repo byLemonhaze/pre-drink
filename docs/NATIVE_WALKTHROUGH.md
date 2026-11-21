@@ -163,3 +163,16 @@ Used a freshly generated disposable fictional vault and the separately named **P
 - Finished with sharing off, vault locked and the preview process confirmed stopped. Temporary fictional data was kept outside Git.
 
 This did not wait a real hour/four hours or repeat owner-assisted physical Mac lock/sleep. Deadline/idle transitions are covered by controlled-clock regressions; the existing native notification test now starts an until-lock work session before exercising its callback. Prior physical Mac lock/sleep observations remain separate historical evidence. The new privacy-on-open count is backend-tested; a native changed-rules upgrade notice is still an acceptance case for a future isolated fixture.
+
+## Backend library paging — 2026-11-21
+
+A rebuilt isolated Reading Preview used fresh fictional encrypted storage containing 2,000 messages, 3,000 memories and 500 briefs. The personal vault was not opened. At the 980×640 minimum window:
+
+- Memory displayed 1–25 of 2,999 unrestricted notes. Last reached 2,976–2,999, disabled Next/Last and moved focus to the range. Searching the oldest marker returned the complete approved note and reset the range to 1–1.
+- A private-note search returned zero until the owner enabled restricted viewing, then displayed one Restricted item. No approval or sharing permission was changed.
+- Briefs displayed 1–25 of 499 unrestricted briefs. A body-text search found the oldest brief beyond the initial page.
+- The new-brief source picker displayed 25 of 100 approved sources, reached the last page without submitting the form, and found the oldest source. Adding it returned focus to search, removed it from available results, increased the linked-source count and appended its complete text to the editor. The unsaved fictional editor was closed.
+- Sharing displayed 25 of 3,500 choices. An approved note stayed selected when searching for an unapproved brief. Selecting both produced exactly one included and one excluded item; the complete preview contained the note only and explained the brief needed approval. Copy/save remained disabled without the review checkbox. Nothing was copied, saved or sent to a client.
+- App-only screenshots checked the light brief editor and dark sharing screen; appearance was returned to light. Manual lock removed the unlocked interface; app shutdown was verified and only this run’s temporary fixture was removed. No desktop-wide screenshot was taken or committed.
+
+This verifies the observed paths, not VoiceOver, every keyboard/error/race case, peak memory, sustained query latency or every macOS version. Rust tests separately cover late Unicode matches, privacy/eligibility, deleted-page clamping and response size. No physical Mac lock/sleep cycle was repeated in this batch.

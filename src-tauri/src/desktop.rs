@@ -3,7 +3,7 @@ use crate::{
     client_config::{create_setup, ClientFormat, ClientSetup},
     db::Vault,
     import::read_export_zip,
-    memory::{Memory, MemoryInput},
+    memory::MemoryInput,
     model::{Conversation, ImportReport, Message, Stats},
     session::{Session, Store, VaultStatus},
 };
@@ -138,8 +138,11 @@ async fn get_stats(store: State<'_, Store>) -> Result<Stats, String> {
     owner_op(store.inner().clone(), |v| v.stats()).await
 }
 #[tauri::command]
-async fn list_memory(store: State<'_, Store>) -> Result<Vec<Memory>, String> {
-    owner_op(store.inner().clone(), |v| v.memories(None, "", false)).await
+async fn library_page(
+    request: crate::library::LibraryQuery,
+    store: State<'_, Store>,
+) -> Result<crate::library::LibraryPage, String> {
+    owner_op(store.inner().clone(), move |v| v.library_page(&request)).await
 }
 #[tauri::command]
 async fn save_memory(input: MemoryInput, store: State<'_, Store>) -> Result<String, String> {
@@ -467,10 +470,6 @@ async fn cancel_replacement(review_id: String, store: State<'_, Store>) -> Resul
 }
 
 #[tauri::command]
-async fn list_briefs(store: State<'_, Store>) -> Result<Vec<crate::briefs::Brief>, String> {
-    owner_op(store.inner().clone(), |v| v.briefs(false, "")).await
-}
-#[tauri::command]
 async fn save_brief(
     input: crate::briefs::BriefInput,
     store: State<'_, Store>,
@@ -640,7 +639,7 @@ pub fn run() {
             get_message_page,
             mark_private,
             get_stats,
-            list_memory,
+            library_page,
             save_memory,
             approval_review,
             approve_review,
@@ -675,7 +674,6 @@ pub fn run() {
             cancel_replacement,
             preview_removal,
             apply_removal,
-            list_briefs,
             save_brief,
             delete_brief
         ])

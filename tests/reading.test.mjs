@@ -239,3 +239,38 @@ test("agent work sessions are opt-in and display the current bounded grant", () 
   );
   assert.match(untilLock, /Active until your Mac locks/);
 });
+
+test("backend library pages expose complete counts and safe form navigation", () => {
+  const Page = component("LibraryPage").default;
+  const state = {
+    items: [{ id: "late-match" }],
+    page: { items: [{ id: "late-match" }], total: 101, offset: 100 },
+    error: "",
+    loading: false,
+    refresh() {},
+    move() {},
+  };
+  const html = renderToStaticMarkup(
+    React.createElement(Page, {
+      state,
+      label: "sources",
+      children: (item) =>
+        React.createElement("article", { key: item.id }, item.id),
+    }),
+  );
+  assert.match(html, /101–101 of 101 sources/);
+  assert.match(html, /late-match/);
+  assert.match(html, /type="button" disabled="">Next/);
+  assert.match(html, /type="button" disabled="">Last/);
+  assert.doesNotMatch(html, /<button(?![^>]*type="button")/);
+  const error = renderToStaticMarkup(
+    React.createElement(Page, {
+      state: { ...state, items: [], page: null, error: "Unavailable" },
+      label: "sources",
+      children() {},
+    }),
+  );
+  assert.match(error, /role="alert"/);
+  assert.match(error, /Retry/);
+  assert.doesNotMatch(error, /late-match/);
+});

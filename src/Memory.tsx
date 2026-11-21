@@ -1,8 +1,8 @@
 import ChoiceSelect from "./ChoiceSelect";
 import Modal from "./Modal";
-import PagedList from "./PagedList";
+import LibraryPage, { useLibraryPage } from "./LibraryPage";
 import ReviewDialog from "./Review";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { FileText, Plus, ShieldCheck, X } from "lucide-react";
 import type { Message } from "./types";
@@ -151,7 +151,6 @@ export function MemoryView({
 }: {
   onSource: (id: string, title: string) => void;
 }) {
-  const [items, setItems] = useState<MemoryItem[]>([]);
   const [filter, setFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [restricted, setRestricted] = useState(false);
@@ -159,13 +158,13 @@ export function MemoryView({
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState<string | null>(null);
-  const refresh = () =>
-    invoke<MemoryItem[]>("list_memory")
-      .then(setItems)
-      .catch((e) => setError(String(e)));
-  useEffect(() => {
-    void refresh();
-  }, []);
+  const library = useLibraryPage<MemoryItem>({
+    collection: "memory",
+    query,
+    kind: filter === "all" ? null : filter,
+    include_restricted: restricted,
+  });
+  const refresh = library.refresh;
   async function remove(id: string) {
     try {
       await invoke("delete_memory", { id });
@@ -175,12 +174,6 @@ export function MemoryView({
       setError(String(e));
     }
   }
-  const shown = items.filter(
-    (m) =>
-      (filter === "all" || m.kind === filter) &&
-      (restricted || (!m.private && !m.sensitive && !m.source_restricted)) &&
-      m.content.toLowerCase().includes(query.toLowerCase()),
-  );
   return (
     <div className="secondary-page memory-page">
       <div className="eyebrow">02 / REVIEWED KNOWLEDGE</div>
@@ -214,6 +207,7 @@ export function MemoryView({
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
+          maxLength={200}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find a note…"
@@ -232,12 +226,7 @@ export function MemoryView({
           {error}
         </p>
       )}
-      <PagedList
-        items={shown}
-        scope={JSON.stringify([filter, query, restricted])}
-        label="memories"
-        className="memory-grid"
-      >
+      <LibraryPage state={library} label="memories" className="memory-grid">
         {(m) => (
           <article className="settings-card memory-card" key={m.id}>
             <div className="memory-meta">
@@ -304,17 +293,17 @@ export function MemoryView({
             </div>
           </article>
         )}
-      </PagedList>
-      {shown.length === 0 && (
+      </LibraryPage>
+      {library.page?.total === 0 && (
         <div className="empty-layer">
           <ShieldCheck size={28} />
           <h3>
-            {items.length
+            {query || filter !== "all" || restricted
               ? "No matching memories."
               : "A smaller, clearer version of your history."}
           </h3>
           <p>
-            {items.length
+            {query || filter !== "all" || restricted
               ? "Try a different search, type, or privacy filter."
               : "Save a note from any message in your archive, or write one here. New notes start as drafts."}
           </p>

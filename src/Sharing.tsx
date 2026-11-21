@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
-import PagedList from "./PagedList";
+import { useState } from "react";
+import LibraryPage, { useLibraryPage, type LibraryItem } from "./LibraryPage";
 import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { Copy, Download, Eye } from "lucide-react";
-import type { MemoryItem } from "./Memory";
-import type { Brief } from "./Briefs";
 
 interface Item {
   kind: "memory" | "brief";
@@ -26,65 +24,37 @@ interface Preview {
 const key = (item: Item) => `${item.kind}:${item.id}`;
 
 export default function Sharing() {
-  const [choices, setChoices] = useState<Choice[]>([]);
-  const [selected, setSelected] = useState<Item[]>([]);
+  const [selected, setSelected] = useState<(Item & { title: string })[]>([]);
   const [preview, setPreview] = useState<Preview | null>(null);
   const [reviewed, setReviewed] = useState(false);
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [query, setQuery] = useState("");
-  useEffect(() => {
-    let active = true;
-    Promise.all([
-      invoke<MemoryItem[]>("list_memory"),
-      invoke<Brief[]>("list_briefs"),
-    ])
-      .then(([notes, briefs]) => {
-        if (!active) return;
-        setChoices([
-          ...briefs.map((b): Choice => ({
-            kind: "brief",
-            id: b.id,
-            title: b.title,
-            content: b.content,
-            status:
-              b.private || b.sensitive
-                ? "Restricted"
-                : b.blocked
-                  ? "Source review needed"
-                  : b.approved
-                    ? "Approved"
-                    : "Draft",
-          })),
-          ...notes.map((m): Choice => ({
-            kind: "memory",
-            id: m.id,
-            title: m.kind,
-            content: m.content,
-            status:
-              m.private || m.sensitive || m.source_restricted
-                ? "Restricted"
-                : m.approved
-                  ? "Approved"
-                  : "Draft",
-          })),
-        ]);
-      })
-      .catch((e) => {
-        if (active) setMessage(String(e));
-      })
-      .finally(() => {
-        if (active) setBusy(false);
-      });
-    return () => {
-      active = false;
+  const library = useLibraryPage<LibraryItem>({
+    collection: "all",
+    query,
+    include_restricted: true,
+  });
+  function choice(item: LibraryItem): Choice {
+    const restricted =
+      item.private ||
+      item.sensitive ||
+      (item.collection === "memory" ? item.source_restricted : item.blocked);
+    return {
+      kind: item.collection,
+      id: item.id,
+      title: item.collection === "brief" ? item.title : item.kind,
+      content: item.content,
+      status: restricted ? "Restricted" : item.approved ? "Approved" : "Draft",
     };
-  }, []);
-  function toggle(item: Item) {
+  }
+  function toggle(item: Choice) {
     setSelected((items) =>
       items.some((i) => key(i) === key(item))
         ? items.filter((i) => key(i) !== key(item))
-        : [...items, { kind: item.kind, id: item.id }],
+        : items.length < 50
+          ? [...items, { kind: item.kind, id: item.id, title: item.title }]
+          : items,
     );
     setPreview(null);
     setReviewed(false);
@@ -98,7 +68,7 @@ export default function Sharing() {
     try {
       setPreview(
         await invoke<Preview>("prepare_share", {
-          selection: { items: selected },
+          selection: { items: selected.map(({ kind, id }) => ({ kind, id })) },
         }),
       );
     } catch (e) {
@@ -112,7 +82,7 @@ export default function Sharing() {
     setBusy(true);
     setMessage("");
     const request = {
-      selection: { items: selected },
+      selection: { items: selected.map(({ kind, id }) => ({ kind, id })) },
       review_hash: preview.review_hash,
       session_generation: preview.session_generation,
     };
@@ -168,6 +138,7 @@ export default function Sharing() {
               autoCorrect="off"
               autoCapitalize="off"
               spellCheck={false}
+              maxLength={200}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search your saved context"
@@ -178,19 +149,16 @@ export default function Sharing() {
             searches.
           </p>
           <div className="share-choices">
-            {!busy && !choices.length && (
-              <p>Create and approve a memory or brief first.</p>
+            {library.page?.total === 0 && (
+              <p>
+                {query
+                  ? "No matching memories or briefs. Try a different search."
+                  : "Create and approve a memory or brief first."}
+              </p>
             )}
-            <PagedList
-              items={choices.filter((c) =>
-                `${c.title} ${c.content}`
-                  .toLowerCase()
-                  .includes(query.toLowerCase()),
-              )}
-              scope={query}
-              label="items"
-            >
-              {(c) => {
+            <LibraryPage state={library} label="items" disabled={busy}>
+              {(item) => {
+                const c = choice(item);
                 const checked = selected.some((s) => key(s) === key(c));
                 return (
                   <label className="share-choice" key={key(c)}>
@@ -210,7 +178,7 @@ export default function Sharing() {
                   </label>
                 );
               }}
-            </PagedList>
+            </LibraryPage>
           </div>
           <button
             className="button primary"
@@ -243,7 +211,7 @@ export default function Sharing() {
                   <ul>
                     {preview.excluded.map((e) => (
                       <li key={key(e.item)}>
-                        {choices.find((c) => key(c) === key(e.item))?.title ||
+                        {selected.find((c) => key(c) === key(e.item))?.title ||
                           "Removed item"}
                         : {e.reason}
                       </li>

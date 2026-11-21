@@ -86,7 +86,7 @@ Still open: broader curation quality and Claude model-led writing; representativ
 
 ## Future ideas and exclusions
 
-Later candidates: Gemini/Copilot and other validated official export adapters; explicitly scoped cross-provider delegation; an on-device curator; per-project grants; note/brief full-text search and database pagination; tagging and branch visualization; richer supersession/conflict handling; reusable export presets. Neither a local nor cloud agent receives broader access implicitly. The owner may deliberately choose an advanced cross-provider delegate; this is a planned option, not implemented permission today.
+Later candidates: Gemini/Copilot and other validated official export adapters; explicitly scoped cross-provider delegation; an on-device curator; per-project grants; note/brief full-text indexing and query optimization (owner library views already use backend pages); tagging and branch visualization; richer supersession/conflict handling; reusable export presets. Neither a local nor cloud agent receives broader access implicitly. The owner may deliberately choose an advanced cross-provider delegate; this is a planned option, not implemented permission today.
 
 No cloud sync, mandatory model subscription, live capture, semantic embeddings, mobile, teams, monetization or demand-testing work is in the current plan. Automatic drafting through an explicitly authorized external agent is now in scope; an always-running background extraction service is not.
 

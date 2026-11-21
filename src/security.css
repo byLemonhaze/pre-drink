@@ -958,3 +958,25 @@ dialog.editor-modal::backdrop {
   font-size: 14px;
   line-height: 1.7;
 }
+
+.source-choice {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+.source-choice > span {
+  overflow-wrap: anywhere;
+}
+.source-choice > button {
+  flex-shrink: 0;
+}
+
+.source-picker-list {
+  max-height: 220px;
+  overflow: auto;
+  padding-right: 4px;
+}

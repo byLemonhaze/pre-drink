@@ -129,6 +129,18 @@ impl Vault {
         topic: &str,
         for_agent: bool,
     ) -> Result<Vec<Memory>, String> {
+        let mut items = Vec::new();
+        self.visit_memories(kind, topic, for_agent, |item| items.push(item))?;
+        Ok(items)
+    }
+
+    pub(crate) fn visit_memories(
+        &self,
+        kind: Option<&str>,
+        topic: &str,
+        for_agent: bool,
+        mut visit: impl FnMut(Memory),
+    ) -> Result<(), String> {
         if topic.len() > 1000 {
             return Err("Keep topics under 1,000 characters.".into());
         }
@@ -162,8 +174,10 @@ impl Vault {
                 })
             })
             .map_err(|e| e.to_string())?;
-        rows.collect::<Result<Vec<_>, _>>()
-            .map_err(|e| e.to_string())
+        for row in rows {
+            visit(row.map_err(|e| e.to_string())?);
+        }
+        Ok(())
     }
 
     pub fn delete_memory(&self, id: &str) -> Result<(), String> {

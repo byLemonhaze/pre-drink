@@ -3,7 +3,7 @@ use crate::{agents::AgentRequest, session::Store};
 use std::{
     io::{Read, Write},
     os::unix::{
-        fs::PermissionsExt,
+        fs::{FileTypeExt, MetadataExt, PermissionsExt},
         net::{UnixListener, UnixStream},
     },
     path::Path,
@@ -20,11 +20,19 @@ pub fn serve(path: &Path, store: Store) -> Result<(), String> {
     // temporarily change the process-wide umask in a multithreaded app.
     let parent = path.parent().ok_or("Missing private socket directory.")?;
     let metadata = std::fs::symlink_metadata(parent).map_err(|e| e.to_string())?;
-    if !metadata.is_dir() || metadata.permissions().mode() & 0o077 != 0 {
+    if !metadata.is_dir()
+        || metadata.uid() != crate::peer::current_uid()
+        || metadata.permissions().mode() & 0o077 != 0
+    {
         return Err("The agent socket requires a private directory (0700).".into());
     }
     // Caller holds the application's exclusive instance lock before replacing a stale socket.
-    if path.exists() {
+    if let Ok(existing) = std::fs::symlink_metadata(path) {
+        if !existing.file_type().is_socket() || existing.uid() != crate::peer::current_uid() {
+            return Err(
+                "The agent socket path contains an unexpected file. Nothing was removed.".into(),
+            );
+        }
         std::fs::remove_file(path).map_err(|e| e.to_string())?;
     }
     let listener =
@@ -79,6 +87,7 @@ fn read_request(stream: &mut UnixStream) -> Result<zeroize::Zeroizing<Vec<u8>>, 
 }
 
 fn handle(mut stream: UnixStream, store: Store) -> Result<(), String> {
+    crate::peer::require_same_account(&stream)?;
     stream
         .set_write_timeout(Some(Duration::from_secs(2)))
         .map_err(|e| e.to_string())?;
@@ -121,6 +130,29 @@ fn handle(mut stream: UnixStream, store: Store) -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stale_socket_cleanup_never_removes_regular_files_or_symlinks() {
+        let directory = tempfile::tempdir().unwrap();
+        std::fs::set_permissions(directory.path(), std::fs::Permissions::from_mode(0o700)).unwrap();
+        let path = directory.path().join("broker.sock");
+        let target = directory.path().join("fictional.txt");
+        std::fs::write(&target, "fictional content").unwrap();
+        let store = Arc::new(std::sync::Mutex::new(crate::session::Session::new(
+            directory.path().into(),
+        )));
+        std::fs::write(&path, "fictional content").unwrap();
+        assert!(serve(&path, store.clone()).is_err());
+        assert_eq!(std::fs::read_to_string(&path).unwrap(), "fictional content");
+        std::fs::remove_file(&path).unwrap();
+        std::os::unix::fs::symlink(&target, &path).unwrap();
+        assert!(serve(&path, store).is_err());
+        assert!(path.is_symlink());
+        assert_eq!(
+            std::fs::read_to_string(&target).unwrap(),
+            "fictional content"
+        );
+    }
 
     #[test]
     fn setup_evidence_requires_authenticated_success_and_retains_no_content() {

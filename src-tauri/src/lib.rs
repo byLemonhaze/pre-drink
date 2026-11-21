@@ -16,6 +16,8 @@ pub mod curation;
 mod curation_jobs;
 #[cfg(unix)]
 pub mod mcp;
+#[cfg(unix)]
+mod peer;
 pub mod session;
 pub mod sharing;
 
@@ -42,3 +44,5 @@ mod curation_tests;
 mod provider_import;
 
 pub mod reader;
+
+pub mod library;

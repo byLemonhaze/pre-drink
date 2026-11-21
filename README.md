@@ -137,3 +137,9 @@ Schema 4 preserves manual notes and approvals, adds encrypted curation state and
 ## Verification cost policy
 
 Run `npm run verify:local` after staging new source files, then `npm run hooks:install` once to enable the exact-source pre-push guard. Development checks run locally. GitHub Actions is manual-only to preserve the owner's included allowance and avoid extra costs. Do not dispatch it or enable automatic triggers without explicit owner approval. The repository stays private until the owner chooses launch. See [execution plan](docs/EXECUTION_PLAN.md) for the current verification baseline and cost constraints.
+
+## Large libraries and local connections
+
+Memory, briefs, sharing choices and brief-source selection request 25 complete items at a time. Search covers the full saved collection, including later pages; selected sharing items stay selected when you change pages or search. Individual large records and full-scan query performance still need further profiling.
+
+The local agent bridge and app both verify the connecting OS account before exchanging credentials. Scoped tokens and privacy/publication checks remain required. This is not model identity verification or protection from malware running as your own account. See [security](docs/SECURITY.md) and [validation](docs/VALIDATION.md).

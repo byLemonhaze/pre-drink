@@ -70,12 +70,13 @@ impl Bridge {
         let result=tokio::task::spawn_blocking(move||->Result<serde_json::Value,String>{
             if query.len()>1000 || conversation_id.len()>1000 {return Err("Request is too large.".into());}
             let mut stream=UnixStream::connect(&bridge.socket).map_err(|_|"Open and unlock Pre-Drink, then enable agent sharing.")?;
+            crate::peer::require_same_account(&stream)?;
             stream.set_read_timeout(Some(Duration::from_secs(5))).map_err(|e|e.to_string())?;
             stream.set_write_timeout(Some(Duration::from_secs(2))).map_err(|e|e.to_string())?;
             let mut request=serde_json::to_vec(&serde_json::json!({"client_id":bridge.client_id,"token":&**bridge.token,"tool":tool,"query":query,"limit":limit,"conversation_id":conversation_id,"curation":curation})).map_err(|_|"Couldn't encode request.")?;
             if request.len()>65_535 {request.zeroize();return Err("Request is too large.".into());}
             request.push(b'\n');let sent=stream.write_all(&request);request.zeroize();sent.map_err(|_|"The vault connection closed.")?;
-            let mut reply=Vec::new();
+            let mut reply=Zeroizing::new(Vec::new());
             BufReader::new(stream).take(256_002).read_until(b'\n',&mut reply).map_err(|_|"The vault connection timed out.")?;
             if reply.len()>256_001 {return Err("Response too large.".into());}
             let decoded=serde_json::from_slice(&reply).map_err(|_|"The vault returned an invalid response.".to_string());reply.zeroize();decoded

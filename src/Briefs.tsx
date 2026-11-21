@@ -1,8 +1,7 @@
-import ChoiceSelect from "./ChoiceSelect";
 import Modal from "./Modal";
-import PagedList from "./PagedList";
+import LibraryPage, { useLibraryPage } from "./LibraryPage";
 import ReviewDialog from "./Review";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Plus, X } from "lucide-react";
 import type { MemoryItem } from "./Memory";
@@ -18,29 +17,18 @@ export interface Brief {
   updated_at: number;
 }
 export default function Briefs() {
-  const [items, setItems] = useState<Brief[]>([]);
-  const [notes, setNotes] = useState<MemoryItem[]>([]);
   const [editing, setEditing] = useState<Brief | null | undefined>();
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [restricted, setRestricted] = useState(false);
   const [query, setQuery] = useState("");
-  const shown = items.filter(
-    (b) =>
-      (restricted || (!b.private && !b.sensitive && !b.blocked)) &&
-      `${b.title} ${b.content}`
-        .toLocaleLowerCase()
-        .includes(query.trim().toLocaleLowerCase()),
-  );
-  const refresh = () =>
-    Promise.all([
-      invoke<Brief[]>("list_briefs").then(setItems),
-      invoke<MemoryItem[]>("list_memory").then(setNotes),
-    ]).catch((e) => setError(String(e)));
-  useEffect(() => {
-    void refresh();
-  }, []);
+  const library = useLibraryPage<Brief>({
+    collection: "brief",
+    query,
+    include_restricted: restricted,
+  });
+  const refresh = library.refresh;
   async function remove(id: string) {
     try {
       await invoke("delete_brief", { id });
@@ -73,6 +61,7 @@ export default function Briefs() {
           autoCapitalize="off"
           spellCheck={false}
           aria-label="Search briefs"
+          maxLength={200}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find a brief…"
@@ -91,11 +80,7 @@ export default function Briefs() {
           {error}
         </p>
       )}
-      <PagedList
-        items={shown}
-        scope={JSON.stringify([query, restricted])}
-        label="briefs"
-      >
+      <LibraryPage state={library} label="briefs">
         {(b) => (
           <article className="settings-card" key={b.id}>
             <div className="memory-meta">
@@ -133,16 +118,16 @@ export default function Briefs() {
             </div>
           </article>
         )}
-      </PagedList>
-      {shown.length === 0 && (
+      </LibraryPage>
+      {library.page?.total === 0 && (
         <div className="empty-layer">
           <h3>
-            {items.length
+            {query || restricted
               ? "No matching briefs."
               : "The whole history isn’t the handoff."}
           </h3>
           <p>
-            {items.length
+            {query || restricted
               ? "Try a different search or privacy filter."
               : "Choose what a new agent needs to know. Keep the source material in your vault."}
           </p>
@@ -159,7 +144,6 @@ export default function Briefs() {
       {editing !== undefined && (
         <BriefEditor
           brief={editing || undefined}
-          notes={notes}
           onClose={() => setEditing(undefined)}
           onSaved={() => void refresh()}
         />
@@ -169,12 +153,10 @@ export default function Briefs() {
 }
 function BriefEditor({
   brief,
-  notes,
   onClose,
   onSaved,
 }: {
   brief?: Brief;
-  notes: MemoryItem[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -185,18 +167,16 @@ function BriefEditor({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [sourceQuery, setSourceQuery] = useState("");
-  const available = notes.filter(
-    (m) => m.approved && !m.private && !m.sensitive && !m.source_restricted,
-  );
-  const sourceMatches = available.filter(
-    (m) =>
-      !sources.includes(m.id) &&
-      m.content
-        .toLocaleLowerCase()
-        .includes(sourceQuery.trim().toLocaleLowerCase()),
-  );
+  const sourceSearch = useRef<HTMLInputElement>(null);
+  const sourceLibrary = useLibraryPage<MemoryItem>({
+    collection: "memory",
+    query: sourceQuery,
+    eligible_only: true,
+    exclude_ids: sources,
+  });
   function addSource(m: MemoryItem) {
-    if (sources.includes(m.id)) return;
+    if (sources.includes(m.id) || sources.length >= 100) return;
+    sourceSearch.current?.focus({ preventScroll: true });
     setSources((previous) => [...previous, m.id]);
     setContent(
       (previous) =>
@@ -256,34 +236,39 @@ function BriefEditor({
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
+            ref={sourceSearch}
+            maxLength={200}
             value={sourceQuery}
             onChange={(e) => setSourceQuery(e.target.value)}
             placeholder="Search all approved source memories…"
           />
         </label>
-        <label>
-          Add an approved memory
-          <ChoiceSelect
-            label="Add an approved memory"
-            value=""
-            onChange={(value) => {
-              const m = available.find((m) => m.id === value);
-              if (m) addSource(m);
-            }}
-            options={[
-              { value: "", label: "Choose a source to include…" },
-              ...sourceMatches.slice(0, 50).map((m) => ({
-                value: m.id,
-                label: `${m.kind}: ${m.content.slice(0, 100)}`,
-              })),
-            ]}
-          />
-        </label>
+        <LibraryPage
+          state={sourceLibrary}
+          label="available sources"
+          className="source-picker-list"
+          disabled={busy}
+        >
+          {(m) => (
+            <div className="source-choice" key={m.id}>
+              <span>
+                {m.kind}: {m.content.slice(0, 160)}
+              </span>
+              <button
+                type="button"
+                className="button secondary"
+                disabled={busy || sources.length >= 100}
+                onClick={() => addSource(m)}
+              >
+                Add source
+              </button>
+            </div>
+          )}
+        </LibraryPage>
         <p className="fine-print">
-          {sourceMatches.length > 50 &&
-            "Showing the first 50 matching sources. Refine your search to find another. "}
-          {sources.length} linked memories. Source links are retained so privacy
-          decisions continue to apply.
+          {sources.length} / 100 linked memories. Search covers all eligible
+          sources; selected sources are omitted from these results. Source links
+          are retained so privacy decisions continue to apply.
         </p>
         <label>
           Brief (Markdown)

@@ -2,7 +2,7 @@ use crate::{db::Vault, privacy::is_sensitive};
 use rusqlite::params;
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize)]
+#[derive(Clone, Serialize)]
 pub struct Brief {
     pub id: String,
     pub title: String,
@@ -66,6 +66,22 @@ impl Vault {
         Ok(id)
     }
     pub fn briefs(&self, for_agent: bool, topic: &str) -> Result<Vec<Brief>, String> {
+        let mut briefs = Vec::new();
+        self.visit_briefs(topic, |b| {
+            if !for_agent || (b.approved && !b.private && !b.sensitive && !b.blocked) {
+                briefs.push(b);
+            }
+        })?;
+        for brief in &mut briefs {
+            self.load_brief_sources(brief)?;
+        }
+        Ok(briefs)
+    }
+    pub(crate) fn visit_briefs(
+        &self,
+        topic: &str,
+        mut visit: impl FnMut(Brief),
+    ) -> Result<(), String> {
         if topic.len() > 1000 {
             return Err("Topic too long.".into());
         }
@@ -88,21 +104,19 @@ impl Vault {
                 })
             })
             .map_err(|e| e.to_string())?;
-        let mut briefs = rows
+        for row in rows {
+            visit(row.map_err(|e| e.to_string())?);
+        }
+        Ok(())
+    }
+    pub(crate) fn load_brief_sources(&self, brief: &mut Brief) -> Result<(), String> {
+        let mut sources = self.connection.prepare("SELECT memory_id FROM brief_sources WHERE brief_id=?1 AND memory_id IS NOT NULL ORDER BY memory_id").map_err(|e| e.to_string())?;
+        brief.source_ids = sources
+            .query_map([&brief.id], |r| r.get(0))
+            .map_err(|e| e.to_string())?
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| e.to_string())?;
-        for b in &mut briefs {
-            let mut sources=self.connection.prepare("SELECT memory_id FROM brief_sources WHERE brief_id=?1 AND memory_id IS NOT NULL ORDER BY memory_id").map_err(|e|e.to_string())?;
-            b.source_ids = sources
-                .query_map([&b.id], |r| r.get(0))
-                .map_err(|e| e.to_string())?
-                .collect::<Result<Vec<_>, _>>()
-                .map_err(|e| e.to_string())?;
-        }
-        if for_agent {
-            briefs.retain(|b| b.approved && !b.private && !b.sensitive && !b.blocked);
-        }
-        Ok(briefs)
+        Ok(())
     }
     pub fn delete_brief(&self, id: &str) -> Result<(), String> {
         self.connection

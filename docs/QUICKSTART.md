@@ -34,3 +34,7 @@ This instruction helps the workflow; backend permissions enforce the actual boun
 - **Client setup fails:** use [MCP](MCP.md) and [verified client evidence](MCP_ACCEPTANCE.md). Codex/Grok fictional writing checks have passed; Claude's installed-model writing check is still open.
 
 The guided flow still requires a manual settings step in the external client. A timed two-minute onboarding result has not been established.
+
+## Finding items in a large library
+
+Memory and Briefs show 25 matching items per page. Search checks all saved text, including items outside the visible page. In a brief editor, search approved eligible sources and use the page controls; adding a source includes its complete text. Selected sources disappear from the available choices. In selected sharing, your choices remain selected across pages and searches. Build and review the exact outgoing preview before copying or saving: selecting an item never bypasses approval or privacy rules.
