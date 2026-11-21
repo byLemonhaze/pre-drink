@@ -1,6 +1,7 @@
 use crate::db::Vault;
 use serde::Serialize;
 use std::{
+    collections::HashSet,
     path::PathBuf,
     sync::{Arc, Mutex},
     time::{Duration, SystemTime},
@@ -23,8 +24,15 @@ pub struct VaultStatus {
     pub isolated_storage: bool,
 }
 
+#[derive(Serialize)]
+pub struct ClientConnection {
+    pub request_seen: bool,
+    pub sharing: bool,
+}
+
 pub struct Session {
     pub vault: Option<Vault>,
+    pub(crate) successful_clients: HashSet<String>,
     pub(crate) pending_replacement: Option<crate::lifecycle::PendingReplacement>,
     pub(crate) backup_receipt: Option<crate::retained_vaults::BackupReceipt>,
     pub directory: PathBuf,
@@ -39,6 +47,7 @@ impl Session {
     pub fn new(directory: PathBuf) -> Self {
         Self {
             vault: None,
+            successful_clients: HashSet::new(),
             pending_replacement: None,
             backup_receipt: None,
             directory,
@@ -76,6 +85,7 @@ impl Session {
         })
     }
     pub fn lock(&mut self) {
+        self.successful_clients.clear();
         self.backup_receipt = None;
         let prepared = self.pending_replacement.is_some();
         self.cancel_replacement();
@@ -110,6 +120,23 @@ impl Session {
         self.touch();
         result
     }
+    // Owner-only setup evidence, not a live connection or model-identity claim.
+    // No tool arguments, returned content, timestamps or tokens are retained.
+    pub fn client_connection(&mut self, id: &str) -> Result<ClientConnection, String> {
+        if !self
+            .access()?
+            .clients()?
+            .iter()
+            .any(|client| client.id == id)
+        {
+            return Err("This client was removed. Create a new connection if needed.".into());
+        }
+        Ok(ClientConnection {
+            request_seen: self.successful_clients.contains(id),
+            sharing: self.sharing,
+        })
+    }
+
     pub fn touch(&mut self) {
         self.last_activity = SystemTime::now();
     }
@@ -154,6 +181,7 @@ impl Session {
                 }
             }
         }
+        self.successful_clients.clear();
         self.vault = Some(vault);
         self.touch();
         self.generation = self.generation.wrapping_add(1);

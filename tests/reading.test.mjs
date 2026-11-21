@@ -26,6 +26,12 @@ function component(name) {
   const module = { exports: {} };
   const require = createRequire(path);
   const imports = (id) => {
+    if (id === "@tauri-apps/api/core")
+      return {
+        invoke: () => {
+          throw new Error("Rendering must not issue native commands");
+        },
+      };
     if (id === "react-markdown") return ReactMarkdown;
     if (id === "remark-gfm") return remarkGfm;
     return id.startsWith("./") ? component(id.slice(2)) : require(id);
@@ -162,4 +168,48 @@ test("huge expanded messages render bounded inert text, with lossless Unicode pa
   assert.doesNotMatch(html, /<script>|tail-orchid/);
   assert.ok(html.length < 22000);
   assert.ok(parts.at(-1).endsWith("tail-orchid"));
+});
+
+test("agent setup initially grants nothing and defaults to shared-only with acknowledgement required", () => {
+  const Setup = component("AgentSetup").default;
+  const html = renderToStaticMarkup(
+    React.createElement(Setup, {
+      sharing: false,
+      onChanged: async () => {},
+      onClose() {},
+    }),
+  );
+  assert.match(html, /Read shared memory only/);
+  assert.match(html, /No raw history or private agent drafts/);
+  assert.match(html, /disabled="">Create private settings/);
+  assert.doesNotMatch(html, /checked=""|PRE_DRINK_CLIENT_TOKEN/);
+});
+
+test("all choice surfaces avoid detached native select popups", () => {
+  const Choice = component("ChoiceSelect").default;
+  const html = renderToStaticMarkup(
+    React.createElement(Choice, {
+      label: "Access",
+      value: "shared",
+      options: [{ value: "shared", label: "Shared only" }],
+      onChange() {},
+    }),
+  );
+  assert.match(html, /aria-haspopup="listbox"/);
+  assert.match(html, /aria-expanded="false"/);
+  assert.match(html, /Shared only/);
+  assert.doesNotMatch(html, /<select|role="listbox"/);
+  for (const name of [
+    "AgentSetup",
+    "Memory",
+    "Briefs",
+    "Curation",
+    "VaultMaintenance",
+  ]) {
+    assert.doesNotMatch(
+      readFileSync(new URL(`../src/${name}.tsx`, import.meta.url), "utf8"),
+      /<select\b/,
+      `${name} must not recreate an OS select popup`,
+    );
+  }
 });

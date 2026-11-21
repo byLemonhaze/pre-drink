@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
-import ConversationMessages from "./ConversationMessages";
+import PagedConversation from "./PagedConversation";
 import {
   ArrowDownToLine,
   Check,
@@ -86,9 +86,6 @@ function App({
   const [restricted, setRestricted] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loadedId, setLoadedId] = useState<string | null>(null);
-  const [allBranches, setAllBranches] = useState(false);
   const [loading, setLoading] = useState(native);
   const [more, setMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -153,31 +150,6 @@ function App({
       window.clearTimeout(timer);
     };
   }, [query, restricted, revision]);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoadedId(null);
-    setMessages([]);
-    setAllBranches(false);
-    if (selected && native) {
-      invoke<Message[]>("get_messages", {
-        id: selected,
-        includeRestricted: restricted,
-      })
-        .then((rows) => {
-          if (!cancelled) {
-            setMessages(rows);
-            setLoadedId(selected);
-          }
-        })
-        .catch((e) => {
-          if (!cancelled) setError(String(e));
-        });
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [selected, restricted, revision]);
 
   const importFiles = useCallback(async (paths: string[]) => {
     if (importLock.current || !paths.length) return;
@@ -267,8 +239,6 @@ function App({
     listGeneration.current++;
     setConversations([]);
     setSelected(null);
-    setMessages([]);
-    setLoadedId(null);
     setRestricted((v) => !v);
   }
 
@@ -281,8 +251,6 @@ function App({
       });
       setConversations([]);
       setSelected(null);
-      setMessages([]);
-      setLoadedId(null);
       setRevision((n) => n + 1);
     } catch (e) {
       setError(String(e));
@@ -723,7 +691,6 @@ function App({
                             conversationId={selectedConversation.id}
                             onChanged={() => {
                               setSelected(null);
-                              setMessages([]);
                               setRevision((n) => n + 1);
                             }}
                           />
@@ -739,38 +706,14 @@ function App({
                           · visible because you enabled review.
                         </div>
                       )}
-                      {loadedId === selected &&
-                        messages.some((m) => !m.is_active) && (
-                          <label className="branch-toggle">
-                            <GitBranch size={15} />
-                            <input
-                              type="checkbox"
-                              checked={allBranches}
-                              onChange={(e) => setAllBranches(e.target.checked)}
-                            />
-                            Show all branches & retained history
-                          </label>
-                        )}
                       <div className="messages">
-                        {loadedId !== selected ? (
-                          <div className="list-empty">
-                            <LoaderCircle className="spin" size={20} />
-                            Loading conversation…
-                          </div>
-                        ) : messages.length === 0 ? (
-                          <div className="list-empty">
-                            No readable text in this conversation. The original
-                            JSON is stored in your vault.
-                          </div>
-                        ) : (
-                          <ConversationMessages
-                            provider={selectedConversation.platform}
-                            key={selected}
-                            messages={messages}
-                            allBranches={allBranches}
-                            onMemory={setMemorySource}
-                          />
-                        )}
+                        <PagedConversation
+                          key={JSON.stringify([selected, restricted, revision])}
+                          id={selectedConversation.id}
+                          provider={selectedConversation.platform}
+                          includeRestricted={restricted}
+                          onMemory={setMemorySource}
+                        />
                       </div>
                     </>
                   ) : (

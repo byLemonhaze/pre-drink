@@ -17,7 +17,7 @@ A free, MIT-licensed macOS memory manager: provider-private histories and workin
 
 ChatGPT/Codex curates ChatGPT history, Grok curates Grok history and Claude curates Claude history. All three have separate working-memory scopes. Other providers cannot read those private drafts or raw sources. Client credentials bind the scope; they must never be reused across providers.
 
-For manual use, choose **Keep as memory**, edit/classify the note, save, then review it. For optional agent curation, use **Agent access** to register a matching curator and connect the generated MCP settings. Curators can save session context or work through bounded archive batches. The app provides batch review, edit/history, held undo and withdrawal. It starts no model or background job by itself.
+For manual use, choose **Keep as memory**, edit/classify the note, save, then review it. For optional agent curation, use **Agent access → Set up a connection** to choose scope, install private MCP settings and verify a permission-only request. Shared-only access is the default; explicitly choose a matching curator for drafting. Curators can save session context or work through bounded archive batches. The app provides batch review, edit/history, held undo and withdrawal. It starts no model or background job by itself.
 
 Automatic publication is a separate opt-in, off by default. Only future eligible projects/decisions can use it; facts and recognized links/instruction-like content require review. Sensitive, stale or conflict-flagged contributions stay withheld. Automatic releases are labelled separately from owner-reviewed ones. Detection and model accuracy are imperfect. See [curation contract](docs/AGENT_CURATION.md).
 
@@ -52,7 +52,7 @@ Choose a separate vault password of at least 14 characters. Prefer a long, uniqu
 - Import official ChatGPT, Claude or Grok ZIPs using the native picker or file-drop handler. See [provider contracts and limits](docs/PROVIDERS.md).
 - Recognizes ChatGPT/Claude `conversations.json` and numbered `conversations-N.json`, and Grok `prod-grok-backend.json`, including nested paths, without extracting files to disk.
 - Preserves JSON snapshots and text branches across repeat imports. The latest imported snapshot sets the displayed branch; when the provider has no confirmed active leaf, a warned latest-leaf fallback is used. Manual privacy flags survive imports.
-- FTS5 searches titles and text across branches using literal words combined with AND within a title or message.
+- FTS5 searches titles and text across branches using literal words combined with AND within a title or message. The conversation reader loads 20 messages at a time; its local find scans complete text in the selected branches.
 - Messages over 12,000 characters start collapsed. Expanding messages over 48,000 UTF-16 code units uses plain-text parts of about 16,000 units, keeping very large Markdown out of the renderer. Stored text and search remain complete.
 - Markdown supports code, lists, and tables. HTML execution, remote images, and clickable external links are disabled.
 - Attachments, audio, images, tool results, and reasoning channels are not rendered or separately imported. Keep the original ZIP if you need those assets.

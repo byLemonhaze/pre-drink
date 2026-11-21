@@ -2,50 +2,10 @@ import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Curation from "./Curation";
 import { ShieldCheck } from "lucide-react";
-interface Client {
-  id: string;
-  name: string;
-  allow_chats: boolean;
-  provider: "chatgpt" | "grok" | "claude" | null;
-  can_curate: boolean;
-}
-type ClientFormat = "codex" | "grok" | "claude" | "generic";
-const destinations: Record<
-  ClientFormat,
-  { label: string; instructions: string }
-> = {
-  codex: {
-    label: "Codex",
-    instructions:
-      "Add these Pre-Drink sections to your private ~/.codex/config.toml (or your custom CODEX_HOME/config.toml). Keep your other settings and replace any existing Pre-Drink sections. Restart the client to load the change.",
-  },
-  grok: {
-    label: "Grok Build",
-    instructions:
-      "Add these Pre-Drink sections to your private ~/.grok/config.toml (or your custom GROK_HOME/config.toml). Keep your other settings and replace any existing Pre-Drink sections. Restart Grok Build to load the change. This is for the local coding client, not Grok web or Grok Bot.",
-  },
-  claude: {
-    label: "Claude (local MCP)",
-    instructions:
-      "Merge this pre-drink entry into your Claude desktop client's private mcpServers configuration. Keep unrelated servers and reload the client. This config does not connect Claude web automatically; follow your local client's setup instructions.",
-  },
-  generic: {
-    label: "Other client (JSON)",
-    instructions:
-      "Merge the pre-drink entry into your client's private mcpServers settings, keeping any other servers. Your client must support local stdio connections. Follow its setup instructions and reload the connection.",
-  },
-};
+import AgentSetup, { type Client } from "./AgentSetup";
 export default function Agents({ sharing }: { sharing: boolean }) {
   const [clients, setClients] = useState<Client[]>([]);
-  const [name, setName] = useState("");
-  const [allowChats, setAllowChats] = useState(false);
-  const [canCurate, setCanCurate] = useState(false);
-  const [consent, setConsent] = useState(false);
-  const [format, setFormat] = useState<ClientFormat>("codex");
-  const [config, setConfig] = useState<{
-    format: ClientFormat;
-    text: string;
-  } | null>(null);
+  const [settingUp, setSettingUp] = useState(false);
   const [error, setError] = useState("");
   const [topic, setTopic] = useState("");
   const [pack, setPack] = useState("");
@@ -57,29 +17,6 @@ export default function Agents({ sharing }: { sharing: boolean }) {
   useEffect(() => {
     void refresh();
   }, []);
-  async function register(e: React.FormEvent) {
-    e.preventDefault();
-    if (busy || !consent) return;
-    setConfig(null);
-    setBusy(true);
-    setError("");
-    try {
-      const text = await invoke<string>("create_client", {
-        name,
-        allowChats,
-        canCurate,
-        format,
-      });
-      setConfig({ format, text });
-      setName("");
-      setConsent(false);
-      await refresh();
-    } catch (e) {
-      setError(String(e));
-    } finally {
-      setBusy(false);
-    }
-  }
   async function toggleSharing() {
     try {
       await invoke("set_sharing", { enabled: !sharing });
@@ -88,12 +25,15 @@ export default function Agents({ sharing }: { sharing: boolean }) {
     }
   }
   async function revoke(id: string) {
+    if (busy) return;
+    setBusy(true);
     try {
       await invoke("revoke_client", { id });
-      setConfig(null);
       await refresh();
     } catch (e) {
       setError(String(e));
+    } finally {
+      setBusy(false);
     }
   }
   async function preview(e: React.FormEvent) {
@@ -139,121 +79,27 @@ export default function Agents({ sharing }: { sharing: boolean }) {
           trust. Revocation cannot recall context already received.
         </p>
       </section>
-      <Curation />
       <section className="settings-card">
-        <h2>Authorize a client</h2>
-        <form onSubmit={register}>
-          <label>
-            Agent application
-            <select
-              value={format}
-              disabled={busy}
-              onChange={(e) => {
-                setFormat(e.target.value as ClientFormat);
-                setAllowChats(false);
-                setCanCurate(false);
-                setConsent(false);
-              }}
-            >
-              {Object.entries(destinations).map(([value, destination]) => (
-                <option key={value} value={value}>
-                  {destination.label}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Client name
-            <input
-              value={name}
-              disabled={busy}
-              maxLength={80}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="For example, my coding agent"
-              required
-            />
-          </label>
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={allowChats}
-              disabled={busy || format === "generic" || canCurate}
-              onChange={(e) => {
-                setAllowChats(e.target.checked);
-                setConsent(false);
-              }}
-            />
-            Allow access to safe{" "}
-            {format === "grok"
-              ? "Grok"
-              : format === "claude"
-                ? "Claude"
-                : "ChatGPT"}{" "}
-            history only
-          </label>
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={canCurate}
-              disabled={busy || format === "generic"}
-              onChange={(e) => {
-                setCanCurate(e.target.checked);
-                if (e.target.checked) setAllowChats(true);
-                setConsent(false);
-              }}
-            />
-            Let this curator draft and revise its own provider’s memory
-          </label>
-          <p className="fine-print">
-            By default, access is limited to approved memory and briefs. Private
-            or sensitive source material is excluded. Curators can write only
-            their provider’s contributions. They cannot change sharing rules,
-            unlock the vault, or remove privacy flags. Other clients stay
-            shared-only. Provider identity is bound to this credential; never
-            give a Codex credential to Grok or another provider. Cloud curation
-            sends the permitted archive content to that provider.
-          </p>
-          <label className="checkbox-row">
-            <input
-              type="checkbox"
-              checked={consent}
-              disabled={busy}
-              onChange={(e) => setConsent(e.target.checked)}
-              required
-            />
-            I authorize this client to receive this scope of context and
-            understand its provider may process it.
-          </label>
-          <button className="button primary" disabled={!consent || busy}>
-            {busy ? "Creating…" : "Create client configuration"}
-          </button>
-        </form>
-        {config && (
-          <div className="config-box">
-            <strong>{destinations[config.format].label} configuration</strong>
-            <p>{destinations[config.format].instructions}</p>
-            <p>
-              The token grants access to this scope while sharing is on. Treat
-              it as a secret; it is shown only now. Keep the settings file
-              private to your Mac account and outside project repositories.
-              Hiding this configuration does not revoke access.
-            </p>
-            <textarea
-              rows={13}
-              readOnly
-              value={config.text}
-              aria-label="MCP client configuration"
-              spellCheck={false}
-            />
-            <button
-              className="button secondary"
-              onClick={() => setConfig(null)}
-            >
-              Hide configuration
-            </button>
-          </div>
-        )}
+        <h2>Connect an agent</h2>
+        <p>
+          Choose its access, install private settings, then verify a request. No
+          model is required for local manual use.
+        </p>
+        <button className="button primary" onClick={() => setSettingUp(true)}>
+          Set up a connection
+        </button>
       </section>
+      {settingUp && (
+        <AgentSetup
+          sharing={sharing}
+          onChanged={refresh}
+          onClose={() => {
+            setSettingUp(false);
+            void refresh();
+          }}
+        />
+      )}
+      <Curation />
       {clients.map((client) => (
         <section className="client-row" key={client.id}>
           <div>

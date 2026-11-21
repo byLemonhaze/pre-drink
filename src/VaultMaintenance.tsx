@@ -1,3 +1,4 @@
+import ChoiceSelect from "./ChoiceSelect";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
@@ -148,20 +149,22 @@ export default function VaultMaintenance({
           {!locked && (
             <label>
               Operation
-              <select
+              <ChoiceSelect
+                label="Operation"
                 value={mode}
                 disabled={busy}
-                onChange={(e) => {
-                  setMode(e.target.value as "restore" | "password");
+                onChange={(value) => {
+                  setMode(value as "restore" | "password");
                   setPassword("");
                   setCurrent("");
                   setConfirm("");
                   setError("");
                 }}
-              >
-                <option value="restore">Restore a backup</option>
-                <option value="password">Change vault password</option>
-              </select>
+                options={[
+                  { value: "restore", label: "Restore a backup" },
+                  { value: "password", label: "Change vault password" },
+                ]}
+              />
             </label>
           )}
           <p>

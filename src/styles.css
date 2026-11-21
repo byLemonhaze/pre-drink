@@ -1994,3 +1994,79 @@ h1,
   cursor: pointer;
   font-weight: 600;
 }
+
+.setup-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.setup-progress [aria-current] {
+  color: var(--accent);
+  font-weight: 700;
+}
+.setup-scope,
+.setup-probe,
+.setup-status {
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+.setup-config {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+/* In-window choices cannot outlive the native window as an OS popup. */
+.choice-select {
+  width: 100%;
+  min-width: 0;
+}
+.choice-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--canvas);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+}
+.choice-trigger span:first-child {
+  overflow-wrap: anywhere;
+}
+.choice-options {
+  max-height: 190px;
+  overflow-y: auto;
+  border: 1px solid var(--strong-line);
+  border-radius: 6px;
+  margin-top: 4px;
+  background: var(--surface);
+  color: var(--text);
+}
+.choice-options [role="option"] {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.choice-options .choice-active {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.choice-options [aria-selected="true"] {
+  font-weight: 650;
+}
+.memory-filters > .choice-select {
+  flex: 1;
+}

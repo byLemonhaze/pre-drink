@@ -96,7 +96,7 @@ Review `Modal.tsx` and its four callers: native modal background inertness, init
 
 ## Long-chat and curation browsing review
 
-Review `PagedList.tsx`, `ConversationMessages.tsx`, `Memory.tsx` and `Briefs.tsx` for filter-before-page behavior, page reset/clamping, keyboard focus, hidden branches/restricted notes and full-source preservation. `npm run test:reading` renders real components to verify bounded output, retained-branch filtering, inert Markdown resources and explicit long-message previews. It does not simulate interactive WebView focus or replace native acceptance. Use `examples/native_reading_fixture.rs` for a separate fictional 2,000-message conversation, 3,000 memories and 500 briefs. Desktop IPC still loads full result collections; render paging is not a claim of bounded database/IPC memory.
+Review `PagedList.tsx`, `ConversationMessages.tsx`, `Memory.tsx` and `Briefs.tsx` for filter-before-page behavior, page reset/clamping, keyboard focus, hidden branches/restricted notes and full-source preservation. `npm run test:reading` renders real components to verify bounded output, retained-branch filtering, inert Markdown resources and explicit long-message previews. It does not simulate interactive WebView focus or replace native acceptance. Use `examples/native_reading_fixture.rs` for a separate fictional 2,000-message conversation, 3,000 memories and 500 briefs. The later `PagedConversation.tsx`/`reader.rs` change limits conversation IPC to 20 complete messages. Memory/brief result collections still load fully; one large message still has no IPC byte cap. The original rendering tests exercise shared message cards but do not test asynchronous page requests. Review stale-response rejection, error/retry, full-source search and privacy checks in the new path.
 
 ## Storage fault review
 
@@ -129,3 +129,11 @@ Review the precommit `vault-layout-v1` guard in `lifecycle.rs`, including ordina
 Inspect `LargeMessageReader.tsx` for lossless Unicode boundaries, bounded inert rendering, part navigation and full-source retention. The 48,000/16,000 thresholds bound mounted text, not database/IPC allocation. Native evidence and the new fixture are separate from the SSR assertions.
 
 Review the Grok driver and provider-general fixture: temporary authentication must not modify the real cache; only the three allowed vault tools and discovery may execute; counters/deadlines and cleanup must hold. The actual run used the prior initial auth-link setup, while the final code seeds a private copy. No model rerun is claimed for that filesystem refinement. Broader curation usefulness is specified in CURATION_QUALITY, not established by the small functional fixture. QUICKSTART documents existing setup rather than claiming an implemented wizard. See REVIEW_RESPONSE for disposition of the owner's latest product review.
+
+## Guided setup and quality corpus follow-up
+
+Review `AgentSetup.tsx`, `client_config.rs`, `broker.rs` and `session.rs`. Setup must default to shared-only, reset consent on scope/application changes, expose a token only during setup, and never imply that settings alone establish connectivity. `connection_status` returns permissions only. Owner verification stores successful client IDs for the current unlock, not request/response content or model identity; lock clears it. Existing installed-model runs predate this wizard.
+
+The ten-case `quality-v1` corpus has separate expected/must-not criteria, including cross-conversation correction, consolidation, uncertainty, hostile reference text, French and literal project-name retrieval. Packaging/import verification does not establish model quality. See CURATION_QUALITY for the unscored protocol and consent boundary.
+
+Review `ChoiceSelect.tsx` for the owner-reported menu remaining above Chrome after minimizing Pre-Drink. No HTML `<select>` should recreate an OS popup; options stay in the WebView. Check selection versus highlight, Escape bubbling, Tab focus, long source labels, window blur/minimize, light/dark and modal scrolling. The component/static regression checks do not substitute for native interaction evidence.

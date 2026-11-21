@@ -40,3 +40,5 @@ mod storage_failure;
 mod curation_tests;
 
 mod provider_import;
+
+pub mod reader;

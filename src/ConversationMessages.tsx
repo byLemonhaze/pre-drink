@@ -96,38 +96,12 @@ export default function ConversationMessages({
         pageSize={20}
       >
         {(m) => (
-          <article className={`message ${m.role}`} key={m.id}>
-            <div className="message-heading">
-              <span className={`avatar ${m.role}`}>
-                {m.role === "user" ? "Y" : "✳"}
-              </span>
-              <strong>
-                {m.role === "user"
-                  ? "You"
-                  : provider === "grok"
-                    ? "Grok"
-                    : provider === "claude"
-                      ? "Claude"
-                      : "ChatGPT"}
-              </strong>
-              {!m.is_active && (
-                <span className="branch-label">
-                  Alternate / retained branch
-                </span>
-              )}
-              {m.sensitive && (
-                <ShieldCheck
-                  size={14}
-                  aria-label="Potentially sensitive message"
-                />
-              )}
-            </div>
-            <MessageBody key={m.content} content={m.content} />
-            <button className="save-memory-button" onClick={() => onMemory(m)}>
-              <Brain size={13} />
-              Keep as memory
-            </button>
-          </article>
+          <MessageCard
+            key={m.id}
+            message={m}
+            provider={provider}
+            onMemory={onMemory}
+          />
         )}
       </PagedList>
       {!matching.length && (
@@ -136,5 +110,45 @@ export default function ConversationMessages({
         </p>
       )}
     </>
+  );
+}
+
+export function MessageCard({
+  message,
+  provider = "chatgpt",
+  onMemory,
+}: {
+  message: Message;
+  provider?: string;
+  onMemory: (message: Message) => void;
+}) {
+  return (
+    <article className={`message ${message.role}`} key={message.id}>
+      <div className="message-heading">
+        <span className={`avatar ${message.role}`}>
+          {message.role === "user" ? "Y" : "✳"}
+        </span>
+        <strong>
+          {message.role === "user"
+            ? "You"
+            : provider === "grok"
+              ? "Grok"
+              : provider === "claude"
+                ? "Claude"
+                : "ChatGPT"}
+        </strong>
+        {!message.is_active && (
+          <span className="branch-label">Alternate / retained branch</span>
+        )}
+        {message.sensitive && (
+          <ShieldCheck size={14} aria-label="Potentially sensitive message" />
+        )}
+      </div>
+      <MessageBody key={message.content} content={message.content} />
+      <button className="save-memory-button" onClick={() => onMemory(message)}>
+        <Brain size={13} />
+        Keep as memory
+      </button>
+    </article>
   );
 }

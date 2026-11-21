@@ -1,3 +1,4 @@
+import ChoiceSelect from "./ChoiceSelect";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Modal from "./Modal";
@@ -136,18 +137,20 @@ export default function Curation() {
       </p>
       <label>
         Private workspace
-        <select
+        <ChoiceSelect
+          label="Private workspace"
           value={provider}
           disabled={loading || busy}
-          onChange={(e) => {
-            setProvider(e.target.value as Provider);
+          onChange={(value) => {
+            setProvider(value as Provider);
             setAfter("");
           }}
-        >
-          <option value="chatgpt">ChatGPT / Codex</option>
-          <option value="grok">Grok</option>
-          <option value="claude">Claude</option>
-        </select>
+          options={[
+            { value: "chatgpt", label: "ChatGPT / Codex" },
+            { value: "grok", label: "Grok" },
+            { value: "claude", label: "Claude" },
+          ]}
+        />
       </label>
       {jobs.length > 0 && (
         <details>
@@ -266,8 +269,8 @@ export default function Curation() {
       </div>
       {notes.length === 0 && (
         <p>
-          No drafts on this page. Authorize a curator below, then ask it to save
-          useful session memory or curate its permitted archive.
+          No drafts on this page. Set up a curator connection above, then ask it
+          to save useful session memory or curate its permitted archive.
         </p>
       )}
       {notes.map((n) => (

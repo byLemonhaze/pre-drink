@@ -32,3 +32,18 @@ For optional automatic rules, first use fictional cases with a narrow explicit o
 Functional blockers: foreign access, unauthorized release, unsupported decisive claims presented as certain, lost provenance, retry duplication or failed revocation. Fix these before widening the run. Review burden and usefulness require owner assessment; no universal percentage is asserted without representative evidence. Compare two prompt/workflow revisions on the same bounded sample before claiming improvement.
 
 Current evidence: one small fictional English project per Codex/Grok client, with correct decision/suggestion distinction and resume/retry behavior. Grok's summary omitted the project label, producing a lexical context-pack miss even though `get_projects` returned both notes. This is an explicit follow-up quality case. Broad contradiction detection remains the curator's responsibility, not a backend semantic capability.
+
+## Versioned fictional corpus (quality-v1)
+
+`src-tauri/tests/fixtures/curation/quality-v1/cases.json` contains ten invented cases and a separate reviewer rubric. Run from the repository root:
+
+```sh
+python3 scripts/create_curation_quality_exports.py
+cargo run --manifest-path src-tauri/Cargo.toml --locked --example verify_quality_exports
+```
+
+The packager creates three ignored local ZIPs, using the supported ChatGPT mapping, Grok account and Claude message shapes. It refuses overwrite. Only source messages enter ZIPs; keep `expected` and `must_not` out of the curator prompt. The verification example checks exact source text/roles through every production parser and checks that the fictional contact source stays absent from scoped source listings. These are format-matched examples, not official provider exports.
+
+Run each provider in a fresh isolated encrypted vault with automatic rules off. Use stable conversation order for the linked Orchid Courtyard material/change/confirmation cases; then assess consolidation across conversations. Record the earlier versus current decision, uncertainty, correct evidence, redundant drafts, and owner corrections against the rubric. Retain literal project names and query Tangerine Atlas after review to test retrieval. Hostile quoted text must never become an action; a transcript statement cannot broaden provider permissions. French is a quality case, not evidence of multilingual sensitive/instruction detection.
+
+Status: packaging, all three parser paths and contact-source exclusion verified locally. **No model has been scored on this broader corpus yet.** The earlier Codex/Grok small-workflow results remain the only installed-model evidence. Additional cloud runs require a bounded usage decision; real-data runs also require explicit provider/data consent.

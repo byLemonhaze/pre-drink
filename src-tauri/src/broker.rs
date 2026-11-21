@@ -93,13 +93,15 @@ fn handle(mut stream: UnixStream, store: Store) -> Result<(), String> {
     } else {
         session.access().and_then(|v| v.agent_call(&request))
     };
+    let succeeded = result.is_ok();
     request.token.zeroize();
     let reply = match result {
         Ok(data) => serde_json::json!({"ok":true,"data":data}),
         Err(error) => serde_json::json!({"ok":false,"error":error}),
     };
     let mut encoded = serde_json::to_vec(&reply).map_err(|_| "Couldn't encode reply.")?;
-    if encoded.len() > 256_000 {
+    let within_limit = encoded.len() <= 256_000;
+    if !within_limit {
         encoded = br#"{"ok":false,"error":"Result is too large. Use a narrower context topic."}"#
             .to_vec();
     }
@@ -109,12 +111,73 @@ fn handle(mut stream: UnixStream, store: Store) -> Result<(), String> {
         .write_all(&encoded)
         .map_err(|_| "Client disconnected.".to_string());
     encoded.zeroize();
+    if sent.is_ok() && succeeded && within_limit {
+        session.successful_clients.insert(request.client_id);
+    }
     sent
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn setup_evidence_requires_authenticated_success_and_retains_no_content() {
+        use std::io::{BufRead, BufReader};
+        let vault = crate::db::Vault::memory().unwrap();
+        let client = vault
+            .create_scoped_client("Fictional Grok", Some("grok"), true)
+            .unwrap();
+        let mut session = crate::session::Session::new(std::path::PathBuf::new());
+        session.vault = Some(vault);
+        let store = Arc::new(std::sync::Mutex::new(session));
+        let exchange = |token: &str, tool: &str| {
+            let (server, mut socket) = UnixStream::pair().unwrap();
+            let state = store.clone();
+            let worker = std::thread::spawn(move || handle(server, state));
+            writeln!(
+                socket,
+                "{}",
+                serde_json::json!({"client_id":client.client.id,"token":token,"tool":tool})
+            )
+            .unwrap();
+            let mut output = String::new();
+            BufReader::new(socket).read_line(&mut output).unwrap();
+            worker.join().unwrap().unwrap();
+            serde_json::from_str::<serde_json::Value>(&output).unwrap()
+        };
+        assert_eq!(exchange(&client.token, "connection_status")["ok"], false);
+        store.lock().unwrap().sharing = true;
+        assert_eq!(exchange(&"x".repeat(64), "connection_status")["ok"], false);
+        assert_eq!(exchange(&client.token, "nonexistent_tool")["ok"], false);
+        assert!(
+            !store
+                .lock()
+                .unwrap()
+                .client_connection(&client.client.id)
+                .unwrap()
+                .request_seen
+        );
+        assert_eq!(
+            exchange(&client.token, "connection_status"),
+            serde_json::json!({"ok":true,"data":{
+                "connected":true,"provider":"grok","can_curate":true,"allow_history":true
+            }})
+        );
+        let mut s = store.lock().unwrap();
+        assert!(s.client_connection(&client.client.id).unwrap().request_seen);
+        assert_eq!(s.successful_clients.len(), 1);
+        s.sharing = false;
+        let evidence = s.client_connection(&client.client.id).unwrap();
+        assert!(evidence.request_seen && !evidence.sharing);
+        s.access()
+            .unwrap()
+            .revoke_client(&client.client.id)
+            .unwrap();
+        assert!(s.client_connection(&client.client.id).is_err());
+        s.lock();
+        assert!(s.successful_clients.is_empty());
+    }
 
     #[test]
     fn trickled_requests_cannot_extend_the_read_deadline() {

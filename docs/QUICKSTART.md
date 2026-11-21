@@ -13,12 +13,12 @@ Pre-Drink is currently a private pre-release. Use the build instructions in [REA
 
 Start with the provider whose archive you imported. A Codex registration is for ChatGPT history; a Grok Build registration is for Grok history; Claude has its own role. These are local MCP clients, not automatic connections to an arbitrary web chat.
 
-1. Open **Agent access → Authorize a client**. Select the agent application and give this connection a recognizable name.
-2. For private drafting, select **Let this curator draft and revise its own provider’s memory**. Read the scope and cloud disclosure before authorizing. Leave both automatic-publication rules off for the first run. A shared-only reader needs neither history nor curation access.
-3. Create the configuration, then follow the destination instructions displayed with it. Keep the token in that client's private settings, outside any repository. Do not paste it into a chat. Restart/reload the local client.
-4. Keep Pre-Drink open and unlocked. Explicitly enable sharing for this session. Ask the client to check its Pre-Drink curation status and make a small private draft first. The app does not launch a model or start curation on its own.
-5. In **Agent curation**, choose the matching provider workspace. Inspect the draft and its source evidence; edit if necessary, then use **Review selected** to release only the chosen saved revisions. Shared readers receive eligible released summaries, not the other provider's archive.
-6. When finished, turn sharing off or lock. Revoke a registration to remove future access. Hiding the configuration does not revoke it, and revocation cannot recall context already sent to a cloud provider.
+1. Open **Agent access → Set up a connection**. Select the agent application and give this connection a recognizable name. Access defaults to **Read shared memory only**.
+2. For drafting, explicitly select **Curate [provider] history and memory**. Read the scope and cloud disclosure, then authorize it. Leave automatic-publication rules off for the first run. Changing the application or scope clears the acknowledgement.
+3. Choose **Create private settings**, then follow the displayed destination instructions. Keep the token in that client's private settings, outside repositories and chats. Restart/reload the local client. Pre-Drink does not modify those settings for you.
+4. Continue to **Verify**. Keep Pre-Drink open/unlocked and explicitly enable agent sharing. Send the displayed instruction to call only `connection_status`; it returns permissions, not memories or archive text. Select **Check for client request**. A successful observation means this credential completed a request during the current unlock; it is not a continuous connection or proof of model identity. Locking clears the observation and disables sharing.
+5. Ask the curator for a small private draft. In **Agent curation**, choose its provider workspace. Inspect the draft and evidence, edit if necessary, then use **Review selected** to release chosen saved revisions. Shared readers receive eligible released summaries, not another provider's archive.
+6. When finished, turn sharing off or lock. Revoke a registration to remove future access. Closing setup hides the configuration but does not revoke it; revocation cannot recall context already received.
 
 A starter instruction for a connected curator:
 
@@ -33,4 +33,4 @@ This instruction helps the workflow; backend permissions enforce the actual boun
 - **Wrong password or damage:** preserve the files and follow [RECOVERY](RECOVERY.md). Do not create a new vault over the existing one or remove its selector.
 - **Client setup fails:** use [MCP](MCP.md) and [verified client evidence](MCP_ACCEPTANCE.md). Codex/Grok fictional writing checks have passed; Claude's installed-model writing check is still open.
 
-A smoother guided connection screen is tracked separately. This guide documents the current controls; it does not claim a timed two-minute onboarding result.
+The guided flow still requires a manual settings step in the external client. A timed two-minute onboarding result has not been established.

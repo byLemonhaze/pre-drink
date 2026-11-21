@@ -7,10 +7,12 @@ Model Context Protocol is a standard way for an AI application to discover tools
 1. Put the app in a stable location before generating its configuration: the executable path is embedded.
 2. Open and unlock the vault.
 3. Review and approve eligible memories and briefs.
-4. In **Agent access**, choose Codex, Grok Build, Claude (local MCP), or Other client (JSON), name the client, leave source/curation access off unless needed; selecting Codex binds ChatGPT, Grok binds Grok and Claude binds Claude, and acknowledge the provider-processing disclosure.
-5. Save the generated configuration in that agent's **local** MCP settings. Its secret token is shown once. Never commit it or paste it into a conversation.
-6. Enable sharing and keep Pre-Drink open/unlocked.
-7. Ask the agent to use `get_context_pack` with a narrow topic.
+4. In **Agent access → Set up a connection**, choose the application and name. Shared memory only is the default. Explicitly choose history or curation if needed; Codex binds ChatGPT, Grok binds Grok and Claude binds Claude. Acknowledge the scope and cloud disclosure.
+5. Create private settings, merge them into that client's local configuration and restart/reload it. Never commit the secret token or paste it into a chat.
+6. Continue to Verify, explicitly enable sharing and keep Pre-Drink open/unlocked. Send the displayed permission-only `connection_status` instruction to the client, then choose **Check for client request**.
+7. After verification, ask for a narrow context pack or small private curation batch within the authorized scope.
+
+Verification retains only a set of client IDs whose authenticated successful response was delivered during the current unlock. Failed authentication, denied calls and oversized/error replies do not count. It stores no request text, returned content, timestamps or tokens, and clears on lock/unlock. The observation is not a live-connection monitor or model-identity proof. It can reflect any successful tool request from that credential, not exclusively the suggested probe.
 
 The app generates TOML for Codex/Grok Build or common `mcpServers` JSON for other local clients. Every format carries the same absolute executable path, `args: ["--mcp"]`, and `PRE_DRINK_SOCKET`, `PRE_DRINK_CLIENT_ID`, `PRE_DRINK_CLIENT_TOKEN` environment entries. Tokens are never placed in command arguments. No vault password belongs in any client configuration. Creating settings does not turn sharing on or modify another application’s files.
 
@@ -26,12 +28,14 @@ Keep the settings file readable/writable only by your Mac account and outside pr
 
 The serializer preserves spaces, quotes, backslashes and Unicode in paths. Non-absolute paths, invalid Unicode and control characters fail without leaving a registration. Grok paths containing `${` are refused because the client interprets environment expressions in settings; use a stable location without that sequence. The TOML serializer was already present in the locked dependency graph and is now a direct dependency.
 
-Grok Build supports command-based local stdio servers, as described in its [MCP guide](https://docs.x.ai/build/features/mcp-servers). This is distinct from [Grok web custom connectors](https://docs.x.ai/grok/connectors), which require a publicly reachable server. Pre-Drink does not expose a public endpoint or create tunnels. The Grok Build checks establish local stdio tool-result compatibility for the tested version; they do not establish Grok Bot/web compatibility. Client-specific configuration generation is implemented. Native configuration-screen checks are recorded in NATIVE_WALKTHROUGH; import support is separately defined and tested in PROVIDERS. Codex's new three-session fictional writing acceptance is recorded in CURATION_ACCEPTANCE; Grok Build model-led writing remains open.
+Grok Build supports command-based local stdio servers, as described in its [MCP guide](https://docs.x.ai/build/features/mcp-servers). This is distinct from [Grok web custom connectors](https://docs.x.ai/grok/connectors), which require a publicly reachable server. Pre-Drink does not expose a public endpoint or create tunnels. The Grok Build checks establish local stdio tool-result compatibility for the tested version; they do not establish Grok Bot/web compatibility. Client-specific configuration generation is implemented. Native configuration-screen checks are recorded in NATIVE_WALKTHROUGH; import support is separately defined and tested in PROVIDERS. Codex and Grok Build each passed three-session fictional writing/resume/retrieval acceptance; see CURATION_ACCEPTANCE for the measured scope and remaining quality gates.
 
 ## Tools
 
 | Tool                                 | Permission              | Result                                                                                         |
 | ------------------------------------ | ----------------------- | ---------------------------------------------------------------------------------------------- |
+| `curate_memory(operation)`           | Matching curator scope  | Own-provider sources, private writes/revisions and resumable jobs; see action contract below   |
+| `connection_status()`                | Any valid registration  | Permissions only: connected, provider, allow_history, can_curate; no archive or memory content |
 | `get_facts()`                        | Approved memory         | Up to 50 recently updated eligible facts                                                       |
 | `get_decisions()`                    | Approved memory         | Up to 50 eligible decisions                                                                    |
 | `get_projects()`                     | Approved memory         | Up to 50 eligible project notes                                                                |
@@ -60,13 +64,13 @@ The local server makes no AI calls and has no per-use charge. Your assistant may
 
 ## Selected exports versus live grants
 
-**Share context** is an owner-only selection → full Markdown preview → copy/save workflow. Its saved-version and session checks apply at delivery. It does not issue a client credential, call a provider or narrow existing MCP access. The original six tools plus the scoped `curate_memory` tool are available; clients cannot invoke `prepare_share`, `copy_share` or `save_share`. Agent access's topic preview remains an illustration of a dynamic query, not an access-control boundary. See [SHARING](SHARING.md).
+**Share context** is an owner-only selection → full Markdown preview → copy/save workflow. Its saved-version and session checks apply at delivery. It does not issue a client credential, call a provider or narrow existing MCP access. Eight tools are available: the original six, scoped `curate_memory`, and permission-only `connection_status`; clients cannot invoke `prepare_share`, `copy_share` or `save_share`. Agent access's topic preview remains an illustration of a dynamic query, not an access-control boundary. See [SHARING](SHARING.md).
 
 ## Agent writing and curation
 
-Enable the curation checkbox when registering Codex, Grok or Claude. This grants its provider's safe source access and private working-memory writes; it does not turn sharing on or authorize automatic publication. Generic JSON registrations stay shared-only. Existing schema-3 broad chat grants are downgraded to shared-only on upgrade.
+Select **Curate [provider] history and memory** in the guided setup for Codex, Grok or Claude. This grants its provider's safe source access and private working-memory writes; it does not turn sharing on or authorize automatic publication. Generic JSON registrations stay shared-only. Existing schema-3 broad chat grants are downgraded to shared-only on upgrade.
 
-The seventh tool, `curate_memory`, takes an `operation` object containing a tagged action, for example `{"operation":{"action":"status"}}`:
+The scoped tool `curate_memory` takes an `operation` object containing a tagged action, for example `{"operation":{"action":"status"}}`:
 
 | Action         | Purpose                                                                                  |
 | -------------- | ---------------------------------------------------------------------------------------- |

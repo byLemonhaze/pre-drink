@@ -1,3 +1,4 @@
+import ChoiceSelect from "./ChoiceSelect";
 import Modal from "./Modal";
 import PagedList from "./PagedList";
 import ReviewDialog from "./Review";
@@ -262,20 +263,21 @@ function BriefEditor({
         </label>
         <label>
           Add an approved memory
-          <select
+          <ChoiceSelect
+            label="Add an approved memory"
             value=""
-            onChange={(e) => {
-              const m = available.find((m) => m.id === e.target.value);
+            onChange={(value) => {
+              const m = available.find((m) => m.id === value);
               if (m) addSource(m);
             }}
-          >
-            <option value="">Choose a source to include…</option>
-            {sourceMatches.slice(0, 50).map((m) => (
-              <option value={m.id} key={m.id}>
-                {m.kind}: {m.content.slice(0, 100)}
-              </option>
-            ))}
-          </select>
+            options={[
+              { value: "", label: "Choose a source to include…" },
+              ...sourceMatches.slice(0, 50).map((m) => ({
+                value: m.id,
+                label: `${m.kind}: ${m.content.slice(0, 100)}`,
+              })),
+            ]}
+          />
         </label>
         <p className="fine-print">
           {sourceMatches.length > 50 &&

@@ -86,6 +86,33 @@ pub fn create_scoped_configuration(
     executable: &Path,
     socket: &Path,
 ) -> Result<String, String> {
+    create_setup(
+        vault,
+        name,
+        allow_chats,
+        can_curate,
+        format,
+        executable,
+        socket,
+    )
+    .map(|setup| setup.configuration)
+}
+
+#[derive(Serialize)]
+pub struct ClientSetup {
+    pub client: crate::agents::AgentClient,
+    pub configuration: String,
+}
+
+pub fn create_setup(
+    vault: &Vault,
+    name: &str,
+    allow_chats: bool,
+    can_curate: bool,
+    format: ClientFormat,
+    executable: &Path,
+    socket: &Path,
+) -> Result<ClientSetup, String> {
     // Format is owner-selected, never supplied by an MCP caller. Generic clients
     // remain shared-only until an explicit provider enrollment is designed.
     let provider = if allow_chats || can_curate {
@@ -105,7 +132,10 @@ pub fn create_scoped_configuration(
     let NewClient { client, token } = vault.create_scoped_client(name, provider, can_curate)?;
     let token = Zeroizing::new(token);
     match render(format, executable, socket, &client.id, &token) {
-        Ok(config) => Ok(config),
+        Ok(configuration) => Ok(ClientSetup {
+            client,
+            configuration,
+        }),
         Err(error) => {
             vault.revoke_client(&client.id)?;
             Err(error)
@@ -225,6 +255,34 @@ mod tests {
                 vault.revoke_client(&facts.client_id).unwrap();
                 assert!(vault.agent_call(&facts).is_err());
             }
+        }
+    }
+
+    #[test]
+    fn setup_returns_the_exact_registered_identity_and_scope() {
+        let vault = Vault::memory().unwrap();
+        for (format, provider) in [
+            (ClientFormat::Codex, "chatgpt"),
+            (ClientFormat::Grok, "grok"),
+            (ClientFormat::Claude, "claude"),
+        ] {
+            let setup = create_setup(
+                &vault,
+                "Fictional setup",
+                true,
+                true,
+                format,
+                Path::new("/app/pre-drink"),
+                Path::new("/tmp/fictional/agents.sock"),
+            )
+            .unwrap();
+            let decoded = decode(format, &setup.configuration);
+            assert_eq!(
+                decoded["pre-drink"]["env"]["PRE_DRINK_CLIENT_ID"],
+                setup.client.id
+            );
+            assert_eq!(setup.client.provider.as_deref(), Some(provider));
+            assert!(setup.client.allow_chats && setup.client.can_curate);
         }
     }
 

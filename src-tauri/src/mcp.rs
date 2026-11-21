@@ -99,6 +99,18 @@ impl Bridge {
 impl Bridge {
     #[tool(
         annotations(
+            read_only_hint = true,
+            destructive_hint = false,
+            open_world_hint = false
+        ),
+        description = "Check this credential's connection and provider permissions without returning any archive or memory content. Requires the owner to unlock the app and enable sharing."
+    )]
+    async fn connection_status(&self) -> CallToolResult {
+        self.call("connection_status", "", None, "").await
+    }
+
+    #[tool(
+        annotations(
             read_only_hint = false,
             destructive_hint = false,
             open_world_hint = false

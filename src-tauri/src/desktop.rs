@@ -1,6 +1,6 @@
 use crate::{
     agents::AgentClient,
-    client_config::{create_scoped_configuration, ClientFormat},
+    client_config::{create_setup, ClientFormat, ClientSetup},
     db::Vault,
     import::read_export_zip,
     memory::{Memory, MemoryInput},
@@ -103,6 +103,21 @@ async fn list_conversations(
     })
     .await
 }
+#[tauri::command]
+async fn get_message_page(
+    id: String,
+    include_restricted: bool,
+    all_branches: bool,
+    query: String,
+    offset: u32,
+    store: State<'_, Store>,
+) -> Result<crate::reader::MessagePage, String> {
+    owner_op(store.inner().clone(), move |v| {
+        v.message_page(&id, include_restricted, all_branches, &query, offset)
+    })
+    .await
+}
+
 #[tauri::command]
 async fn get_messages(
     id: String,
@@ -226,18 +241,31 @@ async fn list_clients(store: State<'_, Store>) -> Result<Vec<AgentClient>, Strin
     owner_op(store.inner().clone(), |v| v.clients()).await
 }
 #[tauri::command]
+async fn client_connection(
+    id: String,
+    store: State<'_, Store>,
+) -> Result<crate::session::ClientConnection, String> {
+    session_op(store.inner().clone(), move |s| {
+        let result = s.client_connection(&id);
+        s.touch();
+        result
+    })
+    .await
+}
+
+#[tauri::command]
 async fn create_client(
     name: String,
     allow_chats: bool,
     can_curate: bool,
     format: ClientFormat,
     store: State<'_, Store>,
-) -> Result<String, String> {
+) -> Result<ClientSetup, String> {
     session_op(store.inner().clone(), move |s| {
         let executable =
             std::env::current_exe().map_err(|_| "Cannot locate the Pre-Drink executable.")?;
         let socket = s.directory.join("agents.sock");
-        let config = create_scoped_configuration(
+        let config = create_setup(
             s.access()?,
             &name,
             allow_chats,
@@ -604,6 +632,7 @@ pub fn run() {
             import_zip,
             list_conversations,
             get_messages,
+            get_message_page,
             mark_private,
             get_stats,
             list_memory,
@@ -618,6 +647,7 @@ pub fn run() {
             copy_share,
             save_share,
             list_clients,
+            client_connection,
             list_curation,
             list_curation_jobs,
             curation_policies,

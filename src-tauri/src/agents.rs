@@ -134,6 +134,10 @@ impl Vault {
         }
         let limit = request.limit.unwrap_or(20).clamp(1, 50);
         match request.tool.as_str() {
+            "connection_status" => Ok(serde_json::json!({
+                "connected": true, "provider": provider,
+                "allow_history": provider.is_some(), "can_curate": can_curate,
+            })),
             "get_facts" | "get_decisions" | "get_projects" => {
                 let kind = match request.tool.as_str() {
                     "get_facts" => "fact",

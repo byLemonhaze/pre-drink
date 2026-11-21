@@ -102,12 +102,38 @@ fn actual_stdio_client_negotiates_lists_tools_and_obeys_lock_and_revocation() {
     assert_eq!(initialized["result"]["serverInfo"]["name"], "pre-drink");
     send(json!({"jsonrpc":"2.0","method":"notifications/initialized"}));
     send(json!({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}));
-    assert_eq!(receive()["result"]["tools"].as_array().unwrap().len(), 7);
+    assert_eq!(receive()["result"]["tools"].as_array().unwrap().len(), 8);
     send(
         json!({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
     );
     assert_eq!(receive()["result"]["isError"], true);
+    assert!(
+        !store
+            .lock()
+            .unwrap()
+            .client_connection(&client.client.id)
+            .unwrap()
+            .request_seen
+    );
     store.lock().unwrap().sharing = true;
+    send(
+        json!({"jsonrpc":"2.0","id":40,"method":"tools/call","params":{"name":"connection_status","arguments":{}}}),
+    );
+    let status = receive();
+    let payload: Value =
+        serde_json::from_str(status["result"]["content"][0]["text"].as_str().unwrap()).unwrap();
+    assert_eq!(
+        payload,
+        json!({"connected":true,"provider":null,"allow_history":false,"can_curate":false})
+    );
+    assert!(
+        store
+            .lock()
+            .unwrap()
+            .client_connection(&client.client.id)
+            .unwrap()
+            .request_seen
+    );
     send(
         json!({"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
     );
@@ -134,6 +160,14 @@ fn actual_stdio_client_negotiates_lists_tools_and_obeys_lock_and_revocation() {
         json!({"jsonrpc":"2.0","id":7,"method":"tools/call","params":{"name":"get_facts","arguments":{}}}),
     );
     assert_eq!(receive()["result"]["isError"], true);
+    assert!(
+        !store
+            .lock()
+            .unwrap()
+            .client_connection(&client.client.id)
+            .unwrap()
+            .request_seen
+    );
     store.lock().unwrap().sharing = true;
     send(
         json!({"jsonrpc":"2.0","id":8,"method":"tools/call","params":{"name":"get_context_pack","arguments":{"topic":"Pre-Drink"}}}),

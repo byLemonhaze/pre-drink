@@ -1,3 +1,4 @@
+import ChoiceSelect from "./ChoiceSelect";
 import Modal from "./Modal";
 import PagedList from "./PagedList";
 import ReviewDialog from "./Review";
@@ -82,11 +83,16 @@ export function MemoryEditor({
       <form onSubmit={save}>
         <label>
           Type
-          <select value={kind} onChange={(e) => setKind(e.target.value)}>
-            <option value="fact">Fact</option>
-            <option value="decision">Decision</option>
-            <option value="project">Project</option>
-          </select>
+          <ChoiceSelect
+            label="Type"
+            value={kind}
+            onChange={setKind}
+            options={[
+              { value: "fact", label: "Fact" },
+              { value: "decision", label: "Decision" },
+              { value: "project", label: "Project" },
+            ]}
+          />
         </label>
         <label>
           Memory
@@ -192,16 +198,17 @@ export function MemoryView({
         </button>
       </div>
       <div className="memory-filters">
-        <select
-          aria-label="Memory type"
+        <ChoiceSelect
+          label="Memory type"
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        >
-          <option value="all">All memories</option>
-          <option value="fact">Facts</option>
-          <option value="decision">Decisions</option>
-          <option value="project">Projects</option>
-        </select>
+          onChange={setFilter}
+          options={[
+            { value: "all", label: "All memories" },
+            { value: "fact", label: "Facts" },
+            { value: "decision", label: "Decisions" },
+            { value: "project", label: "Projects" },
+          ]}
+        />
         <input
           aria-label="Search memory"
           autoCorrect="off"
