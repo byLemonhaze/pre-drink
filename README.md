@@ -133,3 +133,7 @@ See [review findings and responses](docs/REVIEW_RESPONSE.md) for the implemented
 Privacy recheck requires individual selections before clearing saved flags; updated detection can add restrictions when a vault opens. Settings also provides reviewed cleanup of previous encrypted vault copies, gated on a fresh verified backup. See [security review response](docs/REVIEW_RESPONSE.md) and [recovery guide](docs/RECOVERY.md) for safeguards and remaining verification gates.
 
 Schema 4 preserves manual notes and approvals, adds encrypted curation state and turns old broad raw-chat grants into shared-only access. Schema 5 adds Claude scopes while preserving existing v4 grants, policies and history. Schema 6 completes the saved-job constraint migration for both v4 and v5 vaults, so Claude can start resumable jobs after an upgrade. Issue fresh provider-scoped registrations when needed. Never downgrade a migrated vault; keep an encrypted backup.
+
+## Verification cost policy
+
+Development checks run locally. GitHub Actions is manual-only to preserve the owner's included allowance and avoid extra costs. Do not dispatch it or enable automatic triggers without explicit owner approval. The repository stays private until the owner chooses launch. See [execution plan](docs/EXECUTION_PLAN.md) for the current verification baseline and cost constraints.

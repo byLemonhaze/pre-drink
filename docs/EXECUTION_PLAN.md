@@ -1,5 +1,11 @@
 # Execution plan
 
+## Current cost constraint — 2026-11-20
+
+The owner has no budget for additional paid services. Run checks locally on the Mac. GitHub Actions is manual-only: no push, pull-request or scheduled runs. Do not dispatch a remote run, enable automatic triggers, purchase a service, or start a potentially billed model/API task without a new explicit usage authorization. A reset of included minutes does not revoke this constraint. Keep the repository private; making it public is not a cost workaround. Apple enrollment remains deferred and requires a separate owner decision about its cost.
+
+The last automatic verification passed for `6b8784a` ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44845461220)). Subsequent local-only commits must be labelled as locally verified; do not imply they received a remote pass. This repository policy does not set an account-wide billing cap or prevent other repositories from consuming the allowance.
+
 Initial direction: 2026-11-19; revised for the owner-approved provider curation workflow on 2026-11-20. Original implementation baseline: `589967e`. Current evidence is in VALIDATION and the chronological WORK_LOG.
 
 ## Outcome

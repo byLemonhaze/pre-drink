@@ -259,3 +259,7 @@ Next: pending official export with isolated import/upgrade acceptance; explicitl
 - Verification: 112 Rust checks, 14 frontend checks, all-target Clippy, formatting and native preview build passed. A temporary fictional registration was revoked, the preview locked/quit, and temporary storage cleaned up. Source-only push and exact-head CI are checked separately.
 
 Next: the requested official export and isolated real-data import/upgrade acceptance; bounded model-quality scoring only with the owner's usage/data scope; Claude installed-model acceptance when available; individual-message and memory/brief IPC bounds; fresh independent security review and fictional demo; Apple signing/notarization last. The guided flow still needs manual external-client settings and a native positive verification result; no automatic connection or model launch is claimed.
+
+## Zero-extra-cost constraint — 2026-11-20
+
+The owner reported nearing the account's included Actions allowance and explicitly has no money for additional charges. The last automatic run for `6b8784a` passed all stages in 6m26s. Removed push, pull-request and weekly triggers; the workflow is manual-only. Future verification runs locally unless the owner explicitly authorizes use of included cloud capacity. No account billing setting was changed, and no repository visibility change is a substitute for the owner's private-until-ready requirement. The workflow/documentation-only cost-policy commit is checked locally and pushed with a CI-skip marker; it deliberately has no new GitHub run.
