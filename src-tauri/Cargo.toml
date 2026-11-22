@@ -55,3 +55,9 @@ objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWork
 objc2-foundation = { version = "0.3", default-features = false, features = ["NSNotification", "NSOperation", "NSString", "block2"], optional = true }
 objc2-core-foundation = { version = "0.3", default-features = false, features = ["std", "CFNotificationCenter", "CFString", "CFDictionary"], optional = true }
 block2 = { version = "0.6", optional = true }
+
+# Rust 1.93 can misalign stripped proc-macro dylibs rejected by macOS 27.
+# Keep host build libraries intact; runtime optimization and KDFs are unchanged.
+# https://github.com/rust-lang/rust/issues/157750
+[profile.release.build-override]
+strip = "none"
