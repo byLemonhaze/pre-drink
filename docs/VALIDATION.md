@@ -20,6 +20,12 @@ The real `bash scripts/release-macos.sh --check-only` command completed successf
 
 A separate optimized app with a unique compiled application identifier was built and its local ad-hoc signature verified for a fresh-vault rehearsal. Its process launched, but two native-control attempts failed before inspection. The isolated process was stopped by verified executable identity. No new native creation/import/approval result is claimed, and the personal vault was not opened or changed. The current acceptance gap remains explicitly listed in RELEASE_READINESS.
 
+## Packaged identity inspection and native retry — 2026-11-22
+
+Retried the previously prepared fictional packaged app after confirming its separate namespace contained only the instance lock and local socket, with no vault. Native control again failed before window inspection; first-run acceptance remains pending and the owner was asked to perform the new-password step. Do not count process launch as a successful UI walkthrough.
+
+Read-only inspection of both the default and isolated bundles confirmed embedded tested implementation revision `7e7683de1f1a` without its dirty-source marker, distinct expected identifiers, version 0.2.0, and passing strict/deep signature verification. Both signatures carry ad-hoc and hardened-runtime flags, with no Apple team identity. Their listed dynamic-library dependencies point only to macOS system libraries/frameworks; this does not inventory statically linked dependencies or prove runtime network behavior. No new implementation was built in this retry. The later documentation-only commit does not change the tested runtime. The personal app/vault was not operated; no model, remote workflow or Apple service was used.
+
 ## Dependency advisories
 
 The ZIP dependency was upgraded from 4.6.1 to 9.7.3 after six published advisories were found. The importer does not extract ZIP entries to disk, and encrypted-entry support is disabled, but the outdated library was still replaced and regression checks rerun. SQLCipher was updated to 4.20.0 / SQLite 3.54.1 through rusqlite 0.43.0.
