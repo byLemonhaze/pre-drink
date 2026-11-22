@@ -2,6 +2,10 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
+## Current local review and privacy fix — Nov 22
+
+Read [CODE_REVIEW_2026-11-22](CODE_REVIEW_2026-11-22.md) for the bounded source review, reproduced defect and residual limits. Inspect `Vault::mark_private`: actual private-flag transitions must atomically invalidate linked manual/published notes and briefs, including draft review timestamps; no-op commands and unrelated records must remain unchanged. Check rollback and stale-review/export regressions. The new notice explains the required reapproval. No format/schema or credential change is intended. This implementation-agent review does not close the separate independent-review gate.
+
 ## Current acceptance handoff — Nov 22
 
 Use RELEASE_READINESS as the fixed gate list. The actual free release check passed at `7e7683d`, including all 199 tests and fresh advisories. Native controls subsequently recovered: owner-created fresh vault → fictional import/search → source-linked draft → saved-version approval → exact local Markdown export → lock/unlock preservation passed on that packaged implementation. The app was left locked; agent sharing stayed off. Later changes only update evidence documentation. Review current implementation boundaries independently and record blocking findings separately from optional improvements. Representative ChatGPT backend/native use has evidence; Claude/Grok representative imports and broad curation quality do not. Human automatic VoiceOver announcements remain unconfirmed. Apple distribution stays last.

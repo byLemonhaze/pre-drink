@@ -84,6 +84,7 @@ function App({
   privacyUpdate: PrivacyUpdate;
   identity: VaultIdentity;
 }) {
+  const [privacyNotice, setPrivacyNotice] = useState("");
   const [page, setPage] = useState<
     | "library"
     | "imports"
@@ -375,6 +376,9 @@ function App({
         id: selectedConversation.id,
         private: !selectedConversation.private,
       });
+      setPrivacyNotice(
+        "Conversation privacy updated. Any linked memories and briefs need fresh approval before sharing.",
+      );
       setConversations([]);
       setSelected(null);
       setRevision((n) => n + 1);
@@ -588,6 +592,17 @@ function App({
           <div className="notice error" role="alert">
             <span>{error}</span>
             <button aria-label="Dismiss error" onClick={() => setError("")}>
+              <X size={16} />
+            </button>
+          </div>
+        )}
+        {privacyNotice && (
+          <div className="notice success" role="status">
+            <span>{privacyNotice}</span>
+            <button
+              aria-label="Dismiss privacy update"
+              onClick={() => setPrivacyNotice("")}
+            >
               <X size={16} />
             </button>
           </div>

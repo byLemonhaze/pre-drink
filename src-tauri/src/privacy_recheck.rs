@@ -287,6 +287,47 @@ mod tests {
     }
 
     #[test]
+    fn failed_private_transition_preserves_source_versions_and_all_approvals() {
+        let v = legacy_fixture();
+        let snapshot = || {
+            v.connection
+                .query_row(
+                    "SELECT c.private,sv.version,m.approved,m.updated_at,b.approved,b.updated_at
+             FROM conversations c JOIN messages msg ON msg.conversation_id=c.id
+             JOIN source_versions sv ON sv.message_id=msg.id
+             JOIN memory m ON m.source_message_id=msg.id
+             JOIN brief_sources bs ON bs.memory_id=m.id JOIN briefs b ON b.id=bs.brief_id
+             WHERE c.id='c' AND msg.id='m'",
+                    [],
+                    |r| {
+                        Ok((
+                            r.get::<_, bool>(0)?,
+                            r.get::<_, i64>(1)?,
+                            r.get::<_, bool>(2)?,
+                            r.get::<_, f64>(3)?,
+                            r.get::<_, bool>(4)?,
+                            r.get::<_, f64>(5)?,
+                        ))
+                    },
+                )
+                .unwrap()
+        };
+        let before = snapshot();
+        v.connection.execute_batch("CREATE TRIGGER reject_privacy_reset BEFORE UPDATE ON memory BEGIN SELECT RAISE(ABORT,'fictional failure'); END;").unwrap();
+        assert!(v.mark_private("c", false).is_err());
+        assert_eq!(snapshot(), before);
+        v.connection
+            .execute_batch("DROP TRIGGER reject_privacy_reset;")
+            .unwrap();
+        v.mark_private("c", false).unwrap();
+        let after = snapshot();
+        assert!(!after.0 && !after.2 && !after.4);
+        assert!(after.1 > before.1 && after.3 > before.3 && after.5 > before.5);
+        assert!(v.mark_private("missing", true).is_err());
+        v.verify().unwrap();
+    }
+
+    #[test]
     fn recheck_is_explicit_preserves_privacy_and_revokes_prior_approvals() {
         let mut v = legacy_fixture();
         let preview = v.privacy_recheck_preview().unwrap();

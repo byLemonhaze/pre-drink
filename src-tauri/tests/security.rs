@@ -533,3 +533,104 @@ fn build_and_storage_identity_are_explicit_without_exposing_passwords() {
     s.isolated_storage = true;
     assert!(s.status().unwrap().isolated_storage);
 }
+
+#[test]
+fn privacy_round_trip_requires_fresh_manual_memory_and_brief_review() {
+    let mut v = Vault::memory().unwrap();
+    let (conversation, source) = sample(&mut v);
+    let note = memory(&mut v, true, Some(source.clone()));
+    let independent = memory(&mut v, true, None);
+    let draft = v
+        .save_memory(MemoryInput {
+            id: None,
+            kind: "project".into(),
+            content: "Fictional garden review remains pending.".into(),
+            source_message_id: Some(source),
+            private: false,
+        })
+        .unwrap();
+    let draft_review = v.approval_review("memory", &draft).unwrap();
+    let brief = v
+        .save_brief(BriefInput {
+            id: None,
+            title: "Fictional project brief".into(),
+            content: "Pre-Drink stays local.".into(),
+            private: false,
+            source_ids: vec![note.clone()],
+        })
+        .unwrap();
+    approve(&mut v, "brief", &brief);
+    let selection = pre_drink::sharing::ShareSelection {
+        items: vec![
+            pre_drink::sharing::ShareItem {
+                kind: pre_drink::sharing::ShareKind::Memory,
+                id: note.clone(),
+            },
+            pre_drink::sharing::ShareItem {
+                kind: pre_drink::sharing::ShareKind::Brief,
+                id: brief.clone(),
+            },
+        ],
+    };
+    let old_export = v.share_preview(&selection).unwrap();
+    assert_eq!(old_export.included.len(), 2);
+    let before = v.approval_review("memory", &note).unwrap();
+    // A repeated no-op privacy command must not invalidate a legitimate review.
+    v.mark_private(&conversation, false).unwrap();
+    assert_eq!(
+        before.review_hash,
+        v.approval_review("memory", &note).unwrap().review_hash
+    );
+    v.mark_private(&conversation, true).unwrap();
+    v.mark_private(&conversation, false).unwrap();
+    assert!(
+        !v.memories(None, "", true)
+            .unwrap()
+            .iter()
+            .any(|m| m.id == note),
+        "clearing source privacy must not resurrect the old manual release"
+    );
+    assert!(v.briefs(true, "").unwrap().is_empty());
+    assert!(v
+        .memories(None, "", true)
+        .unwrap()
+        .iter()
+        .any(|m| m.id == independent));
+    assert!(v
+        .approve_review("memory", &note, &before.review_hash)
+        .is_err());
+    assert!(v
+        .approve_review("memory", &draft, &draft_review.review_hash)
+        .is_err());
+    approve(&mut v, "memory", &note);
+    assert!(
+        v.briefs(true, "").unwrap().is_empty(),
+        "source reapproval must not reapprove a brief"
+    );
+    approve(&mut v, "brief", &brief);
+    assert_eq!(v.briefs(true, "").unwrap().len(), 1);
+    v.verify().unwrap();
+    let mut s = Session::new(std::path::PathBuf::new());
+    s.vault = Some(v);
+    let old_request = pre_drink::sharing::ShareRequest {
+        selection: selection.clone(),
+        review_hash: old_export.review_hash,
+        session_generation: s.generation,
+    };
+    assert!(s
+        .with_validated_share(&old_request, |_| -> Result<(), String> {
+            panic!("the pre-privacy-change export must not reach a writer, even after reapproval")
+        })
+        .is_err());
+    let fresh = s.prepare_share(&selection).unwrap();
+    let request = pre_drink::sharing::ShareRequest {
+        selection,
+        review_hash: fresh.preview.review_hash,
+        session_generation: fresh.session_generation,
+    };
+    assert_eq!(
+        s.with_validated_share(&request, |text| Ok(text.to_owned()))
+            .unwrap(),
+        fresh.preview.markdown
+    );
+}

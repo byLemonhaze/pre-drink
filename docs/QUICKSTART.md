@@ -28,7 +28,7 @@ This instruction helps the workflow; backend permissions enforce the actual boun
 
 ## If something is missing
 
-- **No shared notes:** check saved-version review, source privacy/sensitivity, sharing on, and the client's scope. Never remove restrictions merely to make a test pass.
+- **No shared notes:** check saved-version review, source privacy/sensitivity, sharing on, and the client's scope. Changing a conversation’s private flag returns linked notes and briefs to draft; making it non-private again still requires fresh approval. Never remove restrictions merely to make a test pass.
 - **No topic match:** inspect the saved summary and use its actual project words. `get_projects` can list eligible project notes without a topic filter.
 - **Wrong password or damage:** preserve the files and follow [RECOVERY](RECOVERY.md). Do not create a new vault over the existing one or remove its selector.
 - **Client setup fails:** use [MCP](MCP.md) and [verified client evidence](MCP_ACCEPTANCE.md). Codex/Grok fictional writing checks have passed; Claude's installed-model writing check is still open.

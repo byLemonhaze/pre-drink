@@ -1,5 +1,5 @@
 use crate::model::{Conversation, ImportReport, Message, ParsedConversation, Stats};
-use rusqlite::{params, Connection};
+use rusqlite::{params, Connection, OptionalExtension};
 use std::{path::Path, time::Duration};
 
 pub struct Vault {
@@ -536,17 +536,38 @@ impl Vault {
     }
 
     pub fn mark_private(&self, id: &str, private: bool) -> Result<(), String> {
-        let changed = self
+        let tx = self
             .connection
-            .execute(
-                "UPDATE conversations SET private=?1 WHERE id=?2",
-                params![private, id],
-            )
+            .unchecked_transaction()
             .map_err(|e| e.to_string())?;
-        if changed == 0 {
-            return Err("Conversation not found.".into());
+        let previous: Option<bool> = tx
+            .query_row("SELECT private FROM conversations WHERE id=?1", [id], |r| {
+                r.get(0)
+            })
+            .optional()
+            .map_err(|e| e.to_string())?;
+        let previous = previous.ok_or("Conversation not found.")?;
+        if previous == private {
+            return Ok(());
         }
-        Ok(())
+        tx.execute(
+            "UPDATE conversations SET private=?1 WHERE id=?2",
+            params![private, id],
+        )
+        .map_err(|e| e.to_string())?;
+        // A privacy round trip must not revive an old release or review. Bind
+        // manual notes and their briefs to the transition, like curated evidence.
+        // Advance draft versions too: an unsubmitted pre-change review is stale.
+        tx.execute("UPDATE briefs SET approved=0,updated_at=max(updated_at+0.000001,unixepoch('subsec'))
+            WHERE id IN (SELECT brief_id FROM brief_sources WHERE memory_id IN (
+                SELECT id FROM memory WHERE source_message_id IN (SELECT id FROM messages WHERE conversation_id=?1)
+                OR id IN (SELECT s.note_id FROM curation_sources s JOIN messages msg ON msg.id=s.message_id WHERE msg.conversation_id=?1)))", [id])
+            .map_err(|e| e.to_string())?;
+        tx.execute("UPDATE memory SET approved=0,updated_at=max(updated_at+0.000001,unixepoch('subsec'))
+            WHERE source_message_id IN (SELECT id FROM messages WHERE conversation_id=?1)
+            OR id IN (SELECT s.note_id FROM curation_sources s JOIN messages msg ON msg.id=s.message_id WHERE msg.conversation_id=?1)", [id])
+            .map_err(|e| e.to_string())?;
+        tx.commit().map_err(|e| e.to_string())
     }
 
     pub fn stats(&self) -> Result<Stats, String> {
