@@ -4,7 +4,7 @@ Review the implementation as an early working native product with outstanding re
 
 ## Current acceptance handoff — Nov 22
 
-Use RELEASE_READINESS as the fixed gate list. The actual free release check passed at `7e7683d`, including all 199 tests and fresh advisories. The new packaged first-run attempt could not be observed because native control failed; it is not acceptance evidence. Review current implementation boundaries independently and record blocking findings separately from optional improvements. Representative ChatGPT backend/native use has evidence; Claude/Grok representative imports and broad curation quality do not. Human automatic VoiceOver announcements remain unconfirmed. Apple distribution stays last.
+Use RELEASE_READINESS as the fixed gate list. The actual free release check passed at `7e7683d`, including all 199 tests and fresh advisories. Native controls subsequently recovered: owner-created fresh vault → fictional import/search → source-linked draft → saved-version approval → exact local Markdown export → lock/unlock preservation passed on that packaged implementation. The app was left locked; agent sharing stayed off. Later changes only update evidence documentation. Review current implementation boundaries independently and record blocking findings separately from optional improvements. Representative ChatGPT backend/native use has evidence; Claude/Grok representative imports and broad curation quality do not. Human automatic VoiceOver announcements remain unconfirmed. Apple distribution stays last.
 
 ## Dependency and release-gate review — Nov 22
 

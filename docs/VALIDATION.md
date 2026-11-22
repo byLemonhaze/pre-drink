@@ -26,6 +26,10 @@ Retried the previously prepared fictional packaged app after confirming its sepa
 
 Read-only inspection of both the default and isolated bundles confirmed embedded tested implementation revision `7e7683de1f1a` without its dirty-source marker, distinct expected identifiers, version 0.2.0, and passing strict/deep signature verification. Both signatures carry ad-hoc and hardened-runtime flags, with no Apple team identity. Their listed dynamic-library dependencies point only to macOS system libraries/frameworks; this does not inventory statically linked dependencies or prove runtime network behavior. No new implementation was built in this retry. The later documentation-only commit does not change the tested runtime. The personal app/vault was not operated; no model, remote workflow or Apple service was used.
 
+## Fresh-vault acceptance now passed — 2026-11-22
+
+The earlier native-control failures were resolved on a subsequent attempt. Owner-created fresh storage was observed empty, then the packaged implementation at `7e7683d` passed fictional import/search, source-linked edited draft creation, pre-approval export exclusion, saved-version approval, exact outgoing Markdown/local save and lock/unlock preservation. The saved 269-byte fictional file contained only the reviewed note and reference-data notice, with 0600 permissions. Sharing stayed off; lock cleared outgoing selection/preview. The app was left locked. Full step evidence and automation-input limitations are in NATIVE_WALKTHROUGH. No runtime fix or additional full-suite run was necessary; this closes the core fresh-user acceptance gate, not independent review, VoiceOver speech or Apple distribution.
+
 ## Dependency advisories
 
 The ZIP dependency was upgraded from 4.6.1 to 9.7.3 after six published advisories were found. The importer does not extract ZIP entries to disk, and encrypted-entry support is disabled, but the outdated library was still replaced and regression checks rerun. SQLCipher was updated to 4.20.0 / SQLite 3.54.1 through rusqlite 0.43.0.
