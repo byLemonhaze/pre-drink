@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, type ReactNode } from "react";
+import { useLayoutEffect, useRef, type ReactNode, type RefObject } from "react";
 
 /** Native WebView modality keeps the background inert and contains keyboard focus. */
 export default function Modal({
@@ -6,18 +6,22 @@ export default function Modal({
   wide = false,
   busy = false,
   onClose,
+  returnFocus,
   children,
 }: {
   label: string;
   wide?: boolean;
   busy?: boolean;
   onClose: () => void;
+  returnFocus?: RefObject<HTMLElement | null>;
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useLayoutEffect(() => {
     const dialog = ref.current!;
-    const previous = document.activeElement;
+    // Pointer clicks do not focus buttons in every macOS WebView. Callers can
+    // explicitly name their opener instead of accidentally capturing <body>.
+    const previous = returnFocus?.current ?? document.activeElement;
     dialog.showModal();
     dialog.querySelector<HTMLElement>("[data-initial-focus]")?.focus();
     return () => {
@@ -26,7 +30,7 @@ export default function Modal({
         previous.focus({ preventScroll: true });
       }
     };
-  }, []);
+  }, [returnFocus]);
   return (
     <dialog
       ref={ref}

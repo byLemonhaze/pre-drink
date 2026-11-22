@@ -29,6 +29,16 @@ export default function VaultGate() {
   const [notice, setNotice] = useState("");
   const [panel, setPanel] = useState<"details" | "restore" | null>(null);
   const [maintenanceBusy, setMaintenanceBusy] = useState(false);
+  const passwordInput = useRef<HTMLInputElement>(null);
+  const detailsButton = useRef<HTMLButtonElement>(null);
+  const restoreButton = useRef<HTMLButtonElement>(null);
+  const pendingPasswordFocus = useRef(false);
+  useEffect(() => {
+    if (!busy && !panel && pendingPasswordFocus.current) {
+      pendingPasswordFocus.current = false;
+      passwordInput.current?.focus();
+    }
+  }, [busy, error, panel]);
   const generation = useRef(0);
   const lastTouch = useRef(0);
   const reportedReady = useRef(false);
@@ -124,6 +134,7 @@ export default function VaultGate() {
       generation.current++;
       await refresh();
     } catch (e) {
+      pendingPasswordFocus.current = true;
       setError(String(e));
       setPassword("");
       setConfirm("");
@@ -132,6 +143,7 @@ export default function VaultGate() {
     }
   }
   function changed(message: string) {
+    pendingPasswordFocus.current = true;
     setPanel(null);
     setMaintenanceBusy(false);
     generation.current++;
@@ -196,6 +208,7 @@ export default function VaultGate() {
               <label>
                 Vault password
                 <input
+                  ref={passwordInput}
                   autoFocus
                   type="password"
                   autoComplete={create ? "new-password" : "current-password"}
@@ -205,6 +218,7 @@ export default function VaultGate() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={busy}
+                  aria-describedby={error ? "vault-password-error" : undefined}
                 />
               </label>
               {create && (
@@ -239,7 +253,11 @@ export default function VaultGate() {
                 </div>
               )}
               {error && (
-                <p className="form-error" role="alert">
+                <p
+                  id="vault-password-error"
+                  className="form-error"
+                  role="alert"
+                >
                   {error}
                 </p>
               )}
@@ -282,6 +300,7 @@ export default function VaultGate() {
             </p>
             <div>
               <button
+                ref={detailsButton}
                 type="button"
                 className="text-button"
                 disabled={busy}
@@ -291,6 +310,7 @@ export default function VaultGate() {
               </button>
               {isTauri() && (
                 <button
+                  ref={restoreButton}
                   type="button"
                   className="text-button"
                   disabled={busy}
@@ -305,6 +325,7 @@ export default function VaultGate() {
         {status && panel && (
           <Modal
             label={panel === "restore" ? "Restore backup" : "Vault details"}
+            returnFocus={panel === "restore" ? restoreButton : detailsButton}
             busy={maintenanceBusy}
             onClose={() => setPanel(null)}
           >

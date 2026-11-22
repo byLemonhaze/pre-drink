@@ -36,6 +36,23 @@ export default function VaultMaintenance({
   const [accepted, setAccepted] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const passwordInput = useRef<HTMLInputElement>(null);
+  const currentInput = useRef<HTMLInputElement>(null);
+  const reviewCheckbox = useRef<HTMLInputElement>(null);
+  const nextFocus = useRef<"password" | "review" | null>(null);
+  useEffect(() => {
+    if (busy || !nextFocus.current) return;
+    const target =
+      nextFocus.current === "review"
+        ? reviewCheckbox.current
+        : mode === "password"
+          ? currentInput.current
+          : passwordInput.current;
+    if (target) {
+      nextFocus.current = null;
+      target.focus();
+    }
+  }, [busy, preview, mode, error]);
   useEffect(() => {
     onBusyChange?.(busy);
   }, [busy, onBusyChange]);
@@ -57,6 +74,7 @@ export default function VaultMaintenance({
         () => {},
       );
     pending.current = null;
+    nextFocus.current = "password";
     setPreview(null);
     setAccepted(false);
     setPassword("");
@@ -71,7 +89,10 @@ export default function VaultMaintenance({
         multiple: false,
         directory: false,
       });
-      if (typeof value === "string") setPath(value);
+      if (typeof value === "string") {
+        setPath(value);
+        passwordInput.current?.focus();
+      }
     } catch (e) {
       setError(String(e));
     }
@@ -97,11 +118,13 @@ export default function VaultMaintenance({
         return;
       }
       pending.current = result.review_id;
+      nextFocus.current = "review";
       setPreview(result);
       setAccepted(false);
       setCurrent("");
       setConfirm("");
     } catch (e) {
+      nextFocus.current = "password";
       setError(String(e));
       setPassword("");
       setCurrent("");
@@ -130,6 +153,7 @@ export default function VaultMaintenance({
         `${message} Agent registrations were removed and sharing is off.${result.previous_vault ? ` Previous encrypted vault preserved at: ${result.previous_vault}. It still needs its previous password.` : ""}${result.durability_warning ? " The switch completed, but the folder could not be flushed to disk. Preserve all vault folders and verify after restarting." : ""}`,
       );
     } catch (e) {
+      nextFocus.current = "password";
       setError(String(e));
       pending.current = null;
       setPreview(null);
@@ -189,6 +213,7 @@ export default function VaultMaintenance({
               <label>
                 Current password
                 <input
+                  ref={currentInput}
                   type="password"
                   autoComplete="current-password"
                   value={current}
@@ -202,6 +227,7 @@ export default function VaultMaintenance({
             <label>
               {mode === "restore" ? "Backup password" : "New vault password"}
               <input
+                ref={passwordInput}
                 type="password"
                 autoComplete={mode === "restore" ? "off" : "new-password"}
                 value={password}
@@ -266,6 +292,7 @@ export default function VaultMaintenance({
           </p>
           <label className="checkbox-row">
             <input
+              ref={reviewCheckbox}
               type="checkbox"
               checked={accepted}
               disabled={busy}

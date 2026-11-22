@@ -303,7 +303,20 @@ function App({
   );
 
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell"
+      onClickCapture={(event) => {
+        // macOS WebKit does not always focus pointer-clicked buttons. Establish
+        // the opener before its handler mounts a dialog so Escape can return
+        // keyboard users to the control they used, not to the document body.
+        const button =
+          event.target instanceof Element
+            ? event.target.closest("button")
+            : null;
+        if (button instanceof HTMLButtonElement && !button.disabled)
+          button.focus({ preventScroll: true });
+      }}
+    >
       <aside className="sidebar">
         <div className="brand">
           <img className="app-mark" src="/favicon.svg" alt="" />

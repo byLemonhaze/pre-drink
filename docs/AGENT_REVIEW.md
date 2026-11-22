@@ -2,6 +2,10 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
+## Latest native review targets — 2026-11-22
+
+Review `Modal.tsx`, `VaultGate.tsx`, `VaultMaintenance.tsx`, `App.tsx` and `ArchiveRemoval.tsx` for explicit opener focus, macOS pointer-button behavior, error retry focus, unchecked restore acknowledgement and busy-state handling. The native recovery fixture and walkthrough cover malformed import retry, damaged backup rejection, cancelled/successful restore, restart and focus across editors/reviews/setup. UI changes must not alter grants or bypass backend review. All generated data is fictional and remains outside Git. No new password-change/permanent-delete submission or physical Mac lock/sleep is claimed. Broader native import/upgrade/accessibility checks remain open.
+
 ## Latest recovery review targets — 2026-11-22
 
 Review backup publication in `db.rs`, cleanup receipts in `retained_vaults.rs`, the shared `Session::finish_import` gate and `storage_failure.rs`. Verify folder flushing before success, preserved files and explicit uncertainty after publication, cleanup receipt invalidation, same-connection retry, stale parsed-import rejection and killed-import rollback. The six new regressions use fictional storage only; simulated I/O faults are test-only, not physical disk-exhaustion evidence. The full local suite passed 130 Rust, 16 frontend and 5 Python tests. See VALIDATION and RECOVERY for limits and open native checks.
