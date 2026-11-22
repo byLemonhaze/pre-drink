@@ -6,7 +6,7 @@ Pre-Drink is currently a private pre-release. Use the build instructions in [REA
 
 1. Create a vault with a separate, unique passphrase and keep it in your password manager. There is no password reset. Make a verified encrypted backup before putting irreplaceable work into it.
 2. Drop an official ChatGPT, Grok or Claude export ZIP into the app, or use the import picker. Read its import report: supported text is normalized; attachments and tool/reasoning channels are not imported. Keep the original ZIP privately.
-3. Search for one current project or decision. Choose **Keep as memory**, shorten the text, select its type and save. The result is a private draft until you review it for sharing.
+3. Search for one current project or decision. Choose **Keep as memory**, shorten the text, select its type and save. The result is a private draft. In **Memory**, choose **Review & approve** on that saved item, inspect its content and evidence, and approve only what you want to share. Editing later returns it to draft.
 4. Open **Share context**, select reviewed notes or a brief, and inspect the exact outgoing text. Copy/save only when ready. That creates plaintext outside the vault; it does not send anything to a model automatically.
 
 ## Optional agent curation

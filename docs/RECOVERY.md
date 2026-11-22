@@ -67,7 +67,9 @@ First-run migration detects v0.1 `vault.sqlite3`, excludes concurrent writers, c
 
 ## Interrupted imports
 
-ZIP parsing happens before the database transaction and outside the session lock. Locking, expiry, relocking/unlocking or a completed restore/password change invalidates an earlier parsed result. Start the import again after unlocking. A process killed before the import transaction commits leaves the previous archive, evidence versions, approvals and search index recoverable; retry the original ZIP after reopening. A completed import followed by an interrupted UI response may already be saved, so repeat imports remain idempotent. There is no dedicated import cancel button or resumable parsing checkpoint yet. During the database transaction, other operations wait for the session lock; this is not a promise of instantaneous cancellation at every point.
+Current imports use encrypted preparation checkpoints. Pause, lock or quit preserves committed preparation but never publishes a partial archive; unlock and explicitly resume with the matching ZIP, or finish without it when fully prepared. A killed final-save transaction rolls back archive publication and checkpoint removal together. If the final commit succeeded before its UI response, the archive is already complete and the checkpoint is absent. During that final transaction, lock waits for the session mutex. See [IMPORTS](IMPORTS.md) for exact cancellation and resume limits.
+
+Deleting a conversation requires a paused import and explicitly discards any entire pending import in the same transaction. An unfinished copy cannot resurrect the conversation on resume. A later, newly selected import of the original ZIP can restore it. Existing external ZIPs/backups and retained generations are unaffected.
 
 ## Evidence and remaining limits
 

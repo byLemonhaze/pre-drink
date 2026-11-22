@@ -74,6 +74,168 @@ fn client_request(client: &crate::agents::NewClient, tool: &str) -> crate::agent
 }
 
 #[test]
+fn deletion_discards_ready_preparation_atomically_and_cannot_resurrect_history() {
+    use crate::retention::{RemovalInput, RemovalKind};
+    let root = tempfile::tempdir().unwrap();
+    let s = store(root.path(), true);
+    let input = {
+        let mut session = s.lock().unwrap();
+        let v = session.access().unwrap();
+        let c = parse_export_conversation(&tree(0), false, &mut ImportReport::default()).unwrap();
+        let input = RemovalInput {
+            kind: RemovalKind::Conversation,
+            conversation_id: Some(c.id.clone()),
+        };
+        v.import(&[c], ImportReport::default()).unwrap();
+        prepared(v, "checkpointorchid staged duplicate");
+        input
+    };
+    {
+        let mut session = s.lock().unwrap();
+        // A failed deletion must preserve the original and preparation together.
+        session.access().unwrap().connection.execute_batch("CREATE TRIGGER fixture_fail_delete BEFORE DELETE ON conversations BEGIN SELECT RAISE(ABORT,'fictional failure'); END;").unwrap();
+        let review = session.preview_removal(&input).unwrap();
+        let pending = review.pending_import.as_ref().unwrap();
+        assert_eq!((pending.saved, pending.total), (1, 1));
+        assert!(session
+            .apply_removal(&input, &review.review_hash, review.session_generation)
+            .is_err());
+        assert_eq!(session.import_state().unwrap().checkpoint.unwrap().saved, 1);
+        assert_eq!(session.access().unwrap().stats().unwrap().conversations, 1);
+        session
+            .access()
+            .unwrap()
+            .connection
+            .execute_batch("DROP TRIGGER fixture_fail_delete;")
+            .unwrap();
+        let review = session.preview_removal(&input).unwrap();
+        session
+            .apply_removal(&input, &review.review_hash, review.session_generation)
+            .unwrap();
+        assert!(
+            session.import_state().unwrap().checkpoint.is_none(),
+            "Deletion must remove pending copies, not only searchable history"
+        );
+        assert_eq!(session.access().unwrap().stats().unwrap().conversations, 0);
+        assert_eq!(
+            session
+                .access()
+                .unwrap()
+                .connection
+                .query_row("SELECT count(*) FROM import_items", [], |r| r
+                    .get::<_, i64>(0))
+                .unwrap(),
+            0
+        );
+    }
+    assert!(run_import(s.clone(), None).is_err());
+    assert_eq!(
+        s.lock()
+            .unwrap()
+            .access()
+            .unwrap()
+            .stats()
+            .unwrap()
+            .conversations,
+        0
+    );
+}
+
+#[test]
+fn deleting_a_not_yet_prepared_conversation_also_invalidates_the_pending_zip() {
+    use crate::retention::{RemovalInput, RemovalKind};
+    let root = tempfile::tempdir().unwrap();
+    let s = store(root.path(), true);
+    let path = root.path().join("fictional.zip");
+    zip(&path, &json!((0..45).map(tree).collect::<Vec<_>>()));
+    let input = {
+        let mut session = s.lock().unwrap();
+        let items = [24, 99].map(|i| {
+            parse_export_conversation(&tree(i), false, &mut ImportReport::default()).unwrap()
+        });
+        let input = RemovalInput {
+            kind: RemovalKind::Conversation,
+            conversation_id: Some(items[0].id.clone()),
+        };
+        session
+            .access()
+            .unwrap()
+            .import(&items, ImportReport::default())
+            .unwrap();
+        input
+    };
+    ACTION.with(|a| a.set(Some("pause")));
+    assert!(run_import(s.clone(), Some(path)).is_err());
+    let mut session = s.lock().unwrap();
+    assert_eq!(
+        session.import_state().unwrap().checkpoint.unwrap().saved,
+        20
+    );
+    let review = session.preview_removal(&input).unwrap();
+    let pending = review.pending_import.as_ref().unwrap();
+    assert_eq!((pending.saved, pending.total), (20, 45));
+    session
+        .apply_removal(&input, &review.review_hash, review.session_generation)
+        .unwrap();
+    assert!(session.import_state().unwrap().checkpoint.is_none());
+    assert_eq!(session.access().unwrap().stats().unwrap().conversations, 1);
+    assert_eq!(
+        session.access().unwrap().list("99", true, 0).unwrap().len(),
+        1
+    );
+}
+
+#[test]
+fn running_import_blocks_deletion_preview_and_submission_without_losing_work() {
+    use crate::retention::{RemovalInput, RemovalKind};
+    let root = tempfile::tempdir().unwrap();
+    let s = store(root.path(), true);
+    let path = root.path().join("fictional.zip");
+    zip(&path, &json!([tree(0)]));
+    let (input, review) = {
+        let mut session = s.lock().unwrap();
+        let c = parse_export_conversation(&tree(0), false, &mut ImportReport::default()).unwrap();
+        let input = RemovalInput {
+            kind: RemovalKind::Conversation,
+            conversation_id: Some(c.id.clone()),
+        };
+        session
+            .access()
+            .unwrap()
+            .import(&[c], ImportReport::default())
+            .unwrap();
+        let review = session.preview_removal(&input).unwrap();
+        (input, review)
+    };
+    let checked = Cell::new(false);
+    assert!(run_import_with_progress(s.clone(), Some(path), |phase| {
+        if phase == "preparing" && !checked.replace(true) {
+            let mut session = s.lock().unwrap();
+            assert!(session
+                .preview_removal(&input)
+                .err()
+                .unwrap()
+                .contains("Pause"));
+            assert!(session
+                .apply_removal(&input, &review.review_hash, review.session_generation)
+                .unwrap_err()
+                .contains("Pause"));
+            assert_eq!(session.access().unwrap().stats().unwrap().conversations, 1);
+            session.pause_import().unwrap();
+        }
+    })
+    .is_err());
+    assert!(checked.get());
+    assert!(s
+        .lock()
+        .unwrap()
+        .import_state()
+        .unwrap()
+        .checkpoint
+        .is_some());
+}
+
+#[test]
 fn wiped_live_vault_restores_paused_import_and_resumes_without_old_client_access() {
     const BACKUP_PASSWORD: &str = "fictional checkpoint backup phrase";
     let root = tempfile::tempdir().unwrap();
@@ -585,12 +747,7 @@ fn killed_final_save_keeps_prepared_work_and_original_archive() {
             .spawn()
             .unwrap(),
     );
-    let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
-    while !path.with_extension("ready").exists() {
-        assert!(child.0.try_wait().unwrap().is_none());
-        assert!(std::time::Instant::now() < deadline);
-        std::thread::sleep(std::time::Duration::from_millis(20));
-    }
+    crate::test_support::wait_for_checkpoint(&mut child.0, &path.with_extension("ready"));
     child.0.kill().unwrap();
     child.0.wait().unwrap();
     let s = store(root.path(), false);

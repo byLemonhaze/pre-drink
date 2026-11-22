@@ -24,3 +24,7 @@ Apple enrollment, Developer ID signing, notarization and a downloaded clean-inst
 | Distribution            | Locally built/ad-hoc-signed app and private source repository                                       | Apple signing/notarization and downloaded clean-install trust                             |
 
 The current backend pass is a self-review plus regression testing. It must not be described as an independent audit. The detailed evidence is in VALIDATION and NATIVE_WALKTHROUGH; IMPORTS records final-save, memory and checkpoint-format limitations.
+
+## Latest review triage — Nov 22
+
+The supplied review at `fcdcf0f` identified a confirmed deletion/resume defect and a newly patched dependency advisory. Those took priority over more walkthrough work. Conversation deletion now atomically discards any pending import, with explicit review wording and running-import exclusion. The patched `url` dependency and advisory gate are documented in [DEPENDENCY_CHECKS](DEPENDENCY_CHECKS.md). The review is useful external evidence about that older snapshot; it is not independent approval of the new fix. Native acceptance and a fresh-source review remain required. Apple distribution remains deferred.

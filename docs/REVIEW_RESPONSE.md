@@ -1,6 +1,16 @@
-# Security review response — updated 2026-11-20
+# Security review response — updated 2026-11-22
 
 The owner supplied an AI-assisted review of commit `a31608c`. Its Linux core checks and focused probes are useful evidence, not a formal independent security or cryptographic audit. This response distinguishes implemented fixes from release requirements and future work. The repository remains private; Pages and public downloads remain disabled.
+
+## Nov 22 review of `fcdcf0f`
+
+Reproduced R8-1 locally before fixing it: **Finish import** could restore a deleted conversation from encrypted preparation. Deletion now rejects running imports and, after explicit review, discards the entire pending import in the conversation-deletion transaction. Tests cover rollback, prepared copies, unprepared ZIP suffixes and running-import exclusion. Other already-published conversations remain. A deliberate new import of the original ZIP can still restore deleted content; no permanent tombstone is promised.
+
+Confirmed R7-1 against RustSec and updated `url` to 2.5.9. For R7-2, local verification now includes free advisory queries; offline/pre-push acceptance requires recent matching successful evidence. Three outstanding dependency warnings remain visible. See [DEPENDENCY_CHECKS](DEPENDENCY_CHECKS.md) for policy and limits.
+
+R8-2 concerned the watchdog around an existing child-readiness signal. All crash-boundary tests now share an immediate signal/early-exit check and a 300-second deadlock bound, retaining production-strength KDF settings. This improves load tolerance without claiming exhaustive hardware coverage.
+
+Checkpoint age/size display, metadata access logs, credential-store integration and KDF format metadata remain follow-ups. The author's product opinions do not replace documented owner-granted permissions, provider walls or Mac-lock behavior. MF-1 (Apple distribution) remains intentionally last. The report reviewed an older snapshot; it does not certify these new changes. See VALIDATION/NATIVE_WALKTHROUGH for the actual new check results.
 
 ## Round 3 — review of `52f8132`
 

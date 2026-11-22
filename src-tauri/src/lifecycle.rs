@@ -545,10 +545,7 @@ fn publication_checkpoint(root: &Path, stage: &str) {
 #[cfg(test)]
 mod interrupted_switch_tests {
     use super::*;
-    use std::{
-        process::{Child, Command, Stdio},
-        time::{Duration, Instant},
-    };
+    use std::process::{Child, Command, Stdio};
     const OLD: &str = "fictional switch original phrase";
     const NEW: &str = "fictional switch replacement phrase";
     struct ChildGuard(Child);
@@ -593,15 +590,7 @@ mod interrupted_switch_tests {
                 .spawn()
                 .unwrap(),
         );
-        let deadline = Instant::now() + Duration::from_secs(60);
-        while !root.path().join("child-ready").exists() {
-            assert!(
-                child.0.try_wait().unwrap().is_none(),
-                "Child exited before switch boundary"
-            );
-            assert!(Instant::now() < deadline, "Child missed switch boundary");
-            std::thread::sleep(Duration::from_millis(20));
-        }
+        crate::test_support::wait_for_checkpoint(&mut child.0, &root.path().join("child-ready"));
         child.0.kill().unwrap();
         child.0.wait().unwrap();
         assert!(

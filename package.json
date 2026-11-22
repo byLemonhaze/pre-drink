@@ -15,6 +15,8 @@
     "format": "prettier --write src public/startup.js public/startup.css public/theme.js public/theme.css tests vite.config.ts index.html package.json tsconfig.json src-tauri/tauri.conf.json src-tauri/capabilities README.md docs && cargo fmt --manifest-path src-tauri/Cargo.toml",
     "format:check": "prettier --check src public/startup.js public/startup.css public/theme.js public/theme.css tests vite.config.ts index.html package.json tsconfig.json src-tauri/tauri.conf.json src-tauri/capabilities README.md docs && cargo fmt --manifest-path src-tauri/Cargo.toml --check",
     "verify:local": "python3 scripts/verify_local.py",
+    "verify:offline": "python3 scripts/verify_local.py --offline",
+    "audit:local": "python3 scripts/verify_local.py --audit-only",
     "hooks:install": "python3 scripts/install_hooks.py"
   },
   "dependencies": {

@@ -48,3 +48,6 @@ pub mod reader;
 pub mod library;
 
 pub mod import_jobs;
+
+#[cfg(test)]
+mod test_support;

@@ -79,10 +79,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     write_export(&valid, &export.to_string())?;
     assert_eq!(pre_drink::import::read_export_zip(&valid)?.0.len(), 1);
     assert!(pre_drink::import::read_export_zip(&root.join("malformed-export.zip")).is_err());
+    // Construct a ready checkpoint containing an already-published conversation
+    // for native deletion-review regression checks. Never reuse owner storage.
+    let pending = root.join("pending");
+    fs::create_dir(&pending)?;
+    fs::set_permissions(&pending, fs::Permissions::from_mode(0o700))?;
+    let mut pending_session = Session::new(pending.clone());
+    pending_session.unlock(PASSWORD, true, false)?;
+    let (conversations, report) = pre_drink::import::read_export_zip(&valid)?;
+    let payload = serde_json::to_string(&conversations[0])?;
+    let conversation_id = conversations[0].id.clone();
+    pending_session.access()?.import(&conversations, report)?;
+    let pending_path = pending_session.path()?;
+    pending_session.lock();
+    let connection = rusqlite::Connection::open(&pending_path)?;
+    let key = pre_drink::crypto::key(PASSWORD, &pre_drink::crypto::salt(&pending_path)?)?;
+    pre_drink::crypto::configure(&connection, &key)?;
+    connection.execute("INSERT INTO import_job(id,fingerprint,label,total,saved,messages,skipped) VALUES(1,'fictional-ready','fictional-ready.zip',1,1,1,0)", [])?;
+    connection.execute(
+        "INSERT INTO import_items(position,conversation_id,payload) VALUES(0,?1,?2)",
+        rusqlite::params![conversation_id, payload],
+    )?;
+    connection.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")?;
+    drop(connection);
     println!(
         "{}",
         serde_json::to_string_pretty(&json!({
             "fixture_root":root, "app_data_dir":live,
+            "fresh_app_data_dir":root.join("fresh"), "pending_app_data_dir":pending,
             "fictional_password":PASSWORD, "fictional_backup_password":BACKUP,
             "current_memories":2, "backup_memories":1
         }))?

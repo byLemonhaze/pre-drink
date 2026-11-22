@@ -81,7 +81,7 @@ Restore/password changes operate on a separately encrypted generation. Preparati
 
 The app serializes lifecycle operations with all other owner/MCP operations. Pending imports and sharing previews are invalidated by the session generation switch. Failed preparation leaves the original selected. A post-publication directory-flush error is reported as a completed switch with a warning; it cannot truthfully be reported as an unchanged vault. Tests model interrupted/unpublished state and no-write failure, not every hardware power-loss outcome. Same-user external database writers and malicious same-account file replacement remain outside the app's isolation guarantees.
 
-Archive deletion has a session/version-bound review and typed confirmation. Its transaction removes raw snapshots, messages, FTS and conversation/tag links while leaving derived records blocked by missing evidence. Snapshot pruning removes older raw JSON only. Neither path is a secure-erasure promise or an implicit purge of other encrypted generations. No lifecycle/deletion commands are exposed over MCP.
+Archive deletion has a session/version-bound review and typed confirmation. Its transaction removes raw snapshots, messages, FTS and conversation/tag links while leaving derived records blocked by missing evidence. Deletion is blocked while an import is running. Conversation deletion also removes the whole pending import and all staged payloads in the same transaction, with its filename/counts bound to the review; an unprepared ZIP suffix cannot resurrect a deletion by resuming. A newly selected reimport can restore it. Snapshot pruning removes older raw JSON only. Neither path is a secure-erasure promise or an implicit purge of other encrypted generations. No lifecycle/deletion commands are exposed over MCP.
 
 ## Interface recovery
 
@@ -120,3 +120,7 @@ Classifier exceptions are narrow: unquoted status prose such as “password is i
 ## Unfinished imports
 
 Schema-8 import preparation is stored only in SQLCipher, including the display filename and content fingerprint. No source path or unencrypted sidecar is saved. Unfinished records have no route to archive search, raw-agent tools or shared memory. Run identity, cancellation and vault-generation checks precede each checkpoint and final publication. Final privacy reclassification occurs outside the session mutex; the atomic publication transaction retains existing manual privacy, source invalidation and FTS rules. Older binaries reject the new schema. See [IMPORTS](IMPORTS.md) for pause latency, ZIP verification and explicit remaining limits.
+
+## Developer advisory gate — 2026-11-22
+
+Local verification refreshes public npm/RustSec package advisories and rejects vulnerability findings, failed queries and incomplete results. Offline/pre-push use requires exact-lockfile evidence under 24 hours old, unchanged report hashes and the current check policy. Remaining informational warnings are printed explicitly. This is an accidental-omission guard on developer machines, not an independent audit or signature. It does not send vault data or enable network access in the application. See [DEPENDENCY_CHECKS](DEPENDENCY_CHECKS.md).

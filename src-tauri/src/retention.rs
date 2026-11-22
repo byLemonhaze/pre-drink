@@ -22,6 +22,7 @@ pub struct RemovalPreview {
     pub snapshots: usize,
     pub memories: i64,
     pub briefs: i64,
+    pub pending_import: Option<crate::import_jobs::ImportCheckpoint>,
     pub review_hash: String,
     pub session_generation: u64,
 }
@@ -33,11 +34,15 @@ impl Vault {
             snapshots: 0,
             memories: 0,
             briefs: 0,
+            pending_import: None,
             review_hash: String::new(),
             session_generation: 0,
         };
         let ids = match input.kind {
             RemovalKind::Conversation => {
+                // Any pending ZIP may contain this ID, including an unprepared suffix.
+                // Discard the entire preparation rather than leaving a resumable copy.
+                p.pending_import = self.import_checkpoint()?;
                 let id = input
                     .conversation_id
                     .as_deref()
@@ -102,7 +107,7 @@ impl Vault {
             }
         };
         p.snapshots = ids.len();
-        let snapshot = serde_json::json!({"input":input,"changes":self.connection.total_changes(),"title":p.title,"messages":p.messages,"memories":p.memories,"briefs":p.briefs,"snapshots":ids});
+        let snapshot = serde_json::json!({"input":input,"changes":self.connection.total_changes(),"title":p.title,"messages":p.messages,"memories":p.memories,"briefs":p.briefs,"snapshots":ids,"pending_import":p.pending_import});
         p.review_hash = hex::encode(Sha256::digest(
             serde_json::to_vec(&snapshot).map_err(|e| e.to_string())?,
         ));
@@ -123,6 +128,8 @@ impl Vault {
                 .conversation_id
                 .as_deref()
                 .ok_or("Select a conversation.")?;
+            tx.execute("DELETE FROM import_job WHERE id=1", [])
+                .map_err(|e| e.to_string())?;
             tx.execute("UPDATE memory SET approved=0,updated_at=max(updated_at+0.000001,unixepoch('subsec')) WHERE source_message_id IN (SELECT id FROM messages WHERE conversation_id=?1) OR id IN (SELECT s.note_id FROM curation_sources s JOIN messages msg ON msg.id=s.message_id WHERE msg.conversation_id=?1)", [id]).map_err(|e| e.to_string())?;
             tx.execute("DELETE FROM search_index WHERE conversation_id=?1", [id])
                 .map_err(|e| e.to_string())?;
@@ -134,6 +141,10 @@ impl Vault {
 }
 impl Session {
     pub fn preview_removal(&mut self, input: &RemovalInput) -> Result<RemovalPreview, String> {
+        self.access()?;
+        if self.import_run.is_some() {
+            return Err("Pause the import before reviewing or deleting archive data.".into());
+        }
         let (mut p, _) = self.access()?.removal_plan(input)?;
         p.session_generation = self.generation;
         self.touch();
@@ -146,6 +157,10 @@ impl Session {
         generation: u64,
     ) -> Result<(), String> {
         self.stop_sharing();
+        self.access()?;
+        if self.import_run.is_some() {
+            return Err("Pause the import before reviewing or deleting archive data.".into());
+        }
         if generation != self.generation {
             return Err("The vault session changed. Review the deletion again.".into());
         }

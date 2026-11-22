@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Offline local checks and an exact-source receipt; never starts Actions or models."""
+"""Local checks plus current advisories; never starts Actions or models."""
 import argparse
 import hashlib
 import json
@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+from dependency_audit import AuditError, refresh as refresh_audit, validate as validate_audit
 
 ROOT = Path(__file__).resolve().parents[1]
 os.chdir(ROOT)
@@ -41,7 +42,14 @@ def run(*args):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--pre-push', action='store_true')
+    parser.add_argument('--audit-only', action='store_true')
+    parser.add_argument('--offline', action='store_true')
     args = parser.parse_args()
+    if args.audit_only:
+        if args.pre_push or args.offline:
+            parser.error('--audit-only cannot be combined with --pre-push or --offline')
+        refresh_audit(ROOT)
+        return
     if args.pre_push:
         head = output('git', 'rev-parse', 'HEAD')
         for line in sys.stdin:
@@ -55,6 +63,13 @@ def main():
     elif subprocess.check_output(['git', 'ls-files', '--others', '--exclude-standard', '-z']):
         sys.exit('Stage new source files before verification so the receipt covers them.')
     before = fingerprint()
+    # Functional checks run offline. Advisory refresh is explicit network I/O;
+    # pre-push/offline reuse only recent evidence for the exact lockfiles.
+    if args.pre_push or args.offline:
+        validate_audit(ROOT)
+    else:
+        RECEIPT.unlink(missing_ok=True)
+        refresh_audit(ROOT)
     if args.pre_push:
         try:
             saved = json.loads(RECEIPT.read_text())
@@ -76,7 +91,7 @@ def main():
     run('npm', 'run', 'build')
     run('npm', 'run', 'test:startup')
     run('npm', 'run', 'test:reading')
-    run('python3', '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_local_verification.py')
+    run('python3', '-m', 'unittest', 'discover', '-s', 'tests', '-p', 'test_*.py')
     run('cargo', 'test', '--manifest-path', 'src-tauri/Cargo.toml', '--locked', '--offline')
     with tempfile.TemporaryDirectory(prefix='pre-drink-fictional-check-') as directory:
         run('python3', 'scripts/create_curation_quality_exports.py', '--output', directory)
@@ -84,10 +99,11 @@ def main():
     run('cargo', 'clippy', '--manifest-path', 'src-tauri/Cargo.toml', '--locked', '--offline', '--all-targets', '--', '-D', 'warnings')
     if before != fingerprint():
         sys.exit('Sources changed during verification; no receipt written. Run verification again.')
+    validate_audit(ROOT)
     RECEIPT.parent.mkdir(exist_ok=True)
     RECEIPT.write_text(json.dumps(before, indent=2) + '\n')
     print('Local verification passed. Receipt contains hashes and tool versions only; no vault data.')
-    print('Dependency advisory refresh and native walkthrough are separate, not claimed by this receipt.')
+    print('Dependency advisories passed; outstanding warnings are listed above. Native walkthrough remains separate.')
 
 
 if __name__ == '__main__':
@@ -95,3 +111,5 @@ if __name__ == '__main__':
         main()
     except subprocess.CalledProcessError as error:
         sys.exit(error.returncode)
+    except AuditError as error:
+        sys.exit(f'Verification blocked: {error} Run npm run audit:local, then retry.')

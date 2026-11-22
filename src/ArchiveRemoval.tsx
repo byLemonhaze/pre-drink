@@ -8,8 +8,26 @@ interface Preview {
   snapshots: number;
   memories: number;
   briefs: number;
+  pending_import: { label: string; saved: number; total: number } | null;
   review_hash: string;
   session_generation: number;
+}
+export function PendingImportRemovalNotice({
+  pending,
+}: {
+  pending: Preview["pending_import"];
+}) {
+  if (!pending) return null;
+  return (
+    <p className="notice warning">
+      This also discards the entire unfinished import of {pending.label}:{" "}
+      {pending.saved.toLocaleString()} of {pending.total.toLocaleString()}{" "}
+      conversations prepared. This prevents its saved copy or remaining ZIP
+      contents from bringing the deleted conversation back when resumed. Other
+      conversations already in your archive stay unchanged. Selecting that ZIP
+      again starts a new import and can restore deleted conversations.
+    </p>
+  );
 }
 export default function ArchiveRemoval({
   conversationId,
@@ -99,6 +117,7 @@ export default function ArchiveRemoval({
               ? `${preview.messages} messages and ${preview.snapshots} raw snapshots will be deleted from this vault and its search index. ${preview.memories} linked memories will remain as blocked drafts; ${preview.briefs} dependent briefs will stay blocked by their missing evidence.`
               : `${preview.snapshots} older raw JSON snapshots will be removed. The most recently imported raw version of each conversation, all message branches, notes and briefs remain.`}
           </p>
+          <PendingImportRemovalNotice pending={preview.pending_import} />
           <p>
             There is no undo here. Original export ZIPs, encrypted backups,
             retained vault generations and Mac snapshots can still contain this

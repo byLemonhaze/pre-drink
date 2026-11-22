@@ -13,6 +13,12 @@ Imports remain local and require an unlocked vault. Supported official ChatGPT, 
 
 Only one import can be prepared at a time. Multiple ZIPs selected together run sequentially; after interruption, later unstarted ZIPs must be selected again. Resume is explicit, never an automatic background task after unlock. A late error in a malformed export can leave harmless encrypted preparation; discard that preparation before importing a corrected export.
 
+## Deleting archive data while an import is pending
+
+Pause a running import before reviewing or deleting archive data. Deleting a conversation also discards the **entire unfinished import**, including already prepared records and the remaining resumable ZIP. The confirmation displays its filename and counts. Both changes commit atomically; an error preserves both. This prevents **Finish import** or **Resume** from silently restoring a deleted conversation, even when it was in the not-yet-prepared portion. Other published conversations stay unchanged.
+
+Selecting the original ZIP again is a deliberate new import and can restore deleted conversations. There is no permanent deletion tombstone, secure-erasure promise or automatic cleanup of old backups. Snapshot-only pruning does not discard paused import preparation.
+
 ## Checkpoint contract
 
 Schema 8 adds `import_job` (one row: fingerprint, display filename, total/saved counts, processed-message and skipped-message counts) and `import_items` (ordered normalized payloads with unique conversation IDs). Both live inside SQLCipher. There is no plaintext checkpoint database, key file, copied ZIP, saved absolute source path or network transfer. These tables are absent from search/MCP/context-pack queries. Backups include them; restoration/rotation never resumes work automatically.

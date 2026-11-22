@@ -8,7 +8,6 @@ use serde_json::json;
 use std::{
     path::Path,
     process::{Child, Command, Stdio},
-    time::{Duration, Instant},
 };
 
 const PASSWORD: &str = "fictional storage recovery phrase";
@@ -205,18 +204,7 @@ fn killed_writer_recovers_committed_encrypted_state() {
             .spawn()
             .unwrap(),
     );
-    let deadline = Instant::now() + Duration::from_secs(30);
-    while !path.with_extension("ready").exists() {
-        assert!(
-            child.0.try_wait().unwrap().is_none(),
-            "Fictional writer exited before fault boundary"
-        );
-        assert!(
-            Instant::now() < deadline,
-            "Fictional writer did not reach fault boundary"
-        );
-        std::thread::sleep(Duration::from_millis(20));
-    }
+    crate::test_support::wait_for_checkpoint(&mut child.0, &path.with_extension("ready"));
     child.0.kill().unwrap();
     child.0.wait().unwrap();
     let mut v = Vault::open(&path, PASSWORD).unwrap();
@@ -507,18 +495,7 @@ fn killed_import_rolls_back_sources_approvals_and_index_then_retries() {
         .args(["--exact", "storage_failure::killed_import_rolls_back_sources_approvals_and_index_then_retries", "--nocapture"])
         .env("PD_IMPORT_CRASH_PATH", &path)
         .stdout(Stdio::null()).stderr(Stdio::null()).spawn().unwrap());
-    let deadline = Instant::now() + Duration::from_secs(30);
-    while !path.with_extension("ready").exists() {
-        assert!(
-            child.0.try_wait().unwrap().is_none(),
-            "Import child exited before commit boundary"
-        );
-        assert!(
-            Instant::now() < deadline,
-            "Import child missed commit boundary"
-        );
-        std::thread::sleep(Duration::from_millis(20));
-    }
+    crate::test_support::wait_for_checkpoint(&mut child.0, &path.with_extension("ready"));
     child.0.kill().unwrap();
     child.0.wait().unwrap();
     let mut v = Vault::open(&path, PASSWORD).unwrap();

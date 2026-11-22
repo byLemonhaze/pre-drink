@@ -386,3 +386,23 @@ test("import status offers pause while preparing and explains the final save bou
   assert.match(view("saving"), /disabled=""/);
   assert.match(view("saving"), /final archive save must finish/);
 });
+
+test("deletion review explains the entire pending import loss and explicit reimport boundary", () => {
+  const Notice = component("ArchiveRemoval").PendingImportRemovalNotice;
+  const view = (pending) =>
+    renderToStaticMarkup(React.createElement(Notice, { pending }));
+  assert.equal(view(null), "");
+  const html = view({ label: "fictional <script>.zip", saved: 20, total: 45 });
+  assert.match(html, /entire unfinished import/);
+  assert.match(html, /20 of 45 conversations prepared/);
+  assert.match(html, /remaining ZIP contents/);
+  assert.match(
+    html,
+    /Other conversations already in your archive stay unchanged/,
+  );
+  assert.match(
+    html,
+    /Selecting that ZIP again starts a new import and can restore deleted conversations/,
+  );
+  assert.doesNotMatch(html, /<script>/);
+});

@@ -138,7 +138,7 @@ Schema 4 preserves manual notes and approvals, adds encrypted curation state and
 
 ## Verification cost policy
 
-Run `npm run verify:local` after staging new source files, then `npm run hooks:install` once to enable the exact-source pre-push guard. Development checks run locally. GitHub Actions is manual-only to preserve the owner's included allowance and avoid extra costs. Do not dispatch it or enable automatic triggers without explicit owner approval. The repository stays private until the owner chooses launch. See [execution plan](docs/EXECUTION_PLAN.md) for the current verification baseline and cost constraints.
+Run `npm run verify:local` after staging new source files, then `npm run hooks:install` once to enable the exact-source pre-push guard. Development checks run locally; free npm/RustSec advisory queries send package metadata only. Install the pinned auditor and see offline-cache rules in [dependency checks](docs/DEPENDENCY_CHECKS.md). GitHub Actions is manual-only to preserve the owner's included allowance and avoid extra costs. Do not dispatch it or enable automatic triggers without explicit owner approval. The repository stays private until the owner chooses launch. See [execution plan](docs/EXECUTION_PLAN.md) for the current verification baseline and cost constraints.
 
 ## Large libraries and local connections
 

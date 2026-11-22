@@ -2,6 +2,16 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
+## Nov 22 report follow-up: deletion and dependency gates
+
+Reproduced R8-1: a ready checkpoint could restore a conversation after deletion. Review the fix in `retention.rs`, the pending-import notice, and three new regressions in `import_job_tests.rs`: atomic rollback, not-yet-prepared ZIP entries, and concurrent-run rejection. Deletion now discards the entire pending import as an explicit reviewed consequence; deliberate new ZIP imports can still restore data. No schema/encryption change is involved.
+
+R7-1 is patched by locking `url` 2.5.9 (and its `form_urlencoded` 1.2.3 requirement). R7-2 now has a free advisory refresh plus a lockfile-bound 24-hour offline/pre-push gate. Review report validation, failed-refresh invalidation and bypass limits in `scripts/dependency_audit.py`, `scripts/verify_local.py` and their Python tests. Read [DEPENDENCY_CHECKS](DEPENDENCY_CHECKS.md) for remaining warnings; a successful vulnerability audit is not a warning-free dependency graph.
+
+R8-2 was a short deadlock watchdog around an existing readiness signal, not a sleep-based assumption of success. `test_support.rs` centralizes the signal wait with a 300-second upper bound and immediate early-exit failure. Production KDF settings are unchanged. Broader load/hardware tolerance remains unproven by a single local pass.
+
+Open recommendations: checkpoint age/size visibility; clearer working-set retention; metadata-only access logging; client credential storage integration; versioned KDF metadata; remaining classifier false positives; current-source independent review. Same-provider client ownership, provider walls, Mac-lock behavior and opt-in publication remain their documented policies. The report does not authorize weakening them. Apple signing remains last.
+
 ## Checkpoint recovery combinations and contrast — 2026-11-22
 
 New regressions restore a paused import after wiping disposable live storage, rotate the password while preparation is paused, and resume a mixed-provider ZIP. Verify that old client credentials remain denied, recovered preparation never automatically runs, shared retrieval remains empty without approval, and direct foreign-provider source reads remain blocked. See `import_job_tests.rs`. No runtime storage or authorization logic changed in this batch.

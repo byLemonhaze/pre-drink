@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 import runpy
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -16,7 +17,8 @@ SOURCE = Path(__file__).resolve().parents[1]
 class VerificationGuard(unittest.TestCase):
     def setUp(self):
         self.previous = Path.cwd()
-        namespace = runpy.run_path(str(SOURCE / 'scripts/verify_local.py'))
+        with patch('sys.path', [str(SOURCE / 'scripts'), *sys.path]):
+            namespace = runpy.run_path(str(SOURCE / 'scripts/verify_local.py'))
         self.main = namespace['main']
         self.state = self.main.__globals__
         self.tmp = tempfile.TemporaryDirectory(prefix='pre-drink-hook-test-')
@@ -31,6 +33,8 @@ class VerificationGuard(unittest.TestCase):
         self.receipt = self.root / 'artifacts/local-verification.json'
         self.receipt.parent.mkdir()
         self.state['RECEIPT'] = self.receipt
+        self.state['ROOT'] = self.root
+        self.state['validate_audit'] = lambda root: None
         self.receipt.write_text(json.dumps(self.state['fingerprint']()))
         (self.root / '.git/info/exclude').write_text('artifacts/\n')
         self.checks = []
@@ -81,6 +85,14 @@ class VerificationGuard(unittest.TestCase):
         self.receipt.unlink()
         with self.assertRaises(SystemExit):
             self.push()
+
+    def test_exact_functional_receipt_still_requires_current_audit(self):
+        def blocked(root):
+            raise self.state['AuditError']('Missing or stale audit')
+        self.state['validate_audit'] = blocked
+        with self.assertRaises(self.state['AuditError']):
+            self.push()
+        self.assertEqual(self.checks, [])
 
 
 if __name__ == '__main__':
