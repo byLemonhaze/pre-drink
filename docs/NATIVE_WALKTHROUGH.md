@@ -216,3 +216,34 @@ Observed before and after the fixes:
 Finished with light mode, sharing off, the vault locked and the preview process confirmed stopped. Only the newly generated fictional directories were removed after shutdown. No screenshots, generated ZIPs/vaults, passwords or private diagnostics are committed; the example contains explicitly fictional fixture phrases only.
 
 These are native observations on this Mac, not VoiceOver certification, physical power-loss tests or acceptance of every platform. No new password creation/change or permanent-delete submission was repeated. Long-running native import progress/interruption, a changed-rules upgrade notice, broader accessibility/OS coverage and representative-data lifecycle checks remain open. Earlier physical sleep/screen-lock evidence and backend injected-failure checks remain separate. Automation's slow first attachment is not an app-startup measurement.
+
+## Long import, upgrade notices and keyboard checks — 2026-11-22
+
+Used a separately identified native debug preview at 980×640 and fresh encrypted fictional storage from `examples/native_upgrade_fixture.rs`. This generator creates an older-classifier/schema-6 fixture with a linked approved memory and brief, one unrelated approved memory, a schema-newer-than-app copy, and a 5,000-conversation/100,000-message official-format ChatGPT ZIP. It never reads owner storage. The old-classifier state is deliberately constructed in fixture SQL; it is not an independently produced historical app archive. Its pre-open assertion checks all three historical approvals. The first setup attempt triggered the current source-edit invalidation rule; it was corrected and the native upgrade was rerun on a fresh fixture.
+
+### Long import interruption
+
+- The native picker started the large fictional ZIP; the app showed its active import indicator and disabled the import button.
+- Clicking Lock vault while the import was active immediately removed the unlocked interface. Reopening showed the original single conversation, no partial import and sharing off. After background parsing settled, no late import appeared.
+- Retrying the same ZIP without interruption reported 5,000 new conversations and 100,000 processed text messages. Searching the final fictional conversation returned its complete 20-message range.
+- A separate fresh fixture was quit with Command-Q while the active import indicator was visible. Process exit was confirmed. Restart began locked; unlock preserved the original conversation and the newly enforced privacy state, with sharing off and no partial import. The upgrade notice did not repeat once its changes had been applied. Retrying after this restart again completed all 5,000 conversations/100,000 messages; the preview was then locked and quit.
+
+These actions exercise interruption during an active native import, not a precisely instrumented transaction-commit boundary. The earlier killed-import regression covers the production transaction immediately before commit. The interface provides an activity indicator, not a percentage, resumable checkpoint or dedicated Cancel command. Parsing may continue in the background after locking; generation validation prevents its stale result from being saved. A lock request arriving after the database transaction has acquired the session mutex waits for that transaction; do not claim instantaneous cancellation at every stage.
+
+### Upgrade notice and approvals
+
+- Opening the corrected fictional schema-6/older-classifier vault displayed exactly two added restrictions and two linked approvals returned to draft. The unrelated project remained approved.
+- Newly restricted history was absent from the default archive view. The linked memory appeared only with restricted-note review enabled; its sharing review explained the restriction and disabled approval. The linked brief was also excluded from the default brief list in the initial pass.
+- A separate fixture with a schema newer than this app was refused with “This vault needs a newer Pre-Drink version.” The password field was cleared and focused; keyboard navigation still opened Vault details and Escape returned to its opener. After quit, the encrypted database hash was unchanged; only the normal instance-lock file had been added.
+- The full notice fit the minimum window in light and dark themes. No privacy flag was cleared, item published, client registered or cloud service contacted.
+
+### Keyboard and visual accessibility
+
+- Tab from the newly unlocked document reached navigation; Return opened Memory. Choice lists handled End, Home, Up/Down, Return and letter type-ahead, returning focus to their trigger. Tab continued into search; Space toggled the focused restricted-note checkbox.
+- A keyboard-opened blocked sharing review exposed its reason and disabled approval. Forward/reverse Tab remained on its only enabled action; Escape returned to its opener.
+- Light-mode keyboard outlines previously used bright decorative orange, with about 2.36:1 contrast against the cream canvas. They now use the existing darker orange text token (about 5.46:1 against that canvas); dark mode retains bright orange (about 6.47:1 against its surface). App-only visual inspection confirmed visible focus on the review Close button and dark-mode Lock vault button.
+- Navigation now marks the current page with `aria-current`. Import status wording covers the entire operation rather than describing the saving stage as reading. No fake progress percentage was added.
+
+These observations and token contrast calculations are not a complete accessibility conformance audit or a VoiceOver listening test. No global macOS accessibility settings were changed. Broader assistive-technology/OS coverage, historical schema families and representative-data lifecycle checks remain separate gates. Screenshots, generated exports, encrypted fixtures and local paths remain outside Git.
+
+The fictional preview was left locked, returned to light mode and quit. Process exit was confirmed before removing only the two freshly generated fictional directories. The separate owner-created vault was not opened, stopped or changed.

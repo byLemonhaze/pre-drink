@@ -328,6 +328,7 @@ function App({
         <nav aria-label="Main navigation">
           <button
             className={page === "library" ? "nav-item active" : "nav-item"}
+            aria-current={page === "library" ? "page" : undefined}
             onClick={() => setPage("library")}
           >
             <Library size={18} />
@@ -336,6 +337,7 @@ function App({
           </button>
           <button
             className={page === "memory" ? "nav-item active" : "nav-item"}
+            aria-current={page === "memory" ? "page" : undefined}
             onClick={() => setPage("memory")}
           >
             <Brain size={18} />
@@ -343,6 +345,7 @@ function App({
           </button>
           <button
             className={page === "briefs" ? "nav-item active" : "nav-item"}
+            aria-current={page === "briefs" ? "page" : undefined}
             onClick={() => setPage("briefs")}
           >
             <FileText size={18} />
@@ -350,6 +353,7 @@ function App({
           </button>
           <button
             className={page === "sharing" ? "nav-item active" : "nav-item"}
+            aria-current={page === "sharing" ? "page" : undefined}
             onClick={() => setPage("sharing")}
           >
             <Share2 size={18} />
@@ -357,6 +361,7 @@ function App({
           </button>
           <button
             className={page === "agents" ? "nav-item active" : "nav-item"}
+            aria-current={page === "agents" ? "page" : undefined}
             onClick={() => setPage("agents")}
           >
             <Plug size={18} />
@@ -364,6 +369,7 @@ function App({
           </button>
           <button
             className={page === "imports" ? "nav-item active" : "nav-item"}
+            aria-current={page === "imports" ? "page" : undefined}
             onClick={() => setPage("imports")}
           >
             <ArrowDownToLine size={18} />
@@ -371,6 +377,7 @@ function App({
           </button>
           <button
             className={page === "settings" ? "nav-item active" : "nav-item"}
+            aria-current={page === "settings" ? "page" : undefined}
             onClick={() => setPage("settings")}
           >
             <Settings2 size={18} />
@@ -963,7 +970,9 @@ function App({
       {busy && (
         <div className="import-progress" role="status">
           <LoaderCircle className="spin" size={18} />
-          <span>Reading your export locally…</span>
+          <span>
+            Importing your export locally… Large archives can take a while.
+          </span>
         </div>
       )}
     </div>

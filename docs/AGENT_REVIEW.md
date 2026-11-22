@@ -2,7 +2,11 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
-## Latest native review targets — 2026-11-22
+## Latest import, upgrade and accessibility review — 2026-11-22
+
+Review `examples/native_upgrade_fixture.rs` and the newest NATIVE_WALKTHROUGH section for fictional lock/quit interruption, complete retry, targeted upgrade notices and keyboard-only review. The fixture reconstructs an older-classifier/schema-6 state and explicitly restores historical approvals after the current evidence trigger fires; it never opens an owner vault. Keep this narrower than acceptance of all historical schemas. UI changes improve focus contrast, mark current navigation and describe import activity accurately; they do not change encryption, grants or publication. Percentage/cancel/resume UI, VoiceOver listening and representative-data lifecycle checks remain open.
+
+## Earlier native review targets — 2026-11-22
 
 Review `Modal.tsx`, `VaultGate.tsx`, `VaultMaintenance.tsx`, `App.tsx` and `ArchiveRemoval.tsx` for explicit opener focus, macOS pointer-button behavior, error retry focus, unchecked restore acknowledgement and busy-state handling. The native recovery fixture and walkthrough cover malformed import retry, damaged backup rejection, cancelled/successful restore, restart and focus across editors/reviews/setup. UI changes must not alter grants or bypass backend review. All generated data is fictional and remains outside Git. No new password-change/permanent-delete submission or physical Mac lock/sleep is claimed. Broader native import/upgrade/accessibility checks remain open.
 
