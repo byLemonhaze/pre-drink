@@ -63,7 +63,7 @@ impl Vault {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .map_err(|e| e.to_string())?;
-        if version > 7 {
+        if version > 8 {
             return Err("This vault needs a newer Pre-Drink version.".into());
         }
         if version == 1 {
@@ -170,7 +170,9 @@ impl Vault {
             tx.execute("INSERT OR IGNORE INTO curation_owner_holds SELECT id FROM curation_notes WHERE conflict=1", [])
                 .map_err(|e| e.to_string())?;
         }
-        tx.execute_batch("PRAGMA user_version=7;")
+        tx.execute_batch(include_str!("import_jobs.sql"))
+            .map_err(|e| e.to_string())?;
+        tx.execute_batch("PRAGMA user_version=8;")
             .map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
         let mut vault = Self {
@@ -226,7 +228,7 @@ impl Vault {
             }
             let exported = self
                 .connection
-                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=7;");
+                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=8;");
             let detached = self.connection.execute_batch("DETACH DATABASE backup;");
             exported
                 .and(detached)
@@ -252,6 +254,8 @@ impl Vault {
                 "curation_job_sources",
                 "curation_processed_sources",
                 "source_versions",
+                "import_job",
+                "import_items",
                 "tags",
                 "conversation_tags",
             ] {
@@ -342,9 +346,21 @@ impl Vault {
     pub fn import(
         &mut self,
         conversations: &[ParsedConversation],
-        mut report: ImportReport,
+        report: ImportReport,
     ) -> Result<ImportReport, String> {
         let tx = self.connection.transaction().map_err(|e| e.to_string())?;
+        let report = Self::import_transaction(&tx, conversations, report)?;
+        #[cfg(test)]
+        crate::storage_failure::import_checkpoint(&self.path, &tx);
+        tx.commit().map_err(|e| e.to_string())?;
+        Ok(report)
+    }
+
+    pub(crate) fn import_transaction(
+        tx: &rusqlite::Transaction<'_>,
+        conversations: &[ParsedConversation],
+        mut report: ImportReport,
+    ) -> Result<ImportReport, String> {
         // Scan the FTS table once per import, not once per conversation. Temp
         // storage is memory-only and the transaction also covers index rebuilds.
         tx.execute_batch("CREATE TEMP TABLE import_ids (id TEXT PRIMARY KEY); CREATE TEMP TABLE import_message_ids (id TEXT PRIMARY KEY);")
@@ -426,9 +442,6 @@ impl Vault {
         tx.execute("INSERT INTO search_index(conversation_id,content) SELECT m.conversation_id,m.content FROM messages m JOIN import_ids i ON i.id=m.conversation_id", []).map_err(|e| e.to_string())?;
         tx.execute_batch("DROP TABLE import_ids; DROP TABLE import_message_ids;")
             .map_err(|e| e.to_string())?;
-        #[cfg(test)]
-        crate::storage_failure::import_checkpoint(&self.path, &tx);
-        tx.commit().map_err(|e| e.to_string())?;
         Ok(report)
     }
 
@@ -575,7 +588,7 @@ mod provider_upgrade_tests {
             v.connection
                 .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
-            7
+            8
         );
         assert_eq!(
             v.connection

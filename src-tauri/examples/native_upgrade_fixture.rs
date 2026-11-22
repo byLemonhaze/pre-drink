@@ -90,7 +90,32 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     fs::set_permissions(&future_path, fs::Permissions::from_mode(0o600))?;
     let connection = Connection::open(&future_path)?;
     crypto::configure(&connection, &key)?;
-    connection.execute_batch("PRAGMA user_version=8; PRAGMA wal_checkpoint(TRUNCATE);")?;
+    connection.execute_batch("PRAGMA user_version=9; PRAGMA wal_checkpoint(TRUNCATE);")?;
+    drop(connection);
+
+    // A fully prepared encrypted input for the native no-ZIP Finish path.
+    let ready = root.join("ready");
+    fs::create_dir(&ready)?;
+    fs::set_permissions(&ready, fs::Permissions::from_mode(0o700))?;
+    let mut ready_session = Session::new(ready.clone());
+    ready_session.unlock(PASSWORD, true, false)?;
+    let ready_path = ready_session.path()?;
+    ready_session.lock();
+    let c = parse_conversation(
+        &json!({"id":"fictional-ready","title":"Fictional prepared garden","current_node":"leaf","mapping":{
+            "leaf":{"parent":null,"message":{"author":{"role":"user"},"content":{"parts":["preparedorchid: choose cedar planters"]}}}
+        }}),
+        &mut ImportReport::default(),
+    )?;
+    let connection = Connection::open(&ready_path)?;
+    let ready_key = crypto::key(PASSWORD, &crypto::salt(&ready_path)?)?;
+    crypto::configure(&connection, &ready_key)?;
+    connection.execute("INSERT INTO import_job(id,fingerprint,label,total,saved,messages,skipped) VALUES(1,'fictional-ready','fictional-ready.zip',1,1,1,0)",[])?;
+    connection.execute(
+        "INSERT INTO import_items(position,conversation_id,payload) VALUES(0,?1,?2)",
+        rusqlite::params![c.id, serde_json::to_string(&c)?],
+    )?;
+    connection.execute_batch("PRAGMA wal_checkpoint(TRUNCATE);")?;
     drop(connection);
 
     let path = root.join("long-fictional-export.zip");
@@ -124,7 +149,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "{}",
         serde_json::to_string_pretty(&json!({
-            "fixture_root":root,"app_data_dir":live,"future_app_data_dir":future,
+            "fixture_root":root,"app_data_dir":live,"future_app_data_dir":future,"ready_app_data_dir":ready,
             "fictional_password":PASSWORD,
             "expected_restrictions":2,"expected_approvals_reset":2,
             "expected_unrelated_approved":1,"long_import_conversations":5000,

@@ -16,6 +16,8 @@ The first release serves an individual who wants durable context across AI tools
 
 Official ZIP import now supports recognized **ChatGPT, Claude and Grok** formats, with versioned synthetic contracts and one successful representative ChatGPT backend and native post-import check; broader native lifecycle and representative Claude/Grok checks remain open. Each has a matching curator role and session-summary writing. Gemini, Copilot and others are requested next candidates, contingent on validated official formats; see [PROVIDERS](PROVIDERS.md). A compatible local MCP client must be configured; this does not connect an arbitrary ChatGPT or Grok web chat automatically.
 
+Large official imports can be paused and resumed from encrypted preparation checkpoints. The archive remains unchanged until the final atomic save; incomplete preparation is never shared. See [IMPORTS](IMPORTS.md).
+
 Official exports are the deliberate historical input. No scraping, userscripts, browser credentials or live capture. Explicit end-of-session notes are a second input to memory, not a captured transcript. User exports and vault contents never belong in GitHub, even while the repository is private.
 
 ## Information layers

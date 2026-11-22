@@ -2,7 +2,6 @@ use crate::{
     agents::AgentClient,
     client_config::{create_setup, ClientFormat, ClientSetup},
     db::Vault,
-    import::read_export_zip,
     memory::MemoryInput,
     model::{Conversation, ImportReport, Message, Stats},
     session::{Session, Store, VaultStatus},
@@ -70,21 +69,59 @@ async fn touch_vault(store: State<'_, Store>) -> Result<(), String> {
     })
     .await
 }
-#[tauri::command]
-async fn import_zip(path: String, store: State<'_, Store>) -> Result<ImportReport, String> {
-    let store = store.inner().clone();
-    let generation = session_op(store.clone(), |s| {
-        s.access()?;
-        Ok(s.generation)
-    })
-    .await?;
+async fn import_command(
+    path: Option<PathBuf>,
+    ticket: String,
+    app: tauri::AppHandle,
+    store: Store,
+) -> Result<ImportReport, String> {
+    uuid::Uuid::parse_str(&ticket).map_err(|_| "Invalid import request.")?;
     tauri::async_runtime::spawn_blocking(move || {
-        let (items, report) = read_export_zip(&PathBuf::from(path))?;
-        let mut session = store.lock().map_err(|_| "Vault unavailable.")?;
-        session.finish_import(generation, &items, report)
+        crate::import_jobs::run_import_with_progress(store, path, |phase| {
+            // Phase only: never publish filenames, paths or archive content in events.
+            let _ = app.emit(
+                "import-phase",
+                serde_json::json!({"ticket":ticket,"phase":phase}),
+            );
+        })
     })
     .await
     .map_err(|_| "Import could not finish.")?
+}
+#[tauri::command]
+async fn import_zip(
+    path: String,
+    ticket: String,
+    app: tauri::AppHandle,
+    store: State<'_, Store>,
+) -> Result<ImportReport, String> {
+    import_command(
+        Some(PathBuf::from(path)),
+        ticket,
+        app,
+        store.inner().clone(),
+    )
+    .await
+}
+#[tauri::command]
+async fn finish_import(
+    ticket: String,
+    app: tauri::AppHandle,
+    store: State<'_, Store>,
+) -> Result<ImportReport, String> {
+    import_command(None, ticket, app, store.inner().clone()).await
+}
+#[tauri::command]
+async fn import_state(store: State<'_, Store>) -> Result<crate::import_jobs::ImportState, String> {
+    session_op(store.inner().clone(), |s| s.import_state()).await
+}
+#[tauri::command]
+async fn pause_import(store: State<'_, Store>) -> Result<(), String> {
+    session_op(store.inner().clone(), |s| s.pause_import()).await
+}
+#[tauri::command]
+async fn discard_import(store: State<'_, Store>) -> Result<(), String> {
+    session_op(store.inner().clone(), |s| s.discard_import()).await
 }
 #[tauri::command]
 async fn list_conversations(
@@ -629,6 +666,10 @@ pub fn run() {
             lock_vault,
             touch_vault,
             import_zip,
+            finish_import,
+            import_state,
+            pause_import,
+            discard_import,
             list_conversations,
             get_messages,
             get_message_page,

@@ -274,3 +274,58 @@ test("backend library pages expose complete counts and safe form navigation", ()
   assert.match(error, /Retry/);
   assert.doesNotMatch(error, /late-match/);
 });
+
+test("resumable import states distinguish encrypted preparation from published history", () => {
+  const Progress = component("ImportProgress").default;
+  const view = (state, busy = false) =>
+    renderToStaticMarkup(
+      React.createElement(Progress, {
+        state,
+        busy,
+        onResume() {},
+        async onPause() {},
+        async onDiscard() {},
+      }),
+    );
+  assert.equal(view(null), "");
+  const paused = view({
+    checkpoint: { label: "fictional <script>.zip", saved: 20, total: 45 },
+    running: false,
+    phase: "paused",
+  });
+  assert.match(paused, /Choose ZIP to resume/);
+  assert.match(paused, /20 of 45 conversations safely prepared/);
+  assert.match(paused, /Nothing from this import is searchable or shared/);
+  assert.match(paused, /aria-label="Conversations safely prepared"/);
+  assert.doesNotMatch(paused, /<script>/);
+  const ready = view({
+    checkpoint: { label: "fictional.zip", saved: 45, total: 45 },
+    running: false,
+    phase: "paused",
+  });
+  assert.match(ready, /Finish import/);
+  assert.doesNotMatch(ready, /Choose ZIP to resume/);
+});
+
+test("import status offers pause while preparing and explains the final save boundary", () => {
+  const Progress = component("ImportProgress").default;
+  const view = (phase) =>
+    renderToStaticMarkup(
+      React.createElement(Progress, {
+        state: {
+          checkpoint: { label: "fictional.zip", saved: 20, total: 45 },
+          running: true,
+          phase,
+        },
+        busy: true,
+        onResume() {},
+        async onPause() {},
+        async onDiscard() {},
+      }),
+    );
+  assert.match(view("preparing"), /Preparing your import/);
+  assert.match(view("preparing"), /Pause import/);
+  assert.match(view("saving"), /Saving your archive/);
+  assert.match(view("saving"), /disabled=""/);
+  assert.match(view("saving"), /final archive save must finish/);
+});

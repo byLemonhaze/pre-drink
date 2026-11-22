@@ -45,6 +45,7 @@ pub struct ClientConnection {
 
 pub struct Session {
     pub vault: Option<Vault>,
+    pub(crate) import_run: Option<crate::import_jobs::ImportRun>,
     pub(crate) successful_clients: HashSet<String>,
     pub(crate) pending_replacement: Option<crate::lifecycle::PendingReplacement>,
     pub(crate) backup_receipt: Option<crate::retained_vaults::BackupReceipt>,
@@ -61,6 +62,7 @@ impl Session {
     pub fn new(directory: PathBuf) -> Self {
         Self {
             vault: None,
+            import_run: None,
             successful_clients: HashSet::new(),
             pending_replacement: None,
             backup_receipt: None,
@@ -113,6 +115,9 @@ impl Session {
         })
     }
     pub fn lock(&mut self) {
+        if let Some(run) = self.import_run.take() {
+            run.cancel();
+        }
         self.agent_session = None;
         self.successful_clients.clear();
         self.backup_receipt = None;

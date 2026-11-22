@@ -3,6 +3,7 @@ use crate::{
     privacy::is_sensitive,
 };
 use serde_json::{Map, Value};
+use sha2::{Digest, Sha256};
 use std::{
     collections::{HashMap, HashSet},
     fs::File,
@@ -26,9 +27,17 @@ pub fn read_export_zip(path: &Path) -> Result<(Vec<ParsedConversation>, ImportRe
     read_archive(file)
 }
 
-pub fn read_archive<R: Read + Seek>(
+/// Parsed JSON is transient; normalized checkpoints are stored only in SQLCipher.
+pub(crate) struct PreparedExport {
+    pub fingerprint: String,
+    pub documents: Vec<(Value, bool)>,
+    pub total: usize,
+}
+
+pub(crate) fn prepare_archive<R: Read + Seek>(
     reader: R,
-) -> Result<(Vec<ParsedConversation>, ImportReport), String> {
+    mut check: impl FnMut() -> Result<(), String>,
+) -> Result<PreparedExport, String> {
     let mut archive =
         zip::ZipArchive::new(reader).map_err(|_| "This file isn't a readable ZIP archive.")?;
     if archive.len() > MAX_ENTRIES {
@@ -37,6 +46,7 @@ pub fn read_archive<R: Read + Seek>(
     let mut entries = Vec::new();
     let mut total = 0u64;
     for index in 0..archive.len() {
+        check()?;
         let entry = archive
             .by_index(index)
             .map_err(|_| "Couldn't read a ZIP entry.")?;
@@ -60,48 +70,95 @@ pub fn read_archive<R: Read + Seek>(
     if entries.is_empty() {
         return Err("No supported conversation file found. Choose an official ChatGPT, Claude or Grok export ZIP.".into());
     }
+    let mut documents = Vec::new();
+    let mut digest = Sha256::new();
+    // Bump when normalization/checkpoint semantics change.
+    digest.update(b"pre-drink-normalized-import-v1");
+    let mut read_bytes = 0;
+    let mut count = 0;
+    for (index, grok) in entries {
+        check()?;
+        let mut entry = archive
+            .by_index(index)
+            .map_err(|_| "Couldn't read conversation data.")?;
+        let mut bytes = Vec::new();
+        let mut chunk = [0u8; 65536];
+        loop {
+            check()?;
+            let n = entry
+                .read(&mut chunk)
+                .map_err(|_| "Couldn't decompress conversation data.")?;
+            if n == 0 {
+                break;
+            }
+            read_bytes += n as u64;
+            if read_bytes > MAX_JSON_BYTES {
+                return Err("The conversation JSON exceeds the 256 MB import limit.".into());
+            }
+            bytes.extend_from_slice(&chunk[..n]);
+        }
+        digest.update([u8::from(grok)]);
+        digest.update((bytes.len() as u64).to_be_bytes());
+        digest.update(&bytes);
+        let data: Value = serde_json::from_slice(&bytes)
+            .map_err(|_| "The export contains invalid conversation JSON. Nothing was imported.")?;
+        check()?;
+        count += export_conversations(&data, grok)?.len();
+        documents.push((data, grok));
+    }
+    Ok(PreparedExport {
+        fingerprint: hex::encode(digest.finalize()),
+        documents,
+        total: count,
+    })
+}
+
+pub(crate) fn export_conversations(data: &Value, grok: bool) -> Result<&Vec<Value>, String> {
+    if grok {
+        data.get("conversations")
+            .and_then(Value::as_array)
+            .ok_or_else(|| {
+                "Expected Grok's account conversations array. Nothing was imported.".into()
+            })
+    } else {
+        data.as_array().ok_or_else(|| {
+            "Expected a ChatGPT or Claude conversations array. Nothing was imported.".into()
+        })
+    }
+}
+
+pub(crate) fn parse_export_conversation(
+    conversation: &Value,
+    grok: bool,
+    report: &mut ImportReport,
+) -> Result<ParsedConversation, String> {
+    if grok {
+        crate::provider_import::parse_grok(conversation, report)
+    } else if conversation.get("mapping").is_some() && conversation.get("chat_messages").is_none() {
+        parse_conversation(conversation, report)
+    } else if conversation.get("chat_messages").is_some() && conversation.get("mapping").is_none() {
+        crate::provider_import::parse_claude(conversation, report)
+    } else {
+        Err("Unknown or ambiguous conversation format. Nothing was imported.".into())
+    }
+}
+
+pub(crate) fn import_warnings(report: &mut ImportReport) {
+    if report.skipped_messages > 0 {
+        report.warnings.push(format!("{} hidden, tool, system, or non-text messages were not added to the reader. Original JSON is retained locally; attachments are not imported.", report.skipped_messages));
+    }
+}
+
+pub fn read_archive<R: Read + Seek>(
+    reader: R,
+) -> Result<(Vec<ParsedConversation>, ImportReport), String> {
+    let prepared = prepare_archive(reader, || Ok(()))?;
     let mut result = Vec::new();
     let mut report = ImportReport::default();
     let mut seen = HashSet::new();
-    let mut read_bytes = 0;
-    for (index, grok) in entries {
-        let mut bytes = Vec::new();
-        archive
-            .by_index(index)
-            .map_err(|_| "Couldn't read conversation data.")?
-            .take(MAX_JSON_BYTES - read_bytes + 1)
-            .read_to_end(&mut bytes)
-            .map_err(|_| "Couldn't decompress conversation data.")?;
-        read_bytes += bytes.len() as u64;
-        if read_bytes > MAX_JSON_BYTES {
-            return Err("The conversation JSON exceeds the 256 MB import limit.".into());
-        }
-        let data: Value = serde_json::from_slice(&bytes)
-            .map_err(|_| "The export contains invalid conversation JSON. Nothing was imported.")?;
-        let conversations = if grok {
-            data.get("conversations")
-                .and_then(Value::as_array)
-                .ok_or("Expected Grok's account conversations array. Nothing was imported.")?
-        } else {
-            data.as_array()
-                .ok_or("Expected a ChatGPT or Claude conversations array. Nothing was imported.")?
-        };
-        for conversation in conversations {
-            let parsed = if grok {
-                crate::provider_import::parse_grok(conversation, &mut report)?
-            } else if conversation.get("mapping").is_some()
-                && conversation.get("chat_messages").is_none()
-            {
-                parse_conversation(conversation, &mut report)?
-            } else if conversation.get("chat_messages").is_some()
-                && conversation.get("mapping").is_none()
-            {
-                crate::provider_import::parse_claude(conversation, &mut report)?
-            } else {
-                return Err(
-                    "Unknown or ambiguous conversation format. Nothing was imported.".into(),
-                );
-            };
+    for (data, grok) in &prepared.documents {
+        for conversation in export_conversations(data, *grok)? {
+            let parsed = parse_export_conversation(conversation, *grok, &mut report)?;
             if !seen.insert(parsed.id.clone()) {
                 return Err(
                     "The ZIP contains duplicate conversation IDs. Nothing was imported.".into(),
@@ -112,9 +169,7 @@ pub fn read_archive<R: Read + Seek>(
         }
     }
     report.conversations = result.len();
-    if report.skipped_messages > 0 {
-        report.warnings.push(format!("{} hidden, tool, system, or non-text messages were not added to the reader. Original JSON is retained locally; attachments are not imported.", report.skipped_messages));
-    }
+    import_warnings(&mut report);
     Ok((result, report))
 }
 

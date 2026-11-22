@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize)]
 pub struct Conversation {
@@ -13,7 +13,7 @@ pub struct Conversation {
     pub preview: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Message {
     pub id: String,
     pub conversation_id: String,
@@ -27,7 +27,7 @@ pub struct Message {
     pub position: i64,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ParsedConversation {
     pub platform: String,
     pub id: String,

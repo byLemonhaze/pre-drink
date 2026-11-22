@@ -1,8 +1,10 @@
 import ThemeSwitch from "./ThemeSwitch";
+import ImportProgress, { type ImportState } from "./ImportProgress";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke, isTauri } from "@tauri-apps/api/core";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { open } from "@tauri-apps/plugin-dialog";
+import { listen } from "@tauri-apps/api/event";
 import PagedConversation from "./PagedConversation";
 import {
   ArrowDownToLine,
@@ -101,11 +103,81 @@ function App({
   const [more, setMore] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [importState, setImportState] = useState<ImportState | null>(null);
+  const importViewActive = useRef(true);
+  const activeImportTicket = useRef<string | null>(null);
+  const [importPhase, setImportPhase] = useState<ImportState["phase"] | null>(
+    null,
+  );
+  useEffect(() => {
+    importViewActive.current = true;
+    if (!native) return;
+    let disposed = false;
+    let stop: (() => void) | undefined;
+    void listen<{ ticket: string; phase: ImportState["phase"] }>(
+      "import-phase",
+      (event) => {
+        if (!disposed && activeImportTicket.current === event.payload.ticket)
+          setImportPhase(event.payload.phase);
+      },
+    )
+      .then((unlisten) => {
+        if (disposed) unlisten();
+        else stop = unlisten;
+      })
+      .catch(() => {});
+    return () => {
+      disposed = true;
+      importViewActive.current = false;
+      stop?.();
+      activeImportTicket.current = null;
+    };
+  }, []);
+  const importRefreshGeneration = useRef(0);
+  const refreshImport = useCallback(async () => {
+    if (!native) return;
+    const request = ++importRefreshGeneration.current;
+    const next = await invoke<ImportState>("import_state");
+    if (request === importRefreshGeneration.current) setImportState(next);
+  }, []);
+  useEffect(() => {
+    if (!native) return;
+    let disposed = false;
+    let pending = false;
+    const refresh = async () => {
+      if (pending) return;
+      pending = true;
+      const request = ++importRefreshGeneration.current;
+      try {
+        const next = await invoke<ImportState>("import_state");
+        if (!disposed && request === importRefreshGeneration.current)
+          setImportState(next);
+      } catch {
+        /* Locking removes this view. */
+      } finally {
+        pending = false;
+      }
+    };
+    void refresh();
+    const timer = window.setInterval(() => void refresh(), 1000);
+    return () => {
+      disposed = true;
+      window.clearInterval(timer);
+    };
+  }, []);
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState("");
   const [report, setReport] = useState<ImportReport | null>(null);
   const [revision, setRevision] = useState(0);
   const importLock = useRef(false);
+  const workspace = useRef<HTMLElement>(null);
+  const focusAfterDiscard = useRef(false);
+  useEffect(() => {
+    if (focusAfterDiscard.current && !importState?.checkpoint) {
+      focusAfterDiscard.current = false;
+      workspace.current?.focus();
+    }
+  }, [importState]);
   const listGeneration = useRef(0);
   const selectedConversation = conversations.find((c) => c.id === selected);
 
@@ -162,47 +234,62 @@ function App({
     };
   }, [query, restricted, revision]);
 
-  const importFiles = useCallback(async (paths: string[]) => {
-    if (importLock.current || !paths.length) return;
-    importLock.current = true;
-    setBusy(true);
-    setDragging(false);
-    setError("");
-    setReport(null);
-    const total: ImportReport = {
-      conversations: 0,
-      messages: 0,
-      new_conversations: 0,
-      updated_conversations: 0,
-      skipped_messages: 0,
-      warnings: [],
-    };
-    let completed = 0;
-    try {
-      for (const path of paths) {
-        const next = await invoke<ImportReport>("import_zip", { path });
-        total.conversations += next.conversations;
-        total.messages += next.messages;
-        total.new_conversations += next.new_conversations;
-        total.updated_conversations += next.updated_conversations;
-        total.skipped_messages += next.skipped_messages;
-        total.warnings.push(...next.warnings);
-        completed++;
+  const importFiles = useCallback(
+    async (paths: string[]) => {
+      if (importLock.current || !paths.length) return;
+      importLock.current = true;
+      setBusy(true);
+      setDragging(false);
+      setError("");
+      setReport(null);
+      const total: ImportReport = {
+        conversations: 0,
+        messages: 0,
+        new_conversations: 0,
+        updated_conversations: 0,
+        skipped_messages: 0,
+        warnings: [],
+      };
+      let completed = 0;
+      try {
+        for (const path of paths) {
+          if (!importViewActive.current) break;
+          const ticket = crypto.randomUUID();
+          activeImportTicket.current = ticket;
+          setImportPhase("reading");
+          const next = await invoke<ImportReport>("import_zip", {
+            path,
+            ticket,
+          });
+          total.conversations += next.conversations;
+          total.messages += next.messages;
+          total.new_conversations += next.new_conversations;
+          total.updated_conversations += next.updated_conversations;
+          total.skipped_messages += next.skipped_messages;
+          total.warnings.push(...next.warnings);
+          completed++;
+        }
+        setReport(total);
+        setPage("library");
+        setQuery("");
+      } catch (e) {
+        if (completed) setReport(total);
+        setError(
+          String(e).startsWith("Import paused.")
+            ? ""
+            : `${String(e)}${completed ? ` ${completed} earlier ZIP(s) were imported successfully.` : ""}`,
+        );
+      } finally {
+        setRevision((n) => n + 1);
+        setBusy(false);
+        importLock.current = false;
+        activeImportTicket.current = null;
+        setImportPhase(null);
+        void refreshImport().catch(() => {});
       }
-      setReport(total);
-      setPage("library");
-      setQuery("");
-    } catch (e) {
-      if (completed) setReport(total);
-      setError(
-        `${String(e)}${completed ? ` ${completed} earlier ZIP(s) were imported successfully.` : ""}`,
-      );
-    } finally {
-      setRevision((n) => n + 1);
-      setBusy(false);
-      importLock.current = false;
-    }
-  }, []);
+    },
+    [refreshImport],
+  );
 
   useEffect(() => {
     if (!native) return;
@@ -242,6 +329,33 @@ function App({
       if (paths) await importFiles(Array.isArray(paths) ? paths : [paths]);
     } catch (e) {
       setError(String(e));
+    }
+  }
+
+  async function resumeImport(ready: boolean) {
+    if (!ready) {
+      await pickZip();
+      return;
+    }
+    if (importLock.current) return;
+    importLock.current = true;
+    setBusy(true);
+    setError("");
+    setReport(null);
+    try {
+      const ticket = crypto.randomUUID();
+      activeImportTicket.current = ticket;
+      setImportPhase("preparing");
+      setReport(await invoke<ImportReport>("finish_import", { ticket }));
+      setRevision((n) => n + 1);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      importLock.current = false;
+      activeImportTicket.current = null;
+      setImportPhase(null);
+      setBusy(false);
+      await refreshImport().catch(() => {});
     }
   }
 
@@ -317,6 +431,12 @@ function App({
           button.focus({ preventScroll: true });
       }}
     >
+      <button
+        className="skip-navigation"
+        onClick={() => workspace.current?.focus()}
+      >
+        Skip to workspace
+      </button>
       <aside className="sidebar">
         <div className="brand">
           <img className="app-mark" src="/favicon.svg" alt="" />
@@ -400,7 +520,7 @@ function App({
         </div>
       </aside>
 
-      <main>
+      <main ref={workspace} tabIndex={-1} aria-label="Vault workspace">
         <header className="topbar">
           <div className="breadcrumb">
             Your vault
@@ -440,6 +560,29 @@ function App({
             sensitive flags in Settings.
           </div>
         )}
+        <ImportProgress
+          state={
+            importPhase
+              ? {
+                  checkpoint: importState?.checkpoint ?? null,
+                  running: true,
+                  phase: importPhase,
+                }
+              : importState
+          }
+          busy={busy}
+          onResume={(ready) => void resumeImport(ready)}
+          onPause={async () => {
+            await invoke("pause_import");
+            await refreshImport();
+          }}
+          onDiscard={async () => {
+            await invoke("discard_import");
+            focusAfterDiscard.current = true;
+            await refreshImport();
+            setError("");
+          }}
+        />
         {!native && (
           <div className="preview-banner">
             <CircleHelp size={16} />
@@ -965,14 +1108,6 @@ function App({
           <FileArchive size={48} />
           <h2>Drop official export</h2>
           <p>Drop your official ChatGPT, Claude or Grok export ZIP.</p>
-        </div>
-      )}
-      {busy && (
-        <div className="import-progress" role="status">
-          <LoaderCircle className="spin" size={18} />
-          <span>
-            Importing your export locally… Large archives can take a while.
-          </span>
         </div>
       )}
     </div>

@@ -2,9 +2,15 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
-## Latest import, upgrade and accessibility review — 2026-11-22
+## Resumable import review — 2026-11-22
 
-Review `examples/native_upgrade_fixture.rs` and the newest NATIVE_WALKTHROUGH section for fictional lock/quit interruption, complete retry, targeted upgrade notices and keyboard-only review. The fixture reconstructs an older-classifier/schema-6 state and explicitly restores historical approvals after the current evidence trigger fires; it never opens an owner vault. Keep this narrower than acceptance of all historical schemas. UI changes improve focus contrast, mark current navigation and describe import activity accurately; they do not change encryption, grants or publication. Percentage/cancel/resume UI, VoiceOver listening and representative-data lifecycle checks remain open.
+Review `import_jobs.rs`, `import_jobs.sql`, the schema-8 migration and `import_job_tests.rs` before release. Staging/cursor commits must be atomic, absent from archive/search/MCP, included in encrypted backups, and cancelled by lock/generation changes. Final archive publication and staging deletion must commit together. Test mismatched ZIPs, renamed ZIPs, duplicate IDs across batches, retry after capacity errors, and finish without a ZIP with current privacy checks. Review future staged-payload migrations explicitly: changing the ZIP fingerprint contract does not invalidate fully prepared payloads.
+
+Review `ImportProgress.tsx` and the active-ticket phase events for keyboard focus, accurate prepared counts, late pause handling and no stale response after lock. Native pause/restart/wrong-ZIP/renamed-ZIP/ready-without-ZIP paths have fictional evidence. A late pause can arrive after final saving begins and cannot undo that transaction. VoiceOver was briefly enabled with owner permission and restored off, but spoken feedback could not be inspected; it remains an open manual audit. See IMPORTS, NATIVE_WALKTHROUGH and VALIDATION for limits.
+
+## Earlier import, upgrade and accessibility review — 2026-11-22
+
+Review `examples/native_upgrade_fixture.rs` and the newest NATIVE_WALKTHROUGH section for fictional lock/quit interruption, complete retry, targeted upgrade notices and keyboard-only review. The fixture reconstructs an older-classifier/schema-6 state and explicitly restores historical approvals after the current evidence trigger fires; it never opens an owner vault. Keep this narrower than acceptance of all historical schemas. UI changes improve focus contrast, mark current navigation and describe import activity accurately; they do not change encryption, grants or publication. This earlier pass preceded resumable imports; see the newer section above. VoiceOver listening and representative-data lifecycle checks remain open.
 
 ## Earlier native review targets — 2026-11-22
 

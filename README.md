@@ -6,6 +6,8 @@ A free, MIT-licensed macOS memory manager: provider-private histories and workin
 
 **Cloud curation is optional.** Import, search, manual memory editing, briefs, selected exports and backups work offline without a model, account or API key. You can separately authorize a connected agent to curate its own provider’s history. Local-model curation is planned, not implemented.
 
+Official imports now support encrypted pause/resume checkpoints across lock and restart. Choose the same ZIP to continue preparation, or finish without it once preparation is complete. Nothing from an unfinished import reaches search or agents. See [resumable imports](docs/IMPORTS.md).
+
 ## From private history to shared memory
 
 | Layer                    | Purpose                                                            | Access                                                                      |
