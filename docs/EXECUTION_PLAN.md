@@ -167,3 +167,7 @@ The ignored receipt contains a digest of every tracked working file (including m
 Schema 8 now retains encrypted preparation checkpoints, supports pause/restart and matching-ZIP resume, and finishes fully prepared work without the ZIP. Final archive publication remains atomic; unfinished work is unavailable to search and agents. Native fictional checks cover persisted progress, mismatch refusal, renamed-file resume, duplicate-free refresh and ready-state completion. Keyboard work adds a workspace skip control, named progress, resume focus and discard-dialog containment. VoiceOver was restored to its original off state after a tool timeout; audible announcement review remains open.
 
 Next zero-cost gates are independent schema-8/source-boundary review, broader representative-data lifecycle and historical-upgrade acceptance, and a human screen-reader pass. Preserve the final-transaction and large-record limits documented in IMPORTS. No paid model calls, Actions runs or Apple enrollment are part of this batch.
+
+## Limited-beta readiness — 2026-11-22
+
+See [RELEASE_READINESS](RELEASE_READINESS.md) for a bounded two-to-three-round estimate, evidence by feature and the distinction between personal use, limited beta and public distribution. The estimate includes review, remaining native acceptance and fresh-user rehearsal; new findings can add work. This self-review is not an independent audit. Keep Apple distribution last and retain the zero-extra-cost constraint.

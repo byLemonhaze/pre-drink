@@ -61,6 +61,276 @@ fn run_token() -> ImportRun {
     }
 }
 
+fn client_request(client: &crate::agents::NewClient, tool: &str) -> crate::agents::AgentRequest {
+    crate::agents::AgentRequest {
+        client_id: client.client.id.clone(),
+        token: client.token.clone(),
+        tool: tool.into(),
+        query: "garden".into(),
+        limit: Some(50),
+        conversation_id: String::new(),
+        curation: None,
+    }
+}
+
+#[test]
+fn wiped_live_vault_restores_paused_import_and_resumes_without_old_client_access() {
+    const BACKUP_PASSWORD: &str = "fictional checkpoint backup phrase";
+    let root = tempfile::tempdir().unwrap();
+    let live = root.path().join("disposable-live");
+    std::fs::create_dir(&live).unwrap();
+    let input = root.path().join("fictional.zip");
+    let backup = root.path().join("backup.sqlite3");
+    zip(&input, &json!((0..45).map(tree).collect::<Vec<_>>()));
+    let s = store(&live, true);
+    let client = s
+        .lock()
+        .unwrap()
+        .access()
+        .unwrap()
+        .create_client("Fictional prior client", true)
+        .unwrap();
+    ACTION.with(|a| a.set(Some("pause")));
+    assert!(run_import(s.clone(), Some(input.clone())).is_err());
+    {
+        let mut session = s.lock().unwrap();
+        session
+            .backup_with_receipt(&backup, BACKUP_PASSWORD)
+            .unwrap();
+        session.lock();
+    }
+    drop(s);
+    let backup_bytes = std::fs::read(&backup).unwrap();
+    std::fs::remove_dir_all(&live).unwrap();
+    std::fs::create_dir(&live).unwrap();
+    let mut restored = Session::new(live.clone());
+    let review = restored.prepare_restore(&backup, BACKUP_PASSWORD).unwrap();
+    assert_eq!(review.conversations, 0);
+    assert_eq!(review.clients_to_remove, 1);
+    restored
+        .apply_replacement(&review.review_id, BACKUP_PASSWORD)
+        .unwrap();
+    drop(restored);
+    let mut restored = Session::new(live);
+    restored.unlock(BACKUP_PASSWORD, false, false).unwrap();
+    let state = restored.import_state().unwrap();
+    assert!(!state.running);
+    assert_eq!(state.checkpoint.unwrap().saved, 20);
+    assert!(!restored.sharing);
+    assert!(restored
+        .access()
+        .unwrap()
+        .agent_call(&client_request(&client, "search_conversations"))
+        .is_err());
+    let s = Arc::new(Mutex::new(restored));
+    PARSED.with(|p| p.set(0));
+    let result = run_import(s.clone(), Some(input)).unwrap();
+    assert_eq!((result.new_conversations, result.messages), (45, 45));
+    assert_eq!(PARSED.with(|p| p.get()), 25);
+    assert!(s
+        .lock()
+        .unwrap()
+        .import_state()
+        .unwrap()
+        .checkpoint
+        .is_none());
+    s.lock().unwrap().access().unwrap().verify().unwrap();
+    assert_eq!(std::fs::read(backup).unwrap(), backup_bytes);
+}
+
+#[test]
+fn password_rotation_preserves_pending_import_but_never_resumes_it_or_clients() {
+    const NEXT: &str = "fictional rotated checkpoint phrase";
+    let root = tempfile::tempdir().unwrap();
+    let input = root.path().join("fictional.zip");
+    zip(&input, &json!((0..25).map(tree).collect::<Vec<_>>()));
+    let s = store(root.path(), true);
+    let client = s
+        .lock()
+        .unwrap()
+        .access()
+        .unwrap()
+        .create_client("Fictional old client", true)
+        .unwrap();
+    ACTION.with(|a| a.set(Some("pause")));
+    assert!(run_import(s.clone(), Some(input.clone())).is_err());
+    {
+        let mut session = s.lock().unwrap();
+        let original = session.path().unwrap();
+        let review = session.prepare_password_change(PASSWORD, NEXT).unwrap();
+        session.apply_replacement(&review.review_id, NEXT).unwrap();
+        assert!(session.vault.is_none());
+        assert!(session.unlock(PASSWORD, false, false).is_err());
+        session.unlock(NEXT, false, false).unwrap();
+        let state = session.import_state().unwrap();
+        assert!(!state.running);
+        assert_eq!(state.checkpoint.unwrap().saved, 20);
+        assert!(!session.sharing);
+        assert!(session
+            .access()
+            .unwrap()
+            .agent_call(&client_request(&client, "get_projects"))
+            .is_err());
+        // The retained old copy is still recoverable only with its original password.
+        assert_eq!(
+            Vault::open(&original, PASSWORD)
+                .unwrap()
+                .import_checkpoint()
+                .unwrap()
+                .unwrap()
+                .saved,
+            20
+        );
+    }
+    assert!(run_import(s.clone(), None)
+        .unwrap_err()
+        .contains("original ZIP"));
+    assert_eq!(
+        run_import(s.clone(), Some(input))
+            .unwrap()
+            .new_conversations,
+        25
+    );
+    assert!(s
+        .lock()
+        .unwrap()
+        .import_state()
+        .unwrap()
+        .checkpoint
+        .is_none());
+}
+
+#[test]
+fn resumed_mixed_provider_import_keeps_preparation_private_and_provider_walls_intact() {
+    use crate::curation::CurationOperation;
+    let root = tempfile::tempdir().unwrap();
+    let path = root.path().join("mixed-fictional.zip");
+    let claude: Value = serde_json::from_str(include_str!(
+        "../tests/fixtures/claude/messages-v1/garden.input.json"
+    ))
+    .unwrap();
+    let grok: Value = serde_json::from_str(include_str!(
+        "../tests/fixtures/grok/account-v1/garden.input.json"
+    ))
+    .unwrap();
+    let mut writer = zip::ZipWriter::new(File::create(&path).unwrap());
+    for (name, data) in [
+        (
+            "chatgpt/conversations.json",
+            json!((0..8).map(tree).collect::<Vec<_>>()),
+        ),
+        (
+            "claude/conversations.json",
+            json!((0..8)
+                .map(|i| {
+                    let mut c = claude[0].clone();
+                    c["uuid"] = json!(format!("fictional-{i}"));
+                    c
+                })
+                .collect::<Vec<_>>()),
+        ),
+        (
+            "prod-grok-backend.json",
+            json!({"conversations":(0..8).map(|i| {let mut c=grok["conversations"][0].clone();c["conversation"]["id"]=json!(format!("fictional-{i}"));c}).collect::<Vec<_>>()}),
+        ),
+    ] {
+        writer
+            .start_file(name, zip::write::SimpleFileOptions::default())
+            .unwrap();
+        writer.write_all(data.to_string().as_bytes()).unwrap();
+    }
+    writer.finish().unwrap();
+    let s = store(root.path(), true);
+    let clients = {
+        let mut session = s.lock().unwrap();
+        ["chatgpt", "claude", "grok"].map(|p| {
+            session
+                .access()
+                .unwrap()
+                .create_scoped_client("Fictional curator", Some(p), true)
+                .unwrap()
+        })
+    };
+    ACTION.with(|a| a.set(Some("pause")));
+    assert!(run_import(s.clone(), Some(path.clone())).is_err());
+    {
+        let mut session = s.lock().unwrap();
+        assert_eq!(
+            session.import_state().unwrap().checkpoint.unwrap().saved,
+            20
+        );
+        let v = session.access().unwrap();
+        for client in &clients {
+            assert_eq!(
+                v.agent_call(&client_request(client, "search_conversations"))
+                    .unwrap(),
+                json!([])
+            );
+            let mut r = client_request(client, "curate_memory");
+            r.curation = Some(CurationOperation::ListSources {
+                after: None,
+                limit: Some(50),
+            });
+            assert_eq!(v.agent_call(&r).unwrap()["sources"], json!([]));
+            assert_eq!(
+                v.agent_call(&client_request(client, "get_projects"))
+                    .unwrap(),
+                json!([])
+            );
+        }
+    }
+    let report = run_import(s.clone(), Some(path)).unwrap();
+    assert_eq!(
+        (
+            report.new_conversations,
+            report.messages,
+            report.skipped_messages
+        ),
+        (24, 48, 24)
+    );
+    let mut session = s.lock().unwrap();
+    let v = session.access().unwrap();
+    let mut source_ids = Vec::new();
+    for client in &clients {
+        let matches = v
+            .agent_call(&client_request(client, "search_conversations"))
+            .unwrap();
+        assert_eq!(matches.as_array().unwrap().len(), 8);
+        assert!(matches
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|c| c["platform"].as_str() == client.client.provider.as_deref()));
+        let mut r = client_request(client, "curate_memory");
+        r.curation = Some(CurationOperation::ListSources {
+            after: None,
+            limit: Some(50),
+        });
+        source_ids.push(
+            v.agent_call(&r).unwrap()["sources"][0]["message_id"]
+                .as_str()
+                .unwrap()
+                .to_owned(),
+        );
+    }
+    for (i, client) in clients.iter().enumerate() {
+        for (j, id) in source_ids.iter().enumerate() {
+            let mut r = client_request(client, "curate_memory");
+            r.curation = Some(CurationOperation::ReadSource {
+                message_id: id.clone(),
+                offset: None,
+            });
+            assert_eq!(v.agent_call(&r).is_ok(), i == j);
+        }
+        assert_eq!(
+            v.agent_call(&client_request(client, "get_projects"))
+                .unwrap(),
+            json!([])
+        );
+    }
+    v.verify().unwrap();
+}
+
 #[test]
 fn paused_checkpoints_survive_restart_backup_and_resume_without_reparsing_prefix() {
     let root = tempfile::tempdir().unwrap();

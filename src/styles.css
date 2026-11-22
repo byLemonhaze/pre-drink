@@ -811,7 +811,7 @@ h1 {
   padding: 10px;
   color: var(--text);
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-line);
   border-radius: 4px;
 }
 .page-controls {
@@ -1059,9 +1059,9 @@ h1 {
   margin-top: 6px;
 }
 .switch {
-  border: 0;
+  border: 1px solid var(--control-line);
   border-radius: 20px;
-  padding: 3px;
+  padding: 2px;
   width: 36px;
   min-width: 36px;
   height: 21px;
@@ -1074,6 +1074,7 @@ h1 {
   height: 15px;
   background: var(--switch-thumb);
   border-radius: 50%;
+  border: 1px solid var(--control-line);
   box-shadow: 0 1px 2px var(--shadow);
 }
 .switch.on {
@@ -1437,7 +1438,7 @@ h1,
 }
 .search {
   background: var(--field);
-  border-color: var(--line);
+  border-color: var(--control-line);
   border-radius: 4px;
   padding: 9px 11px;
 }
@@ -1657,7 +1658,7 @@ h1,
 }
 .zip-label {
   background: var(--accent);
-  color: var(--primary-text);
+  color: var(--accent-ink);
   transform: none;
   border-radius: 2px;
   font-family: var(--font-mono);
@@ -2033,7 +2034,7 @@ h1,
   gap: 12px;
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-line);
   border-radius: 6px;
   background: var(--canvas);
   color: var(--text);

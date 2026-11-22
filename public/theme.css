@@ -10,7 +10,9 @@
   --subtle-text: #574e44;
   --line: #d9cbb8;
   --strong-line: #b5a38b;
+  --control-line: #88765f;
   --accent: #ff742b;
+  --accent-ink: #17120f;
   --headline-accent: #cd4a0b;
   --accent-text: #a93d0a;
   --accent-soft: #ffebd7;
@@ -46,6 +48,7 @@
   --subtle-text: #bec7cc;
   --line: #34393b;
   --strong-line: #56646b;
+  --control-line: #77858b;
   --accent-text: #ff742b;
   --headline-accent: #ff742b;
   --accent-soft: #33231c;

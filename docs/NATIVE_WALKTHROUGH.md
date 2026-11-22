@@ -260,3 +260,9 @@ All inputs and storage in this pass were newly generated fictional data. No pers
 - With explicit owner permission, macOS VoiceOver was briefly switched from off to on. Its control connection timed out and no audible output was captured, so spoken labels/announcements are **not verified**. The switch was confirmed off again and System Settings was returned to its original General pane. No other global accessibility preferences changed.
 
 The fictional app was locked and quit, with process shutdown confirmed. No new model calls, paid services, remote workflows, password changes or permanent native deletions were performed. Physical power loss, all historical schemas, representative-data lifecycle and a complete human screen-reader pass remain outside this evidence.
+
+## 2026-11-22 — Control contrast and lock explanation
+
+Generated fresh fictional recovery storage and opened only the isolated debug app. At 980×640, inspected the light lock-screen password boundary/focus, light agent-session dropdown boundary, dark expanded dropdown with keyboard Escape returning focus, and rebuilt sharing-switch boundaries in both themes. Verified that the revised session explanation visibly states the final-import-save delay before lock completion. No agent session or connection was enabled. App-only screenshots were inspected transiently and not stored in the repository.
+
+Restored the fictional preview to light appearance, locked it and confirmed process shutdown. No global accessibility setting or personal vault was changed. This pass does not verify VoiceOver speech, the transient Saving state, all dialogs or full accessibility conformance.

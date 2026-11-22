@@ -36,7 +36,7 @@ body {
 }
 .startup-card button {
   padding: 12px 18px;
-  border: 1px solid #ff742b;
+  border: 1px solid var(--primary-line);
   border-radius: 5px;
   background: var(--primary-bg);
   color: var(--primary-text);
@@ -45,7 +45,7 @@ body {
   cursor: pointer;
 }
 .startup-card button:focus-visible {
-  outline: 2px solid #ff742b;
+  outline: 2px solid var(--accent-text);
   outline-offset: 4px;
 }
 

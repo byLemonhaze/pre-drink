@@ -145,3 +145,5 @@ Run `npm run verify:local` after staging new source files, then `npm run hooks:i
 Memory, briefs, sharing choices and brief-source selection request 25 complete items at a time. Search covers the full saved collection, including later pages; selected sharing items stay selected when you change pages or search. Individual large records and full-scan query performance still need further profiling.
 
 The local agent bridge and app both verify the connecting OS account before exchanging credentials. Scoped tokens and privacy/publication checks remain required. This is not model identity verification or protection from malware running as your own account. See [security](docs/SECURITY.md) and [validation](docs/VALIDATION.md).
+
+Current release gates and evidence: [Release readiness](docs/RELEASE_READINESS.md).

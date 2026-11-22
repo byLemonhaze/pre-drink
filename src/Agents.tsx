@@ -154,9 +154,10 @@ export default function Agents({
         )}
         <p className="fine-print">
           The vault locks when the chosen time ends. Locking or sleeping your
-          Mac ends every session immediately. Agents cannot extend it. Ending
-          sharing restores the normal 15-minute idle lock; use Lock vault to
-          lock immediately.
+          Mac ends every session. Agents cannot extend it. Ending sharing
+          restores the normal 15-minute idle lock; use Lock vault to lock now. A
+          final import save already in progress must finish or roll back before
+          locking completes.
         </p>
       </section>
       <section className="settings-card">

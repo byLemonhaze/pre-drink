@@ -436,7 +436,7 @@ form textarea,
 .memory-filters > input,
 .memory-filters > select {
   background: var(--field);
-  border-color: var(--line);
+  border-color: var(--control-line);
   border-radius: 3px;
   color: var(--text);
 }
@@ -647,7 +647,7 @@ dialog.editor-modal::backdrop {
   padding: 11px;
   background: var(--canvas);
   color: var(--text);
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-line);
   border-radius: 3px;
   font: inherit;
 }
@@ -950,7 +950,7 @@ dialog.editor-modal::backdrop {
   min-height: 150px;
   resize: vertical;
   padding: 12px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-line);
   border-radius: 3px;
   background: var(--field);
   color: var(--text);

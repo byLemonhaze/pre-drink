@@ -2,6 +2,12 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
+## Checkpoint recovery combinations and contrast — 2026-11-22
+
+New regressions restore a paused import after wiping disposable live storage, rotate the password while preparation is paused, and resume a mixed-provider ZIP. Verify that old client credentials remain denied, recovered preparation never automatically runs, shared retrieval remains empty without approval, and direct foreign-provider source reads remain blocked. See `import_job_tests.rs`. No runtime storage or authorization logic changed in this batch.
+
+Control borders now use separate contrast tokens in both themes, including text fields, dropdown triggers and sharing switches. Startup focus uses the theme's readable accent. Review the session explanation's final-save/lock limitation and the native evidence. Numeric color checks are not a full accessibility audit. RELEASE_READINESS separates this self-review from the outstanding independent review and human VoiceOver pass.
+
 ## Resumable import review — 2026-11-22
 
 Review `import_jobs.rs`, `import_jobs.sql`, the schema-8 migration and `import_job_tests.rs` before release. Staging/cursor commits must be atomic, absent from archive/search/MCP, included in encrypted backups, and cancelled by lock/generation changes. Final archive publication and staging deletion must commit together. Test mismatched ZIPs, renamed ZIPs, duplicate IDs across batches, retry after capacity errors, and finish without a ZIP with current privacy checks. Review future staged-payload migrations explicitly: changing the ZIP fingerprint contract does not invalidate fully prepared payloads.

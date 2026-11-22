@@ -10,6 +10,63 @@ import { renderToStaticMarkup } from "react-dom/server";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+test("light and dark controls retain readable text, boundaries and focus", () => {
+  const css = readFileSync(
+    new URL("../public/theme.css", import.meta.url),
+    "utf8",
+  );
+  const themes = [...css.matchAll(/\{([^}]+)\}/g)];
+  const colors = {};
+  const luminance = (hex) => {
+    const channels = [1, 3, 5].map((offset) => {
+      const value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
+      return value <= 0.04045
+        ? value / 12.92
+        : ((value + 0.055) / 1.055) ** 2.4;
+    });
+    return channels.reduce(
+      (sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i],
+      0,
+    );
+  };
+  function contrast(foreground, background, minimum, theme) {
+    assert.ok(
+      colors[foreground] && colors[background],
+      `Missing theme token ${foreground}/${background}`,
+    );
+    const [low, high] = [
+      luminance(colors[foreground]),
+      luminance(colors[background]),
+    ].sort((a, b) => a - b);
+    const ratio = (high + 0.05) / (low + 0.05);
+    assert.ok(
+      ratio >= minimum,
+      `${theme}: ${foreground}/${background} contrast ${ratio.toFixed(2)} < ${minimum}`,
+    );
+  }
+  for (const [i, block] of themes.entries()) {
+    Object.assign(
+      colors,
+      Object.fromEntries(
+        [...block[1].matchAll(/--([\w-]+):\s*(#[\da-f]{6});/g)].map((m) => [
+          m[1],
+          m[2],
+        ]),
+      ),
+    );
+    const theme = i ? "dark" : "light";
+    for (const background of ["canvas", "surface", "field", "raised"]) {
+      contrast("text", background, 4.5, theme);
+      contrast("muted", background, 4.5, theme);
+      contrast("control-line", background, 3, theme);
+      contrast("accent-text", background, 3, theme);
+    }
+    contrast("primary-text", "primary-bg", 4.5, theme);
+    contrast("control-line", "hover", 3, theme);
+    contrast("accent-ink", "accent", 4.5, theme);
+  }
+});
+
 // Render the actual components with React's server renderer. TypeScript is an
 // existing build dependency; no DOM substitute or extra test runtime is needed.
 const cache = new Map();
