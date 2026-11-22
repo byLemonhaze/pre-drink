@@ -1,0 +1,47 @@
+{
+  "purpose": "Exact historical DDL; all test records are separately invented. Never personal vault data.",
+  "files": [
+    {
+      "file": "base-v2.sql",
+      "commit": "20a8fc2f342f097a660a9dd7c982843539674e0b",
+      "source": "src-tauri/src/schema.sql",
+      "sha256": "84be82ac8ea5da2acf657d4d830a5cabbee33b803d08adc2439053aab2506c68"
+    },
+    {
+      "file": "base-v3.sql",
+      "commit": "589967e2adbc1577958e9e6387e8ed8b7497f3c2",
+      "source": "src-tauri/src/schema.sql",
+      "sha256": "4e2ede9ad0da69adf44ccf8075fc1e075c2e5f7bf3c139e92681fbae44e8060d"
+    },
+    {
+      "file": "base-v4.sql",
+      "commit": "2ed7241f4cc329eb719a23569ebea2173a620ebf",
+      "source": "src-tauri/src/schema.sql",
+      "sha256": "2a6c9392abfa8292db264905515bdad8c6dc78a363f0a12ee7005920cde0ddea"
+    },
+    {
+      "file": "curation-v4.sql",
+      "commit": "2ed7241f4cc329eb719a23569ebea2173a620ebf",
+      "source": "src-tauri/src/curation.sql",
+      "sha256": "1bdc9858cfa5d80e98f49e28a7297252c3a7591ef5a68d8c488f2954fbcc9de8"
+    },
+    {
+      "file": "curation-v6.sql",
+      "commit": "6be64eed6b19bfb209e354a8615f84bbb5665853",
+      "source": "src-tauri/src/curation.sql",
+      "sha256": "19b08f34466d165c338c9223c14b275e599f14a11d06da5d3b55c8040ecd7d1f"
+    },
+    {
+      "file": "curation-v7.sql",
+      "commit": "a818a4350904b864f2763821af44af0e0d5fda91",
+      "source": "src-tauri/src/curation.sql",
+      "sha256": "a7ba356c19ecd150d006e4cd4ba59d5fbd959edd220e02cb96dd77f2e31c54f5"
+    },
+    {
+      "file": "provider-v5.sql",
+      "commit": "b5b314a091372ab0475f957c653a742ce3340c28",
+      "source": "src-tauri/src/provider_migration.sql",
+      "sha256": "6154e585c797daad169d1c6dcd78808b157f0ec85018906fdc4ce77716fa17e4"
+    }
+  ]
+}

@@ -1,3 +1,4 @@
+import PrivacyNotice from "./PrivacyNotice";
 import ThemeSwitch from "./ThemeSwitch";
 import ImportProgress, { type ImportState } from "./ImportProgress";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -552,14 +553,7 @@ function App({
             Lock vault
           </button>
         </header>
-        {privacyUpdate.flagged > 0 && (
-          <div className="preview-banner" role="status">
-            Privacy rules added {privacyUpdate.flagged} restrictions when this
-            vault opened. {privacyUpdate.approvals_reset} linked approvals
-            returned to draft. Unrelated approvals were preserved. Review
-            sensitive flags in Settings.
-          </div>
-        )}
+        <PrivacyNotice update={privacyUpdate} />
         <ImportProgress
           state={
             importPhase

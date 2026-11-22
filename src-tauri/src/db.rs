@@ -72,6 +72,7 @@ impl Vault {
         connection
             .execute_batch(include_str!("schema.sql"))
             .map_err(|e| e.to_string())?;
+        let mut migration_update = crate::privacy_recheck::PrivacyUpdate::default();
         if version < 3 {
             // Reclassify existing vaults before any sharing can start. Keep old
             // restrictions; the new review contract requires explicit reapproval.
@@ -102,11 +103,15 @@ impl Vault {
                                     &format!("UPDATE {table} SET sensitive=1 WHERE id=?1"),
                                     [id],
                                 )
+                                .map(|changed| migration_update.flagged += changed)
                                 .map_err(|e| e.to_string())?;
                         }
                     }
                 }
-                connection.execute_batch("UPDATE conversations SET sensitive=1 WHERE EXISTS(SELECT 1 FROM messages WHERE conversation_id=conversations.id AND sensitive=1); UPDATE memory SET approved=0; UPDATE briefs SET approved=0; PRAGMA user_version=3;").map_err(|e| e.to_string())
+                migration_update.flagged += connection.execute("UPDATE conversations SET sensitive=1 WHERE sensitive=0 AND EXISTS(SELECT 1 FROM messages WHERE conversation_id=conversations.id AND sensitive=1)", []).map_err(|e| e.to_string())?;
+                migration_update.approvals_reset = connection.query_row("SELECT (SELECT count(*) FROM memory WHERE approved=1) + (SELECT count(*) FROM briefs WHERE approved=1)", [], |row| row.get::<_, i64>(0)).map_err(|e| e.to_string())? as usize;
+                migration_update.legacy_review_upgrade = matches!(version, 1 | 2);
+                connection.execute_batch("UPDATE memory SET approved=0; UPDATE briefs SET approved=0; PRAGMA user_version=3;").map_err(|e| e.to_string())
             })();
             if let Err(error) = refreshed {
                 let _ = connection.execute_batch("ROLLBACK;");
@@ -181,6 +186,11 @@ impl Vault {
             privacy_on_open: Default::default(),
         };
         vault.enforce_sensitive_rules()?;
+        // The legacy migration already applied these changes before the current
+        // classifier ran. Preserve its counts for the successful unlock notice.
+        vault.privacy_on_open.flagged += migration_update.flagged;
+        vault.privacy_on_open.approvals_reset += migration_update.approvals_reset;
+        vault.privacy_on_open.legacy_review_upgrade = migration_update.legacy_review_upgrade;
         Ok(vault)
     }
 

@@ -90,6 +90,7 @@ fn reset_approvals(connection: &Connection, affected: &[(String, String)]) -> Re
 pub struct PrivacyUpdate {
     pub flagged: usize,
     pub approvals_reset: usize,
+    pub legacy_review_upgrade: bool,
 }
 
 impl Vault {
@@ -214,6 +215,7 @@ impl Vault {
         self.privacy_on_open = PrivacyUpdate {
             flagged: changes.len(),
             approvals_reset: affected.len(),
+            legacy_review_upgrade: false,
         };
         Ok(())
     }

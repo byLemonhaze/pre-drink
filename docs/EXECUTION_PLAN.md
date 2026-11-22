@@ -175,3 +175,7 @@ See [RELEASE_READINESS](RELEASE_READINESS.md) for a bounded two-to-three-round e
 ## Latest local acceptance — Nov 22
 
 The final native Saving state and disabled Pause now have direct fictional observation at 10,000 conversations / 200,000 messages. Owner-assisted VoiceOver confirmed password/unlock labels; automatic saving/completion announcements remain open because the listener was unsure. Restore the original VoiceOver state after every future listening check. Dependency policy 2 checks both Mac target graphs and blocks active unsound dependencies; all unresolved warnings stay visible. These checks do not replace independent review, representative lifecycle/Claude/Grok export acceptance or final Apple distribution.
+
+## Historical upgrade acceptance — Nov 22
+
+Local coverage now includes the archived schema-2 through schema-7 layouts, fresh/upgraded v5 variants, backup-copy migration and failure retry. The legacy approval-reset notice defect is fixed and checked natively, including fresh approval persistence after reopening. These are fictional historical-schema constructions; representative upgrades, historical executable/hardware coverage, live VoiceOver announcements and current-source independent review remain distinct. Keep Apple signing at the end and avoid paid GitHub usage. OpenAI API credit may be used for useful model tests under the owner's authorization, but this round made no API calls.

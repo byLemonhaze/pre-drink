@@ -44,4 +44,5 @@ export interface AgentSessionStatus {
 export interface PrivacyUpdate {
   flagged: number;
   approvals_reset: number;
+  legacy_review_upgrade: boolean;
 }

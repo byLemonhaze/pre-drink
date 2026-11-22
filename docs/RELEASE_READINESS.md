@@ -16,10 +16,10 @@ Apple enrollment, Developer ID signing, notarization and a downloaded clean-inst
 
 | Area                    | Evidence available                                                                                  | Still distinct from that evidence                                                         |
 | ----------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| ChatGPT import          | Representative export backend acceptance and native post-import use; fictional interruption/resume  | Broader representative upgrade/lifecycle acceptance and all future export formats         |
+| ChatGPT import          | Representative export backend acceptance and native post-import use; fictional interruption/resume  | Representative historical upgrades and all future export formats                          |
 | Grok and Claude imports | Versioned fictional parser contracts and mixed-provider isolation                                   | Representative exports from each provider; avoid broad compatibility claims until checked |
 | Agent curation          | Backend authorization/revision/publication tests; bounded fictional Codex and Grok client runs      | Broad semantic quality, Claude client acceptance and unrelated web-chat integrations      |
-| Recovery                | Encrypted backup, wiped-storage restore, rotation, stale-operation rejection and simulated failures | Physical power loss, full disks and every historical schema/filesystem                    |
+| Recovery                | Encrypted backup, wiped-storage restore, rotation, stale-operation rejection and simulated failures | Physical power loss, full disks, representative migrations and broader filesystems        |
 | Accessibility           | Keyboard/focus/layout/contrast checks; owner-confirmed password/unlock spoken labels                | VoiceOver live-announcement review and full accessibility conformance                     |
 | Distribution            | Locally built/ad-hoc-signed app and private source repository                                       | Apple signing/notarization and downloaded clean-install trust                             |
 
@@ -28,3 +28,7 @@ The current backend pass is a self-review plus regression testing. It must not b
 ## Latest review triage — Nov 22
 
 The supplied review at `fcdcf0f` identified a confirmed deletion/resume defect and a newly patched dependency advisory. Those took priority over more walkthrough work. Conversation deletion now atomically discards any pending import, with explicit review wording and running-import exclusion. The patched `url` dependency and advisory gate are documented in [DEPENDENCY_CHECKS](DEPENDENCY_CHECKS.md). The review is useful external evidence about that older snapshot; it is not independent approval of the new fix. Native acceptance and a fresh-source review remain required. Apple distribution remains deferred.
+
+## Historical upgrade progress — Nov 22
+
+Archived schema-2 through schema-7 fictional fixtures now cover preservation, permission/review changes, reopen, backup, failed-migration retry and restoring an old backup without modifying it. The native legacy approval-reset notice and reapproval persistence passed after fixing omitted migration counts. This narrows the remaining upgrade gap but is not representative-data or every-old-binary acceptance. Current-source independent review and live spoken announcements remain open. No model or paid GitHub usage was needed.

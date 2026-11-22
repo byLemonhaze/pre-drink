@@ -406,3 +406,34 @@ test("deletion review explains the entire pending import loss and explicit reimp
   );
   assert.doesNotMatch(html, /<script>/);
 });
+
+test("upgrade notice reports legacy approval resets even without new sensitive flags", () => {
+  const Notice = component("PrivacyNotice").default;
+  const renderNotice = (update) =>
+    renderToStaticMarkup(React.createElement(Notice, { update }));
+  const legacy = renderNotice({
+    flagged: 0,
+    approvals_reset: 5,
+    legacy_review_upgrade: true,
+  });
+  assert.match(legacy, /role="status"/);
+  assert.match(legacy, /5 earlier approvals returned to draft/);
+  assert.match(legacy, /fresh review before sharing/);
+  assert.doesNotMatch(legacy, /Unrelated approvals were preserved/);
+  const targeted = renderNotice({
+    flagged: 2,
+    approvals_reset: 2,
+    legacy_review_upgrade: false,
+  });
+  assert.match(targeted, /2 restrictions/);
+  assert.match(targeted, /2 linked approvals/);
+  assert.match(targeted, /Unrelated approvals were preserved/);
+  assert.equal(
+    renderNotice({
+      flagged: 0,
+      approvals_reset: 0,
+      legacy_review_upgrade: false,
+    }),
+    "",
+  );
+});

@@ -2,6 +2,12 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
+## Historical upgrade review — Nov 22
+
+Review `tests/historical_upgrade.rs`, its shared fictional builder and the byte-preserved DDL manifest. Check both version-5 layouts, retained content/provenance, backup-copy migration, permission resets and rollback/retry assertions. This is self-verification using historical schemas, not an independent old-binary or representative-data audit.
+
+The reproduced runtime defect was a missing v2 upgrade notice, not missing protection: legacy restrictions/reset approvals were absent from the later classifier's counts. Review `db.rs` count aggregation, `PrivacyUpdate.legacy_review_upgrade` and `PrivacyNotice.tsx`. Legacy wording must not claim unrelated old approvals survived; approval-only changes must render. Counts are ephemeral and separate migration phases are not newly made atomic. Native evidence covers the notice in both themes and fresh approval surviving the next unlock. No grant or encryption policy changed.
+
 ## Mac dependency scope and final-save follow-up
 
 Review audit policy 2 in `scripts/dependency_audit.py`: cached/pre-push validation must resolve both Mac normal/build dependency graphs offline and reject any active unsound warning. An absent or failed tree must not become a clean result. Warning matching includes exact package versions. Unit tests cover affected versus unaffected versions and failed/malformed/incomplete trees. No advisory ignore list or unsupported upstream fork was added. DEPENDENCY_CHECKS records why the three existing warnings cannot currently be removed by compatible stable upgrades.

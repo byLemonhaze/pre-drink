@@ -77,7 +77,7 @@ Automated coverage includes complete disposable wipe-and-restore exercises throu
 
 ## Schema-4 upgrade
 
-Make a verified backup before upgrading. Schema 4 preserves manual notes/approvals and the vault password, adds encrypted provider workspaces/history/jobs and downgrades broad legacy chat grants to shared-only. Create fresh provider-specific registrations if raw access or writing is wanted. The schema-v3 one-time approval reset remains relevant only to older v2 upgrades. Do not run an older app against a schema-4 vault. Encrypted backup tests include the new tables; preservation of curation history and resets during password rotation have dedicated regressions.
+Make a verified backup before upgrading. Schema 4 preserves manual notes/approvals and the vault password, adds encrypted provider workspaces/history/jobs and downgrades broad legacy chat grants to shared-only. Create fresh provider-specific registrations if raw access or writing is wanted. The schema-v3 one-time approval reset remains relevant only to older v1/v2 upgrades. Their successful unlock notice reports the earlier approvals returned to draft and newly added privacy restrictions; reapprove saved versions deliberately. That legacy reset does not repeat on later unlocks. Newer privacy updates reset only affected approvals. The notice is ephemeral, not a persistent migration history. Do not run an older app against a schema-4 vault. Encrypted backup tests include the new tables; preservation of curation history and resets during password rotation have dedicated regressions.
 
 Schema 5 adds Claude without changing encryption or existing passwords. The v4/v5 → v6 regressions verify retained scopes, policies, drafts, history, evidence and publication/job records and active foreign-key enforcement. New Claude policy defaults off. Claude job creation is checked after each upgrade. All backups now record schema 8; keep a pre-upgrade backup and never downgrade an upgraded vault. Additional export providers cannot recreate lost session notes or curated revisions.
 
@@ -90,3 +90,7 @@ The 2026-11-22 fictional native pass covers manual lock during active parsing, r
 ## Resumable import preparation — schema 8
 
 Schema 8 adds encrypted import checkpoints without changing encryption or existing approvals. Backups retain unfinished preparation. It is excluded from search and all agent/shared-memory tools until one atomic final save succeeds. Only the owner can resume or discard; unlocking does not resume automatically. Pause/lock stops work at a safe preparation boundary, while an already-started final database transaction must finish or roll back. See [IMPORTS](IMPORTS.md) for the ZIP fingerprint, retry, capacity and interruption contract.
+
+## Historical upgrade evidence
+
+The current fictional encrypted matrix uses exact archived DDL for versions 2–7, including both fresh and previously upgraded v5 layouts. It checks preserved sources/curation relationships, expected permission/review changes, reopen and backup, failure rollback/retry, and old-backup restoration without modifying the source. See VALIDATION and the historical fixture manifest for provenance and limits. These constructions supplement representative acceptance; do not downgrade or damage an owner vault to reproduce them.
