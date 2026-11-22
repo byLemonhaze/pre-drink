@@ -171,3 +171,7 @@ Next zero-cost gates are independent schema-8/source-boundary review, broader re
 ## Limited-beta readiness — 2026-11-22
 
 See [RELEASE_READINESS](RELEASE_READINESS.md) for a bounded two-to-three-round estimate, evidence by feature and the distinction between personal use, limited beta and public distribution. The estimate includes review, remaining native acceptance and fresh-user rehearsal; new findings can add work. This self-review is not an independent audit. Keep Apple distribution last and retain the zero-extra-cost constraint.
+
+## Latest local acceptance — Nov 22
+
+The final native Saving state and disabled Pause now have direct fictional observation at 10,000 conversations / 200,000 messages. Owner-assisted VoiceOver confirmed password/unlock labels; automatic saving/completion announcements remain open because the listener was unsure. Restore the original VoiceOver state after every future listening check. Dependency policy 2 checks both Mac target graphs and blocks active unsound dependencies; all unresolved warnings stay visible. These checks do not replace independent review, representative lifecycle/Claude/Grok export acceptance or final Apple distribution.

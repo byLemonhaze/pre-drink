@@ -2,6 +2,12 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
+## Mac dependency scope and final-save follow-up
+
+Review audit policy 2 in `scripts/dependency_audit.py`: cached/pre-push validation must resolve both Mac normal/build dependency graphs offline and reject any active unsound warning. An absent or failed tree must not become a clean result. Warning matching includes exact package versions. Unit tests cover affected versus unaffected versions and failed/malformed/incomplete trees. No advisory ignore list or unsupported upstream fork was added. DEPENDENCY_CHECKS records why the three existing warnings cannot currently be removed by compatible stable upgrades.
+
+`examples/native_saving_fixture.rs` constructs a large encrypted ready checkpoint from fictional normalized conversations for observing the actual final-save interface. It adds no runtime delay or environment-controlled fault path. This visual check is distinct from parser/resume-contract tests and does not use owner data.
+
 ## Nov 22 report follow-up: deletion and dependency gates
 
 Reproduced R8-1: a ready checkpoint could restore a conversation after deletion. Review the fix in `retention.rs`, the pending-import notice, and three new regressions in `import_job_tests.rs`: atomic rollback, not-yet-prepared ZIP entries, and concurrent-run rejection. Deletion now discards the entire pending import as an explicit reviewed consequence; deliberate new ZIP imports can still restore data. No schema/encryption change is involved.

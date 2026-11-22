@@ -7,14 +7,16 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import time
 
-POLICY = 1
+POLICY = 2
 MAX_AGE = 24 * 60 * 60
 AUDITOR_VERSION = '0.23.0'
 LOCKFILES = ('package-lock.json', 'src-tauri/Cargo.lock')
+MAC_TARGETS = ('aarch64-apple-darwin', 'x86_64-apple-darwin')
 
 
 class AuditError(RuntimeError):
@@ -27,6 +29,45 @@ def digest(path):
 
 def lock_hashes(root):
     return {name: digest(root / name) for name in LOCKFILES}
+
+
+def target_packages(root, target):
+    """Inspect normal/build dependencies; no compilation or registry requests."""
+    try:
+        result = subprocess.run(
+            ['cargo', 'tree', '--manifest-path', 'src-tauri/Cargo.toml', '--locked',
+             '--offline', '--target', target, '--edges', 'normal,build',
+             '--prefix', 'none', '--format', '{p}'],
+            cwd=root, capture_output=True, text=True, timeout=60,
+            env={**os.environ, 'CARGO_NET_OFFLINE': 'true'},
+        )
+        if result.returncode:
+            raise AuditError(f'Cannot resolve the locked dependency graph for {target}; cache missing packages first.')
+        packages = set()
+        for line in result.stdout.splitlines():
+            match = re.fullmatch(r'([A-Za-z0-9_-]+) v([^\s]+)(?: \([^\n]*\))?(?: \(\*\))?', line)
+            if not match:
+                raise AuditError(f'Unrecognized dependency graph output for {target}.')
+            packages.add(match.groups())
+        if not any(name == 'pre-drink' for name, _ in packages):
+            raise AuditError(f'Incomplete dependency graph for {target}.')
+        return packages
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise AuditError(f'Local dependency graph check failed for {target}.') from error
+
+
+def check_mac_scope(root, rust):
+    """Keep all warnings visible; forbid known unsound code in either Mac graph."""
+    for target in MAC_TARGETS:
+        packages = target_packages(root, target)
+        for kind, items in rust['warnings'].items():
+            for item in items:
+                package = item['package']
+                present = (package['name'], package['version']) in packages
+                label = 'present' if present else 'absent'
+                print(f"{target}: {item['advisory']['id']} ({package['name']} {package['version']}) {label}")
+                if kind == 'unsound' and present:
+                    raise AuditError(f"Unsound dependency {package['name']} is active in the {target} build graph.")
 
 
 def assess(npm, rust):
@@ -101,7 +142,11 @@ def refresh(root):
         **summary,
     }
     receipt.write_text(json.dumps(saved, indent=2) + '\n')
-    return validate(root)
+    try:
+        return validate(root)
+    except AuditError:
+        receipt.unlink(missing_ok=True)
+        raise
 
 
 def validate(root):
@@ -124,6 +169,7 @@ def validate(root):
         summary = assess(reports['npm'], reports['rust'])
         if any(saved[key] != value for key, value in summary.items()):
             raise AuditError('Dependency audit summary does not match its reports.')
+        check_mac_scope(root, reports['rust'])
     except (OSError, ValueError, KeyError, TypeError) as error:
         raise AuditError('Dependency audit evidence is missing or invalid.') from error
     print('Current lockfiles passed the vulnerability audit (receipt valid for 24 hours).')

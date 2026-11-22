@@ -278,3 +278,13 @@ Used the rebuilt debug preview with newly generated owner-only fictional storage
 - Restored the preview's light appearance, locked it and quit. Temporary fixture cleanup is local and outside Git.
 
 The file chooser required retrying path navigation through its visible controls; this was an automation interaction issue, not evidence of a failed importer. Remaining distinct checks: owner-performed fresh password setup, current-source independent review, human VoiceOver listening, representative upgrade/lifecycle coverage, final saving-state observation, representative Claude/Grok exports and final Apple distribution. Previous Codex/Grok client runs remain the model-led evidence; they were not repeated or charged here.
+
+## Nov 22 — Final saving state and owner-assisted VoiceOver
+
+Used `examples/native_saving_fixture.rs` to construct a ready encrypted checkpoint containing 10,000 fictional conversations and 200,000 short messages, with an initially empty published archive. This fixture uses the real parser and checkpoint payload format but deliberately writes prepared records directly; it is not a new end-to-end ZIP preparation benchmark. The app used its normal publication path with no artificial delays.
+
+- Finish import required no source ZIP. Native accessibility observation captured **Saving your archive…** and **Pause import disabled**. Completion reported 10,000 new / zero refreshed and 200,000 processed messages; pending preparation disappeared.
+- Searching the final fictional conversation returned its complete 20-message range. Sharing stayed off. The final state was inspected visually at the compact window size.
+- With permission and the owner listening, VoiceOver announced **Vault password** and **Unlock vault** clearly, as confirmed by the owner. The owner was unsure whether saving and completion were announced automatically, so those live announcements remain unverified. This is a limited control-label check, not a full screen-reader pass.
+- An initial automated unlock entry failed; pasting the existing fictional phrase unlocked successfully. No password was changed and no damaged-vault claim follows from that input attempt.
+- VoiceOver was confirmed off again and Settings returned to General. The fictional vault was locked, its process stopped, and only this run's generated temporary storage removed. No personal vault was opened or modified; screenshots and private diagnostics remain outside Git.

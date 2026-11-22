@@ -18,6 +18,8 @@ class DependencyAudit(unittest.TestCase):
         self.refresh = self.state['refresh']
         self.validate = self.state['validate']
         self.error = self.state['AuditError']
+        self.real_target_packages = self.refresh.__globals__['target_packages']
+        self.refresh.__globals__['target_packages'] = lambda root, target: {('pre-drink', '0.2.0')}
         self.tmp = tempfile.TemporaryDirectory(prefix='pre-drink-audit-test-')
         self.root = Path(self.tmp.name)
         (self.root / 'src-tauri').mkdir()
@@ -28,7 +30,7 @@ class DependencyAudit(unittest.TestCase):
         self.rust = {'vulnerabilities': {'found': False, 'count': 0, 'list': []},
                      'database': {'last-commit': 'fictional-commit', 'last-updated': 'fictional-date'},
                      'warnings': {'unmaintained': [{'advisory': {'id': 'FICTIONAL-WARNING'},
-                                                   'package': {'name': 'fictional-package'}}]}}
+                                                   'package': {'name': 'fictional-package', 'version': '1.0.0'}}]}}
         self.calls = []
 
     def tearDown(self):
@@ -119,6 +121,32 @@ class DependencyAudit(unittest.TestCase):
             return self.result(command, **kwargs)
         with self.assertRaises(self.error):
             self.refresh_fixture(changed)
+
+    def test_unsound_warning_blocks_only_when_its_affected_version_is_in_mac_graph(self):
+        self.rust['warnings']['unsound'] = [{'advisory': {'id': 'FICTIONAL-UNSOUND'},
+                                            'package': {'name': 'fictional-package', 'version': '1.0.0'}}]
+        self.refresh_fixture()
+        self.refresh.__globals__['target_packages'] = lambda root, target: {('fictional-package', '2.0.0')}
+        self.refresh_fixture()
+        # This also exercises revalidation of a previously successful receipt.
+        self.refresh.__globals__['target_packages'] = lambda root, target: {('fictional-package', '1.0.0')}
+        with self.assertRaises(self.error):
+            self.validate(self.root)
+        with self.assertRaises(self.error):
+            self.refresh_fixture()
+        self.assertFalse((self.root / 'artifacts/dependency-audit.json').exists())
+
+    def test_target_graph_parser_and_failed_resolution_do_not_claim_absence(self):
+        valid = 'pre-drink v0.2.0 (/fictional/source)\nfictional-package v1.0.0\nfictional-package v1.0.0 (*)\n'
+        result = subprocess.CompletedProcess([], 0, valid, '')
+        with patch('subprocess.run', return_value=result) as run:
+            packages = self.real_target_packages(self.root, 'aarch64-apple-darwin')
+            self.assertEqual(packages, {('pre-drink', '0.2.0'), ('fictional-package', '1.0.0')})
+            self.assertIn('--offline', run.call_args.args[0])
+            self.assertIn('normal,build', run.call_args.args[0])
+        for status, text in ((1, valid), (0, ''), (0, 'unexpected output'), (0, 'fictional-package v1.0.0')):
+            with patch('subprocess.run', return_value=subprocess.CompletedProcess([], status, text, '')), self.assertRaises(self.error):
+                self.real_target_packages(self.root, 'aarch64-apple-darwin')
 
 
 if __name__ == '__main__':
