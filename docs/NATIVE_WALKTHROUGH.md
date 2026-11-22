@@ -176,3 +176,22 @@ A rebuilt isolated Reading Preview used fresh fictional encrypted storage contai
 - App-only screenshots checked the light brief editor and dark sharing screen; appearance was returned to light. Manual lock removed the unlocked interface; app shutdown was verified and only this run’s temporary fixture was removed. No desktop-wide screenshot was taken or committed.
 
 This verifies the observed paths, not VoiceOver, every keyboard/error/race case, peak memory, sustained query latency or every macOS version. Rust tests separately cover late Unicode matches, privacy/eligibility, deleted-page clamping and response size. No physical Mac lock/sleep cycle was repeated in this batch.
+
+## Representative ChatGPT post-import check — 2026-11-21
+
+An optimized, locally ad-hoc-signed app bundle used a fresh identifier and its own previously unused app-data namespace. The ordinary Pre-Drink bundle identifier and storage were not used. This release build did not enable the debug-only data-directory override. The separate directory was verified owner-only before the owner created a vault. The owner performed password creation and import before automation resumed; initial file-picker/drop and import-progress behavior were not observed in this session.
+
+After reconnecting at the owner's locked screen, automation used existing credentials only for unlock. No new credentials were entered by the agent. Unlocked accessibility snapshots were filtered inside the local automation runtime before returning only known controls, states and aggregate counts; no unlocked screenshots or chat text were returned or committed. Cached automation state was discarded afterward.
+
+Observed outcomes:
+
+- Unlock returned to the populated archive with the expected total and sharing off.
+- A positive literal search returned results. A unique nonexistent term showed the empty-results notice and no chat rows; clearing it restored the list.
+- The local restricted-content checkbox could be enabled, and the archive loaded beyond its initial page. The list's displayed loaded count confirmed additional results after loading/navigating. Automation exposed only part of the long screen at a time, so visible accessibility-node counts were not treated as total result counts.
+- A message range was exposed in the reader. Long-message expansion, every branch and message-page navigation were not retested on personal content; earlier fictional evidence remains separate.
+- Memory and Briefs were empty. Selected sharing showed no items, no selections and a disabled preview button. Import had not generated or published memory, and agent sharing remained off.
+- The local restricted-content checkbox was restored to off, search was cleared and the archive returned. Manual lock restored the password gate and removed archive navigation.
+
+The owner-created imported vault was retained and left locked in the separate app. It was not deleted or moved into the normal app. Its database had a non-plaintext SQLite header and owner-only file/directory permissions; this header sanity check is not an independent cryptographic audit. Earlier backend checks separately verified encrypted integrity, complete normalized-message preservation, backup/open and reimport. Automation connection failures before this successful run are not app startup-time measurements. No real archive curation, source grants, outgoing copies, provider/model calls or paid Actions were performed.
+
+Remaining representative-data coverage includes the initial picker/drop/progress flow, interruption/cancel behavior, full long-message/branch interaction, old-vault upgrades and broader lifecycle/recovery UI. Do not infer these from the post-import checks.

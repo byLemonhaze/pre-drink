@@ -294,3 +294,11 @@ The owner supplied an official export locally. Read the original ZIP without ext
 Development-mode sensitivity scans were noticeably slow. A private function-stack sample and fictional microbenchmark identified the matching engine; optimized execution of unchanged rules was materially faster. No speculative detector change was shipped. The temporary verifier was removed from the repository working tree. Only generic verification evidence is documented; source contents, identifiers, filenames, personal counts and raw diagnostics are excluded from Git.
 
 Remaining: representative native workflow and existing-vault upgrade checks, real Claude/Grok export acceptance, broader performance/hardware and curation-quality evidence, fresh independent review and final Apple enrollment/signing/notarization. Real archive curation has not started and no source access has been granted to cloud agents.
+
+## Representative native post-import walkthrough — 2026-11-21
+
+Prepared an optimized, locally ad-hoc-signed app with a new identifier and unused owner-only storage, leaving the normal bundle/storage separate. The owner created its password and imported the official archive. Automation reconnected at the locked screen after transient connection failures and completed unlock, positive/empty search and clearing, loading beyond the initial archive page, local restricted viewing, empty Memory/Briefs/sharing checks, restoration of the default privacy view and final locking.
+
+The imported owner-created copy is retained, locked, in the separate app namespace. Nothing was published or granted to agents. Only controls/states and aggregate results were returned from locally filtered accessibility observations; no unlocked screenshots, chat text, credentials, personal counts or diagnostic identifiers enter Git. Cached automation observations were discarded. The original ZIP and normal vault were not changed.
+
+This batch changes documentation only. Initial import execution was owner-performed rather than observed, and fuller native lifecycle, long-reader/branch, upgrade, independent review and final Apple distribution gates remain. No paid services or GitHub Actions were used.
