@@ -14,13 +14,19 @@ Verified locally on 2026-11-19 using synthetic data only. No user export, vault,
 | Landing page                               | Desktop and 375/320-pixel layouts reviewed; no horizontal overflow after fix; FAQ and download-status navigation verified                                                                   |
 | Repository guard and staged-content review | Source/documents/synthetic fixtures only; ignored data and build outputs excluded                                                                                                           |
 
+## Latest release-path check — 2026-11-22
+
+The real `bash scripts/release-macos.sh --check-only` command completed successfully from clean source `7e7683de1f1a`. It installed the locked frontend dependencies, fetched the locked Rust graph, refreshed advisory evidence, and ran the authoritative local verifier: **199 tests (157 Rust, 21 frontend, 21 Python)**, formatting, production frontend build, source-only guard, three-provider fictional ZIP verification and all-target Clippy. One optional benchmark remains ignored. It exited with the check-only success message before Apple signing, notarization or release packaging. This supplements the earlier mocked routing tests; it does not verify the Apple branch. All three documented upstream warnings remain visible. No GitHub Actions or model calls were used.
+
+A separate optimized app with a unique compiled application identifier was built and its local ad-hoc signature verified for a fresh-vault rehearsal. Its process launched, but two native-control attempts failed before inspection. The isolated process was stopped by verified executable identity. No new native creation/import/approval result is claimed, and the personal vault was not opened or changed. The current acceptance gap remains explicitly listed in RELEASE_READINESS.
+
 ## Dependency advisories
 
 The ZIP dependency was upgraded from 4.6.1 to 9.7.3 after six published advisories were found. The importer does not extract ZIP entries to disk, and encrypted-entry support is disabled, but the outdated library was still replaced and regression checks rerun. SQLCipher was updated to 4.20.0 / SQLite 3.54.1 through rusqlite 0.43.0.
 
 `npm audit` reported zero vulnerabilities. `cargo audit` completed without vulnerability findings but with three advisory warnings, **not a completely warning-free report**:
 
-- `chrono 0.4.45`: unmaintained ([RUSTSEC-2026-0543](https://rustsec.org/advisories/RUSTSEC-2026-0543)); used directly and pulled transitively by the official MCP SDK/schema dependencies in the macOS graph. No fixed upgrade was offered. Monitor upstream replacement; do not suppress the warning as resolved.
+- `chrono 0.4.45`: unmaintained ([RUSTSEC-2026-0543](https://rustsec.org/advisories/RUSTSEC-2026-0543)); pulled transitively by the official MCP SDK/schema dependencies in the macOS graph; direct application use was removed in the Nov 22 parser update. No fixed upgrade was offered. Monitor upstream replacement; do not suppress the warning as resolved.
 - `proc-macro-error 1.0.4`: unmaintained ([RUSTSEC-2024-0370](https://rustsec.org/advisories/RUSTSEC-2024-0370)); present in the cross-platform lockfile, absent from the active macOS dependency graph.
 - `glib 0.18.5`: iterator unsoundness ([RUSTSEC-2024-0429](https://rustsec.org/advisories/RUSTSEC-2024-0429)); present in the cross-platform lockfile, absent from the active macOS dependency graph. Linux is not supported by this release; do not reuse this assessment for a Linux build.
 

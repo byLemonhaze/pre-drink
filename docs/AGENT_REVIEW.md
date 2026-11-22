@@ -2,6 +2,10 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
+## Current acceptance handoff — Nov 22
+
+Use RELEASE_READINESS as the fixed gate list. The actual free release check passed at `7e7683d`, including all 199 tests and fresh advisories. The new packaged first-run attempt could not be observed because native control failed; it is not acceptance evidence. Review current implementation boundaries independently and record blocking findings separately from optional improvements. Representative ChatGPT backend/native use has evidence; Claude/Grok representative imports and broad curation quality do not. Human automatic VoiceOver announcements remain unconfirmed. Apple distribution stays last.
+
 ## Dependency and release-gate review — Nov 22
 
 Review `provider_import.rs` and the shared timestamp contract before/after direct Chrono replacement. The `time` parser is wrapped only to preserve the previous space/leap-second/millisecond behavior; malformed/missing inputs retain raw values and absent normalized times. Chrono remains inside the official MCP SDK, and the three upstream warnings are explicitly unresolved.
@@ -67,7 +71,7 @@ Use `npm run verify:local` with installed dependencies (stage new source files f
 
 ## Start here
 
-Read EXECUTION_PLAN and WORK_LOG first for current scope/status, then README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE. Source is independent of Loominary; see PROVENANCE. Current adapters and own-provider curator roles cover ChatGPT, Grok and Claude with fictional contracts. One representative ChatGPT export has passed isolated backend acceptance; representative Claude/Grok exports and native real-data acceptance remain open. Read AGENT_CURATION before evaluating this feature. Cloud curation is optional; verify offline manual use remains independent. User data is deliberately absent from this repository.
+Read EXECUTION_PLAN and WORK_LOG first for current scope/status, then README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE. Source is independent of Loominary; see PROVENANCE. Current adapters and own-provider curator roles cover ChatGPT, Grok and Claude with fictional contracts. One representative ChatGPT export has passed isolated backend acceptance; representative Claude/Grok exports remain open; the representative ChatGPT native post-import check is recorded in VALIDATION. Read AGENT_CURATION before evaluating this feature. Cloud curation is optional; verify offline manual use remains independent. User data is deliberately absent from this repository.
 
 ## Safe local verification
 

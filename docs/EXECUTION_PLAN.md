@@ -1,8 +1,12 @@
 # Execution plan
 
-## Current cost constraint — 2026-11-20
+## Current cost constraint — updated 2026-11-22
 
 The owner has no budget for additional paid services. Run checks locally on the Mac. GitHub Actions is manual-only: no push, pull-request or scheduled runs. Do not dispatch a remote run, enable automatic triggers, purchase a service, or start a potentially billed model/API task without a new explicit usage authorization. A reset of included minutes does not revoke this constraint. Keep the repository private; making it public is not a cost workaround. Apple enrollment remains deferred and requires a separate owner decision about its cost.
+
+The owner subsequently authorized existing OpenAI credits for useful tests. This does not authorize paid GitHub usage or sending a personal archive to a cloud model without explicit source/destination consent. Keep any model test narrowly bounded and use fictional data; no model call was needed for the latest release preflight.
+
+The fixed remaining acceptance and review gates are in [RELEASE_READINESS](RELEASE_READINESS.md). Do not restart already completed test rounds without a new change, failure or unresolved concern.
 
 The last automatic verification passed for `6b8784a` ([run](https://github.com/byLemonhaze/pre-drink/actions/runs/44845461220)). Subsequent local-only commits must be labelled as locally verified; do not imply they received a remote pass. This repository policy does not set an account-wide billing cap or prevent other repositories from consuming the allowance.
 
