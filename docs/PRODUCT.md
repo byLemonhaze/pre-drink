@@ -14,7 +14,7 @@ This extends the existing app. The encrypted archive, search, manual notes, brie
 
 The first release serves an individual who wants durable context across AI tools and control over what they share. Large archives make agent-assisted curation a core optional workflow: using it must not require reading the entire archive or approving thousands of individual notes.
 
-Official ZIP import now supports recognized **ChatGPT, Claude and Grok** formats, with versioned synthetic contracts and remaining representative-export acceptance. Each has a matching curator role and session-summary writing. Gemini, Copilot and others are requested next candidates, contingent on validated official formats; see [PROVIDERS](PROVIDERS.md). A compatible local MCP client must be configured; this does not connect an arbitrary ChatGPT or Grok web chat automatically.
+Official ZIP import now supports recognized **ChatGPT, Claude and Grok** formats, with versioned synthetic contracts and one successful representative ChatGPT backend check; native real-data acceptance and representative Claude/Grok checks remain open. Each has a matching curator role and session-summary writing. Gemini, Copilot and others are requested next candidates, contingent on validated official formats; see [PROVIDERS](PROVIDERS.md). A compatible local MCP client must be configured; this does not connect an arbitrary ChatGPT or Grok web chat automatically.
 
 Official exports are the deliberate historical input. No scraping, userscripts, browser credentials or live capture. Explicit end-of-session notes are a second input to memory, not a captured transcript. User exports and vault contents never belong in GitHub, even while the repository is private.
 
@@ -82,7 +82,7 @@ Implemented and deterministically tested: scoped source reads and writes, retry/
 
 Grok Build additionally passed three fictional provider-matched sessions and 29 MCP calls. Context packs match words in the saved summary; they do not infer topic associations. Curators should retain recognizable project names.
 
-Still open: broader curation quality and Claude model-led writing; representative owner-local export and upgrade acceptance when the requested ZIP arrives; broader scale, accessibility and filesystem failure coverage; fresh independent review; signed/notarized distribution and clean installation. See [VALIDATION](VALIDATION.md) for precise evidence, [AGENT_CURATION](AGENT_CURATION.md) for the contract and [EXECUTION_PLAN](EXECUTION_PLAN.md) for order.
+Still open: broader curation quality and Claude model-led writing; native representative owner-local export and existing-vault upgrade acceptance following the successful ChatGPT backend check; broader scale, accessibility and filesystem failure coverage; fresh independent review; signed/notarized distribution and clean installation. See [VALIDATION](VALIDATION.md) for precise evidence, [AGENT_CURATION](AGENT_CURATION.md) for the contract and [EXECUTION_PLAN](EXECUTION_PLAN.md) for order.
 
 ## Future ideas and exclusions
 

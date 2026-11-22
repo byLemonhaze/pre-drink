@@ -2,7 +2,7 @@
 
 **Your AI history, sober and ready.**
 
-A free, MIT-licensed macOS memory manager: provider-private histories and working memory feed a shared layer you control. Built on Tauri 2, React, TypeScript and SQLCipher/SQLite FTS5. Official ZIP import supports recognized **ChatGPT, Claude and Grok** account-export formats; representative real-export acceptance remains open. The repository is a private pre-release until the owner chooses public launch.
+A free, MIT-licensed macOS memory manager: provider-private histories and working memory feed a shared layer you control. Built on Tauri 2, React, TypeScript and SQLCipher/SQLite FTS5. Official ZIP import supports recognized **ChatGPT, Claude and Grok** account-export formats; one representative ChatGPT export has passed isolated local backend checks; native representative-data acceptance and real Claude/Grok export checks remain open. The repository is a private pre-release until the owner chooses public launch.
 
 **Cloud curation is optional.** Import, search, manual memory editing, briefs, selected exports and backups work offline without a model, account or API key. You can separately authorize a connected agent to curate its own provider’s history. Local-model curation is planned, not implemented.
 

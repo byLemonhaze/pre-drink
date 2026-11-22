@@ -15,7 +15,7 @@ Use `npm run verify:local` with installed dependencies (stage new source files f
 
 ## Start here
 
-Read EXECUTION_PLAN and WORK_LOG first for current scope/status, then README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE. Source is independent of Loominary; see PROVENANCE. Current adapters and own-provider curator roles cover ChatGPT, Grok and Claude with fictional contracts; representative exports remain open. Read AGENT_CURATION before evaluating this feature. Cloud curation is optional; verify offline manual use remains independent. User data is deliberately absent from this repository.
+Read EXECUTION_PLAN and WORK_LOG first for current scope/status, then README, PRODUCT, ARCHITECTURE, SECURITY, MCP, RECOVERY and REVIEW_RESPONSE. Source is independent of Loominary; see PROVENANCE. Current adapters and own-provider curator roles cover ChatGPT, Grok and Claude with fictional contracts. One representative ChatGPT export has passed isolated backend acceptance; representative Claude/Grok exports and native real-data acceptance remain open. Read AGENT_CURATION before evaluating this feature. Cloud curation is optional; verify offline manual use remains independent. User data is deliberately absent from this repository.
 
 ## Safe local verification
 
@@ -53,7 +53,7 @@ Report findings with severity, exact code path, reproduction, impact, and a prop
 
 The baseline at `589967e` had 35 automated cases covering importer behavior, storage and privacy boundaries, encryption/backups/migration, and one real stdio MCP integration. Earlier native synthetic-data verification covered creating a vault, picker import, approved memory, approved brief, context preview and manual lock. A later M1 native run verifies basic separate approval, source display, edit invalidation, zero-change flag recheck, identity and lock; see the explicit scope in VALIDATION. See VALIDATION for final command results and dependency warnings.
 
-Not yet verified: representative real exports, real-export and UI scale performance, every supported OS/hardware, broader sleep/lock-screen coverage, independent security audit. Owner-assisted file drops and native client-configuration screens now have evidence in NATIVE_WALKTHROUGH. Restore/password change and deletion/retention are implemented; fuller native failure and hardware durability evidence remains open. Per-brief grants and tagging UI remain roadmap items.
+Not yet verified: representative Claude/Grok exports, native real-export workflow and broader UI scale performance, every supported OS/hardware, broader sleep/lock-screen coverage, independent security audit. Owner-assisted file drops and native client-configuration screens now have evidence in NATIVE_WALKTHROUGH. Restore/password change and deletion/retention are implemented; fuller native failure and hardware durability evidence remains open. Per-brief grants and tagging UI remain roadmap items.
 
 ## Immediate review focus
 
@@ -154,3 +154,7 @@ Review `ChoiceSelect.tsx` for the owner-reported menu remaining above Chrome aft
 Review `peer.rs`, `broker.rs` and `mcp.rs`: kernel UID verification must precede request parsing/token transmission; parent ownership and stale socket cleanup must fail closed. The real Mac socket-pair regression checks both directions and a mismatched expected UID; it is not a second-user penetration test or executable-signature proof. Linux's credential branch has not been run on this Mac.
 
 Review `library.rs` and `LibraryPage.tsx` for complete late-match/Unicode search, privacy and source eligibility, count accuracy, deletion clamping, stale-response rejection and error/retry. Sharing selections must survive pages/search, strip display-only titles before backend requests, and retain exact-preview eligibility checks. Brief source paging must not submit its surrounding form; previews must not truncate appended source text. The Rust large-library test measures serialized response size, not process peak memory or latency. Each request still scans all relevant rows; SQLite internals and single large records remain outside the row bound.
+
+## Representative ChatGPT evidence
+
+Read the latest VALIDATION entry before repeating the earlier pending-export gate. One owner-authorized official multipart export passed local optimized backend acceptance, independent source accounting, complete normalized-message round trips, encrypted backup/open, repeat import, FTS/paging/privacy, reopen and wrong-password checks. No personal fixtures or diagnostic values belong in the repository. The temporary verifier called production `Vault`/parser methods directly with its own generated encrypted paths; it did not use the release app's disabled data-directory override. Native interaction and old-vault upgrade acceptance are still unverified on representative data. Development-mode privacy scanning was much slower than optimized execution without changes to matching rules; avoid extrapolating debug timings to a release SLA.
