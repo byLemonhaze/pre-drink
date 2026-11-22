@@ -22,19 +22,9 @@ jobs:
       - name: Select Rust
         run: rustup default 1.93.1
       - run: npm ci
-      - run: npm run format:check
-      - run: npm run build
-      - run: npm run test:startup
-      - run: npm run test:reading
-      - run: npm audit --audit-level=high
       - name: Install dependency auditor
         run: cargo install cargo-audit --version 0.23.0 --locked
-      - run: cargo audit --file src-tauri/Cargo.lock
-      - run: cargo test --manifest-path src-tauri/Cargo.toml --locked
-      - name: Verify fictional curation quality inputs
-        run: |
-          python3 scripts/create_curation_quality_exports.py
-          cargo run --manifest-path src-tauri/Cargo.toml --locked --example verify_quality_exports
-      - run: cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
-      - name: Verify source-only repository
-        run: python3 scripts/check_repository.py
+      - name: Cache locked Rust dependencies for offline verification
+        run: cargo fetch --manifest-path src-tauri/Cargo.toml --locked
+      - name: Run the complete verification and advisory gate
+        run: npm run verify:local

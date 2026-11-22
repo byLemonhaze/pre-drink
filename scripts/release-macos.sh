@@ -1,14 +1,24 @@
 #!/bin/bash
 set -euo pipefail
 
-# Run from the repository root after configuring your own Developer ID and
-# notarytool Keychain profile. Never paste signing credentials into this file.
-: "${APPLE_SIGNING_IDENTITY:?Set your Developer ID Application signing identity}"
-: "${PRE_DRINK_NOTARY_PROFILE:?Set an existing notarytool Keychain profile name}"
-case "$APPLE_SIGNING_IDENTITY" in
-  "Developer ID Application:"*) ;;
-  *) echo "Public releases require a Developer ID Application identity." >&2; exit 1 ;;
-esac
+# --check-only performs free developer checks without requiring or using Apple
+# credentials. Distribution remains a separate, explicitly configured action.
+check_only=false
+if [[ $# -gt 1 ]] || [[ $# -eq 1 && "$1" != "--check-only" ]]; then
+  echo "Usage: bash scripts/release-macos.sh [--check-only]" >&2
+  exit 2
+fi
+if [[ $# -eq 1 ]]; then
+  check_only=true
+fi
+if [[ "$check_only" == false ]]; then
+  : "${APPLE_SIGNING_IDENTITY:?Set your Developer ID Application signing identity}"
+  : "${PRE_DRINK_NOTARY_PROFILE:?Set an existing notarytool Keychain profile name}"
+  case "$APPLE_SIGNING_IDENTITY" in
+    "Developer ID Application:"*) ;;
+    *) echo "Public releases require a Developer ID Application identity." >&2; exit 1 ;;
+  esac
+fi
 
 if [[ -n "$(git status --porcelain)" ]]; then
   echo "Release from a clean reviewed commit so SOURCE_COMMIT identifies the exact source." >&2
@@ -16,13 +26,14 @@ if [[ -n "$(git status --porcelain)" ]]; then
 fi
 
 npm ci
-npm run format:check
-npm run build
-npm audit --audit-level=high
-cargo audit --file src-tauri/Cargo.lock
-python3 scripts/check_repository.py
-cargo test --manifest-path src-tauri/Cargo.toml --locked
-cargo clippy --manifest-path src-tauri/Cargo.toml --locked --all-targets -- -D warnings
+cargo fetch --manifest-path src-tauri/Cargo.toml --locked
+# One authoritative gate: every vulnerability severity, both Mac dependency
+# graphs, Python/frontend/Rust tests, fictional imports, formatting and Clippy.
+npm run verify:local
+if [[ "$check_only" == true ]]; then
+  echo "Local release checks passed. No Apple signing or notarization was attempted."
+  exit 0
+fi
 npm run tauri -- build -- --locked
 
 app_path="src-tauri/target/release/bundle/macos/Pre-Drink.app"

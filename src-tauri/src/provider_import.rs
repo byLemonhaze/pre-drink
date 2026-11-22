@@ -4,7 +4,8 @@ use crate::{
     model::{ImportReport, ParsedConversation},
 };
 use serde_json::{json, Map, Value};
-use std::collections::HashSet;
+use std::{borrow::Cow, collections::HashSet};
+use time::{format_description::well_known::Rfc3339, OffsetDateTime};
 
 fn text<'a>(v: &'a Value, key: &str) -> Option<&'a str> {
     v.get(key).and_then(Value::as_str).filter(|s| !s.is_empty())
@@ -26,9 +27,23 @@ fn timestamp(v: &Value) -> Option<f64> {
         }
         return timestamp(date);
     }
-    v.as_str()
-        .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
-        .map(|d| d.timestamp_millis() as f64 / 1000.0)
+    let source = v.as_str()?;
+    let mut normalized = Cow::Borrowed(source);
+    // Preserve the previous export contract: a space may separate date/time,
+    // and second 60 rolls into the next Unix second (including its fraction).
+    // The maintained parser still validates every other date/offset component.
+    if source.as_bytes().get(10) == Some(&b' ') {
+        normalized.to_mut().replace_range(10..11, "T");
+    }
+    let leap_second = source.get(17..19) == Some("60");
+    if leap_second {
+        normalized.to_mut().replace_range(17..19, "59");
+    }
+    let date = OffsetDateTime::parse(&normalized, &Rfc3339).ok()?;
+    let nanos = date.unix_timestamp_nanos() + i128::from(leap_second) * 1_000_000_000;
+    // Floor rather than truncate: negative pre-epoch fractions retain the old
+    // millisecond representation, preventing needless reimport invalidation.
+    Some(nanos.div_euclid(1_000_000) as f64 / 1000.0)
 }
 
 struct Entry<'a> {

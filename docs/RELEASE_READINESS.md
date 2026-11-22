@@ -32,3 +32,7 @@ The supplied review at `fcdcf0f` identified a confirmed deletion/resume defect a
 ## Historical upgrade progress — Nov 22
 
 Archived schema-2 through schema-7 fictional fixtures now cover preservation, permission/review changes, reopen, backup, failed-migration retry and restoring an old backup without modifying it. The native legacy approval-reset notice and reapproval persistence passed after fixing omitted migration counts. This narrows the remaining upgrade gap but is not representative-data or every-old-binary acceptance. Current-source independent review and live spoken announcements remain open. No model or paid GitHub usage was needed.
+
+## Dependency and preflight progress — Nov 22
+
+The application's direct Chrono dependency is replaced with maintained parsing and compatibility checks. The SDK's transitive Chrono and two Linux-only warnings remain unresolved; compatible stable upstream replacements are not yet available. Local, future release and manual-only CI checks now share one verification gate. A free check-only release mode stops before Apple operations. Remaining human/representative-data/independent-review gates are unchanged; API credit is available if a useful model test requires it, but this pass did not spend it.

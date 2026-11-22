@@ -264,3 +264,61 @@ fn flat_response_records_and_legacy_claude_text_remain_readable() {
         "Garden needs a shaded corner."
     );
 }
+
+#[test]
+fn provider_timestamp_contract_preserves_offsets_precision_missing_values_and_raw() {
+    // Independent Unix-time expectations, shared by both official-export adapters.
+    let cases = [
+        (json!("1970-01-01T00:00:00Z"), Some(0.0)),
+        (json!("1970-01-01T02:00:00+02:00"), Some(0.0)),
+        (json!("1969-12-31T19:00:00-05:00"), Some(0.0)),
+        (json!("1970-01-01T00:00:00.123999999Z"), Some(0.123)),
+        (json!("1970-01-01T00:00:00.123456789123Z"), Some(0.123)),
+        (json!("1969-12-31T23:59:59.999999Z"), Some(-0.001)),
+        (json!("1970-01-01 00:00:00.125Z"), Some(0.125)),
+        (json!("1970-01-01t00:00:00.125z"), Some(0.125)),
+        (json!("1969-12-31T23:59:60.125Z"), Some(0.125)),
+        (json!("1970-01-01T01:59:60.125+02:00"), Some(0.125)),
+        (json!({"$date":{"$numberLong":"-1"}}), Some(-0.001)),
+        (json!({"$date":125}), Some(0.125)),
+        (json!({"$date":"1970-01-01T00:00:00.125Z"}), Some(0.125)),
+        (json!("2023-02-29T00:00:00Z"), None),
+        (json!("1970-01-01T24:00:00Z"), None),
+        (json!("1970-01-01T00:00:61Z"), None),
+        (json!("1970-01-01T00:00:00+24:00"), None),
+        (json!("1970-01-01T00:00:00"), None),
+        (json!("1970-01-01T00:00:00Z trailing"), None),
+        (json!("é🌱"), None),
+        (json!(0), None),
+        (json!({"$date":{"$numberLong":"9223372036854775808"}}), None),
+        (Value::Null, None),
+    ];
+    for (input, expected) in cases {
+        let mut g = grok();
+        g["conversations"][0]["conversation"]["create_time"] = input.clone();
+        g["conversations"][0]["responses"][0]["response"]["create_time"] = input.clone();
+        let mut c = claude();
+        c[0]["created_at"] = input.clone();
+        c[0]["chat_messages"][0]["created_at"] = input.clone();
+        let (items, _) = read_archive(zip(&[
+            ("prod-grok-backend.json", g.clone()),
+            ("conversations.json", c.clone()),
+        ]))
+        .unwrap();
+        for item in &items {
+            assert_eq!(item.created_at, expected, "timestamp input: {input}");
+            assert_eq!(
+                item.messages[0].timestamp, expected,
+                "message timestamp input: {input}"
+            );
+        }
+        assert_eq!(
+            serde_json::from_str::<Value>(&items[0].raw_json).unwrap(),
+            g["conversations"][0]
+        );
+        assert_eq!(
+            serde_json::from_str::<Value>(&items[1].raw_json).unwrap(),
+            c[0]
+        );
+    }
+}

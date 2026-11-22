@@ -2,6 +2,12 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
+## Dependency and release-gate review — Nov 22
+
+Review `provider_import.rs` and the shared timestamp contract before/after direct Chrono replacement. The `time` parser is wrapped only to preserve the previous space/leap-second/millisecond behavior; malformed/missing inputs retain raw values and absent normalized times. Chrono remains inside the official MCP SDK, and the three upstream warnings are explicitly unresolved.
+
+Review `release-macos.sh --check-only`, its mocked-command tests, and manual-only CI. Both distribution and CI must use the authoritative verifier; no old high-only audit, omitted Python/frontend tests or skipped Mac dependency-scope check should remain. Check-only must never reach Apple operations, even with credentials configured. No actual remote workflow, signing, notarization or model-led acceptance was performed. Native acceptance from the previous batch is unchanged because this batch changes parser/build checks only.
+
 ## Historical upgrade review — Nov 22
 
 Review `tests/historical_upgrade.rs`, its shared fictional builder and the byte-preserved DDL manifest. Check both version-5 layouts, retained content/provenance, backup-copy migration, permission resets and rollback/retry assertions. This is self-verification using historical schemas, not an independent old-binary or representative-data audit.
