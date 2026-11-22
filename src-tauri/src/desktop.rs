@@ -81,12 +81,7 @@ async fn import_zip(path: String, store: State<'_, Store>) -> Result<ImportRepor
     tauri::async_runtime::spawn_blocking(move || {
         let (items, report) = read_export_zip(&PathBuf::from(path))?;
         let mut session = store.lock().map_err(|_| "Vault unavailable.")?;
-        if session.generation != generation {
-            return Err("Vault locked during import. Nothing was imported.".into());
-        }
-        let result = session.access()?.import(&items, report);
-        session.touch();
-        result
+        session.finish_import(generation, &items, report)
     })
     .await
     .map_err(|_| "Import could not finish.")?

@@ -174,6 +174,22 @@ impl Session {
             .as_mut()
             .ok_or_else(|| "Your vault is locked. Unlock it in Pre-Drink.".into())
     }
+    /// Owner import: parsing happens outside the session lock. A lock, expiry,
+    /// restore or subsequent unlock must invalidate that parsed result.
+    pub fn finish_import(
+        &mut self,
+        generation: u64,
+        items: &[crate::model::ParsedConversation],
+        report: crate::model::ImportReport,
+    ) -> Result<crate::model::ImportReport, String> {
+        self.expire();
+        if self.generation != generation {
+            return Err("Vault locked during import. Nothing was imported.".into());
+        }
+        let result = self.access()?.import(items, report);
+        self.touch();
+        result
+    }
     pub fn apply_privacy_recheck(
         &mut self,
         review_hash: &str,

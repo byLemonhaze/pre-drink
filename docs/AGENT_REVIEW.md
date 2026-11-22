@@ -2,7 +2,11 @@
 
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
-## Latest review targets — 2026-11-20
+## Latest recovery review targets — 2026-11-22
+
+Review backup publication in `db.rs`, cleanup receipts in `retained_vaults.rs`, the shared `Session::finish_import` gate and `storage_failure.rs`. Verify folder flushing before success, preserved files and explicit uncertainty after publication, cleanup receipt invalidation, same-connection retry, stale parsed-import rejection and killed-import rollback. The six new regressions use fictional storage only; simulated I/O faults are test-only, not physical disk-exhaustion evidence. The full local suite passed 130 Rust, 16 frontend and 5 Python tests. See VALIDATION and RECOVERY for limits and open native checks.
+
+## Earlier review targets — 2026-11-20
 
 The evening-review implementation adds schema-7 owner holds, deliberate long agent work sessions, targeted privacy resets and local verification automation. Start with these boundaries:
 
@@ -111,7 +115,7 @@ Review `PagedList.tsx`, `ConversationMessages.tsx`, `Memory.tsx` and `Briefs.tsx
 
 ## Storage fault review
 
-`src-tauri/src/storage_failure.rs` adds encrypted-file fault regressions. A per-connection SQLite page limit forces capacity failures during import, memory edit and brief edit; complete logical snapshots must match the previous state, reopening must succeed and retry must work after lifting the limit. A separate test spawns a writer, flushes uncommitted changes, waits for an explicit boundary marker, kills that process and reopens the vault to verify search, approvals and retry. All paths are temporary fictional storage. Review the scope carefully: these do not inject filesystem ENOSPC at backup/publication boundaries or simulate hardware power loss.
+`src-tauri/src/storage_failure.rs` adds encrypted-file fault regressions. A per-connection SQLite page limit forces capacity failures during import, memory edit and brief edit; complete logical snapshots must match the previous state, reopening must succeed and retry must work after lifting the limit. A separate test spawns a writer, flushes uncommitted changes, waits for an explicit boundary marker, kills that process and reopens the vault to verify search, approvals and retry. All paths are temporary fictional storage. The later local matrix adds a killed production import before commit; stale parsed imports after lock/reunlock/expiry/replacement; attached-backup SQLite capacity failure; test-only ENOSPC injection at backup flush/publication/folder-flush and selector write/publication/folder-flush boundaries; and a failed partial restore copy. Review preservation, staging cleanup, cleared cleanup receipts, same-connection backup retry and restart selection. Backup folder flushing is now required before success; a failure after publication preserves the file and reports uncertainty. Thread-local one-shot hooks are compiled out of production. These model selected I/O errors without filling a disk, and do not simulate hardware power loss or certify all filesystems.
 
 ## Appearance and compact sharing review
 

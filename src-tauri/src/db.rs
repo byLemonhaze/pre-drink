@@ -217,6 +217,13 @@ impl Vault {
                     params![staging.to_string_lossy(), &*key],
                 )
                 .map_err(|_| "Couldn't create encrypted backup.")?;
+            #[cfg(test)]
+            if crate::storage_failure::take_fault("backup_export_full") {
+                // A real SQLite capacity error, restricted to this attached copy.
+                self.connection
+                    .execute_batch("PRAGMA backup.max_page_count=1;")
+                    .unwrap();
+            }
             let exported = self
                 .connection
                 .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=7;");
@@ -265,13 +272,30 @@ impl Vault {
                 .checkpoint()
                 .map_err(|_| "Backup checkpoint failed.")?;
             drop(verified);
-            std::fs::File::open(&staging)
-                .and_then(|f| f.sync_all())
-                .map_err(|_| "Could not flush the backup to disk.")?;
+            let flush = || {
+                #[cfg(test)]
+                crate::storage_failure::io_fault("backup_file_sync")?;
+                std::fs::File::open(&staging).and_then(|f| f.sync_all())
+            };
+            flush().map_err(|_| "Could not flush the backup to disk.")?;
             // Same-folder hard link publishes atomically and refuses to overwrite a raced-in file.
-            std::fs::hard_link(&staging, target).map_err(|_| {
+            let publish = || {
+                #[cfg(test)]
+                crate::storage_failure::io_fault("backup_publish")?;
+                std::fs::hard_link(&staging, target)
+            };
+            publish().map_err(|_| {
                 "Couldn't publish the backup. Choose an unused filename on a local filesystem."
             })?;
+            // Flushing the file alone does not persist its new directory entry.
+            // After publication, preserve the verified copy even if this fails;
+            // do not grant a cleanup receipt for uncertain durability.
+            let sync_parent = || {
+                #[cfg(test)]
+                crate::storage_failure::io_fault("backup_directory_sync")?;
+                std::fs::File::open(parent).and_then(|f| f.sync_all())
+            };
+            sync_parent().map_err(|_| "The backup file was created, but its folder could not be flushed to disk. Keep your original vault and try another backup filename on a local filesystem before removing old copies.")?;
             Ok(())
         })();
         let _ = std::fs::remove_file(&staging);
@@ -402,6 +426,8 @@ impl Vault {
         tx.execute("INSERT INTO search_index(conversation_id,content) SELECT m.conversation_id,m.content FROM messages m JOIN import_ids i ON i.id=m.conversation_id", []).map_err(|e| e.to_string())?;
         tx.execute_batch("DROP TABLE import_ids; DROP TABLE import_message_ids;")
             .map_err(|e| e.to_string())?;
+        #[cfg(test)]
+        crate::storage_failure::import_checkpoint(&self.path, &tx);
         tx.commit().map_err(|e| e.to_string())?;
         Ok(report)
     }

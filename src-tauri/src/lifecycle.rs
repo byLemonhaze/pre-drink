@@ -156,6 +156,11 @@ fn copy_backup(source: &Path, destination: &Path) -> Result<(), String> {
     let mut out = options
         .open(destination)
         .map_err(|_| "Cannot create the prepared vault.")?;
+    #[cfg(test)]
+    if crate::storage_failure::take_fault("restore_partial_copy") {
+        std::io::copy(&mut Read::by_ref(&mut source).take(4096), &mut out).unwrap();
+        return Err("Could not copy the backup. Check free space.".into());
+    }
     let copied = std::io::copy(
         &mut Read::by_ref(&mut source).take(MAX_BACKUP_BYTES + 1),
         &mut out,
@@ -373,6 +378,9 @@ impl Session {
             let mut file = options
                 .open(&temporary)
                 .map_err(|_| "Cannot prepare the vault switch. Original vault preserved.")?;
+            #[cfg(test)]
+            crate::storage_failure::io_fault("switch_write")
+                .map_err(|_| "Cannot flush the vault switch. Original vault preserved.")?;
             file.write_all(
                 &serde_json::to_vec(&pointer).map_err(|_| "Cannot encode vault selection.")?,
             )
@@ -417,12 +425,19 @@ impl Session {
             }
             #[cfg(test)]
             publication_checkpoint(&self.directory, "before");
+            #[cfg(test)]
+            crate::storage_failure::io_fault("switch_publish")
+                .map_err(|_| "Could not switch vaults. Unlock the original vault to continue.")?;
             fs::rename(&temporary, self.directory.join(POINTER))
                 .map_err(|_| "Could not switch vaults. Unlock the original vault to continue.")?;
             // Never remove the active generation after commit.
             pending.keep = true;
             #[cfg(test)]
             publication_checkpoint(&self.directory, "after");
+            #[cfg(test)]
+            if crate::storage_failure::io_fault("switch_directory_sync").is_err() {
+                return Ok(true);
+            }
             Ok(sync_directory(&self.directory).is_err())
         })();
         // Ordinary precommit failures can undo a newly created guard. If that
