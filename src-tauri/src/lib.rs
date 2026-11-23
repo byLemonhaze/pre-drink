@@ -12,6 +12,7 @@ pub mod agents;
 #[cfg(unix)]
 pub mod broker;
 pub mod client_config;
+pub mod client_setup;
 pub mod curation;
 mod curation_jobs;
 #[cfg(unix)]

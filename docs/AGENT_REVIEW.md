@@ -1,5 +1,11 @@
 # Independent agent review guide
 
+## Separate review received; focused follow-up — Nov 22 evening
+
+The supplied independent agent review at `6fafc0d` found no new defect and confirmed prior fixes on Linux. Its Mac exclusions and dispositions are in REVIEW_RESPONSE. Do not keep describing that baseline as lacking any separate review; do not treat the report as a professional audit or approval of subsequent changes.
+
+Review the new `client_setup.rs`, `Session` cleanup, owner-only commands in `desktop.rs` and `AgentSetup.tsx`: registration must return no credential text; save/reveal must recheck expiry/generation/setup identity and revocation; the mutex must cover the file side effect; lock must drop pending settings; stale modal cleanup must not erase a newer setup. Save must create a new 0600 file, preserve existing/symlink targets, reject repository destinations, and deliver exact backend-held text. No new MCP tool, sharing permission, schema or encryption change is intended. Check the narrow `privacy.rs` status-phrase exception against quoted/literal credentials and additional secrets. Same-provider workspace disclosure is intentional.
+
 Review the implementation as an early working native product with outstanding release gates. Do not assume it is audited or public-release ready because tests pass.
 
 ## Current local review and privacy fix — Nov 22
@@ -8,7 +14,7 @@ Read [CODE_REVIEW_2026-11-22](CODE_REVIEW_2026-11-22.md) for the bounded source 
 
 ## Current acceptance handoff — Nov 22
 
-Use RELEASE_READINESS as the fixed gate list. The actual free release check passed at `7e7683d`, including all 199 tests and fresh advisories. Native controls subsequently recovered: owner-created fresh vault → fictional import/search → source-linked draft → saved-version approval → exact local Markdown export → lock/unlock preservation passed on that packaged implementation. The app was left locked; agent sharing stayed off. Later changes only update evidence documentation. Review current implementation boundaries independently and record blocking findings separately from optional improvements. Representative ChatGPT backend/native use has evidence; Claude/Grok representative imports and broad curation quality do not. Human automatic VoiceOver announcements remain unconfirmed. Apple distribution stays last.
+Use RELEASE_READINESS as the fixed gate list. The actual free release check passed at `7e7683d`, including all 199 tests and fresh advisories. Native controls subsequently recovered: owner-created fresh vault → fictional import/search → source-linked draft → saved-version approval → exact local Markdown export → lock/unlock preservation passed on that packaged implementation. The app was left locked; agent sharing stayed off. Subsequent privacy/setup changes have separate focused evidence. Review current implementation boundaries independently and record blocking findings separately from optional improvements. Representative ChatGPT backend/native use has evidence; Claude/Grok representative imports and broad curation quality do not. Human automatic VoiceOver announcements remain unconfirmed. Apple distribution stays last.
 
 ## Dependency and release-gate review — Nov 22
 
@@ -143,7 +149,7 @@ Read `src-tauri/tests/fixtures/README.md` and the ChatGPT manifest. The golden e
 
 ## Client configuration review focus
 
-Review `client_config.rs`, `desktop::create_client`, and `Agents.tsx` together: selected format must match the returned configuration and destination instructions, failed formatting must roll back registration, paths must survive serialization without becoming shell expressions, and tokens must remain environment entries. Grok expands `${...}` in settings, so affected paths are rejected. Settings are shown locally and never written into another agent's files. Verify the native selector, consent reset, one-time display and hide/revoke distinction; compiled/read-only parser evidence does not replace that walkthrough.
+Review `client_config.rs`, `desktop::create_client`, and `Agents.tsx` together: selected format must match the returned configuration and destination instructions, failed formatting must roll back registration, paths must survive serialization without becoming shell expressions, and tokens must remain environment entries. Grok expands `${...}` in settings, so affected paths are rejected. Settings are hidden until explicit reveal or saved to a new private file, never merged into another agent's existing files. Verify the native selector, consent reset, one-time display and hide/revoke distinction; compiled/read-only parser evidence does not replace that walkthrough.
 
 ## Round 3 fixes to review first
 

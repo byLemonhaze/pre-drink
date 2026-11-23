@@ -242,6 +242,27 @@ test("agent setup initially grants nothing and defaults to shared-only with ackn
   assert.doesNotMatch(html, /checked=""|PRE_DRINK_CLIENT_TOKEN/);
 });
 
+test("curator setup explains the shared provider workspace without granting foreign history", () => {
+  const { scopeDescription } = component("AgentSetup");
+  for (const [format, provider] of [
+    ["codex", "ChatGPT"],
+    ["grok", "Grok"],
+    ["claude", "Claude"],
+  ]) {
+    const curate = scopeDescription(format, "curate");
+    assert.ok(curate.startsWith(`${provider} history only`));
+    assert.match(
+      curate,
+      /share one workspace and can revise each other’s contributions/,
+    );
+    assert.match(scopeDescription(format, "history"), /Cannot write memories/);
+  }
+  assert.match(
+    scopeDescription("generic", "curate"),
+    /No raw history or private agent drafts/,
+  );
+});
+
 test("all choice surfaces avoid detached native select popups", () => {
   const Choice = component("ChoiceSelect").default;
   const html = renderToStaticMarkup(

@@ -2,6 +2,7 @@ import ChoiceSelect from "./ChoiceSelect";
 import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import Modal from "./Modal";
+import { save } from "@tauri-apps/plugin-dialog";
 
 export interface Client {
   id: string;
@@ -14,7 +15,7 @@ type Format = "codex" | "grok" | "claude" | "generic";
 type Access = "shared" | "history" | "curate";
 interface Setup {
   client: Client;
-  configuration: string;
+  request: { setup_id: string; session_generation: number };
 }
 interface Connection {
   request_seen: boolean;
@@ -52,7 +53,7 @@ export const destinations: Record<
 export function scopeDescription(format: Format, access: Access) {
   if (access === "shared" || format === "generic")
     return "Reads eligible shared memories and briefs. No raw history or private agent drafts.";
-  return `${destinations[format].provider} history only, excluding private or sensitive material, plus eligible shared memory.${access === "curate" ? " Can revise this provider’s contributions; publication follows your existing sharing rules." : " Cannot write memories."}`;
+  return `${destinations[format].provider} history only, excluding private or sensitive material, plus eligible shared memory.${access === "curate" ? " Curators connected to this provider share one workspace and can revise each other’s contributions. Publication follows your existing sharing rules." : " Cannot write memories."}`;
 }
 const probe =
   "Call only Pre-Drink's connection_status tool. Report the returned permissions. Do not read archives or memories, write anything, or call another tool.";
@@ -72,6 +73,8 @@ export default function AgentSetup({
   const [consent, setConsent] = useState(false);
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [setup, setSetup] = useState<Setup | null>(null);
+  const [configuration, setConfiguration] = useState("");
+  const [saved, setSaved] = useState(false);
   const [connection, setConnection] = useState<Connection | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -79,6 +82,14 @@ export default function AgentSetup({
   useEffect(() => {
     heading.current?.focus();
   }, [step]);
+  useEffect(() => {
+    if (!setup) return;
+    return () => {
+      void invoke("discard_client_setup", {
+        setupId: setup.request.setup_id,
+      }).catch(() => {});
+    };
+  }, [setup]);
   // Any sharing change invalidates the displayed observation until checked again.
   useEffect(() => {
     setConnection(null);
@@ -102,6 +113,38 @@ export default function AgentSetup({
     } catch (e) {
       setError(`${String(e)} Check the registered clients before retrying.`);
       await onChanged();
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function deliverSettings(destination: "reveal" | "file") {
+    if (!setup || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      if (destination === "reveal") {
+        setConfiguration(
+          await invoke<string>("reveal_client_settings", {
+            request: setup.request,
+          }),
+        );
+      } else {
+        const extension =
+          format === "codex" || format === "grok" ? "toml" : "json";
+        const path = await save({
+          title: "Save private agent settings outside your repositories",
+          defaultPath: `Pre-Drink-${format}.${extension}`,
+          filters: [
+            { name: "Private client settings", extensions: [extension] },
+          ],
+        });
+        if (!path) return;
+        await invoke("save_client_settings", { request: setup.request, path });
+        setSaved(true);
+      }
+    } catch (e) {
+      setError(String(e));
+      setConfiguration("");
     } finally {
       setBusy(false);
     }
@@ -251,19 +294,52 @@ export default function AgentSetup({
             <strong>{setup.client.name}</strong> · {destinations[format].label}
           </p>
           <p>{destinations[format].instructions}</p>
-          <textarea
-            className="setup-config"
-            rows={7}
-            readOnly
-            spellCheck={false}
-            aria-label="MCP client configuration"
-            value={setup.configuration}
-          />
           <p className="fine-print">
-            These settings contain a secret token, shown only during setup. Keep
-            them outside repositories and chats. Closing hides the token; it
-            does not revoke access. Revoke this client if you lose the settings
-            or need a different scope.
+            Your secret token is hidden. Save a new private file, then merge its
+            Pre-Drink sections using the instructions above. Existing client
+            settings are never overwritten. Saved files contain a plaintext
+            credential outside vault encryption: keep them in a local folder,
+            outside repositories, synced folders and chats.
+          </p>
+          <div className="form-actions">
+            <button
+              className="button primary"
+              disabled={busy}
+              onClick={() => void deliverSettings("file")}
+            >
+              Save private settings…
+            </button>
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => {
+                if (configuration) setConfiguration("");
+                else void deliverSettings("reveal");
+              }}
+            >
+              {configuration ? "Hide settings" : "Reveal settings"}
+            </button>
+          </div>
+          {configuration && (
+            <textarea
+              className="setup-config"
+              rows={7}
+              readOnly
+              spellCheck={false}
+              aria-label="MCP client configuration — contains a secret token"
+              value={configuration}
+            />
+          )}
+          {saved && (
+            <p role="status">
+              Saved with owner-only file permissions. Merge these settings into
+              your client and restart it; saving alone does not connect it.
+            </p>
+          )}
+          <p className="fine-print">
+            Closing setup or locking discards the unsaved settings, but does not
+            revoke the connection or erase a saved file. Revoke this client if
+            you lose the settings or need a different scope.
           </p>
           <div className="form-actions">
             <button
@@ -276,7 +352,10 @@ export default function AgentSetup({
             <button
               className="button primary"
               disabled={busy}
-              onClick={() => setStep(3)}
+              onClick={() => {
+                setConfiguration("");
+                setStep(3);
+              }}
             >
               Continue to verification
             </button>

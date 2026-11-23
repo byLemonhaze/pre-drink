@@ -36,7 +36,7 @@ The GUI is the only process owning an unlocked database connection. The MCP brid
 | `import.rs`, `provider_import.rs`, `model.rs`     | Bounded ZIP normalization and branch graph                                                                    |
 | `memory.rs`, `briefs.rs`, `privacy.rs`            | Derived knowledge and eligibility predicates                                                                  |
 | `session.rs`, `mac_lock.rs`                       | Connection ownership, idle timer and native notifications                                                     |
-| `client_config.rs`                                | Transactional registration and client-specific JSON/TOML settings                                             |
+| `client_config.rs`, `client_setup.rs`             | Registration/formatting plus session-bound reveal and private new-file delivery                               |
 | `agents.rs`                                       | Client credentials/scopes and tool policy                                                                     |
 | `broker.rs`                                       | Bounded authenticated Unix socket requests                                                                    |
 | `mcp.rs`                                          | Official rmcp SDK stdio tool server                                                                           |

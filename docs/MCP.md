@@ -7,14 +7,16 @@ Model Context Protocol is a standard way for an AI application to discover tools
 1. Put the app in a stable location before generating its configuration: the executable path is embedded.
 2. Open and unlock the vault.
 3. Review and approve eligible memories and briefs.
-4. In **Agent access → Set up a connection**, choose the application and name. Shared memory only is the default. Explicitly choose history or curation if needed; Codex binds ChatGPT, Grok binds Grok and Claude binds Claude. Acknowledge the scope and cloud disclosure.
-5. Create private settings, merge them into that client's local configuration and restart/reload it. Never commit the secret token or paste it into a chat.
+4. In **Agent access → Set up a connection**, choose the application and name. Shared memory only is the default. Explicitly choose history or curation if needed; Codex binds ChatGPT, Grok binds Grok and Claude binds Claude. Curators for the same provider share one workspace and can revise each other’s contributions. Acknowledge the scope and cloud disclosure.
+5. Create private settings, save a new private configuration file (or explicitly reveal it), merge its Pre-Drink sections into that client's local configuration and restart/reload it. Save does not install or connect the client. Keep the file outside repositories, synced folders and chats.
 6. Continue to Verify, explicitly enable sharing and keep Pre-Drink open/unlocked. Send the displayed permission-only `connection_status` instruction to the client, then choose **Check for client request**.
 7. After verification, ask for a narrow context pack or small private curation batch within the authorized scope.
 
 Verification retains only a set of client IDs whose authenticated successful response was delivered during the current unlock. Failed authentication, denied calls and oversized/error replies do not count. It stores no request text, returned content, timestamps or tokens, and clears on lock/unlock. The observation is not a live-connection monitor or model-identity proof. It can reflect any successful tool request from that credential, not exclusively the suggested probe.
 
 The app generates TOML for Codex/Grok Build or common `mcpServers` JSON for other local clients. Every format carries the same absolute executable path, `args: ["--mcp"]`, and `PRE_DRINK_SOCKET`, `PRE_DRINK_CLIENT_ID`, `PRE_DRINK_CLIENT_TOKEN` environment entries. Tokens are never placed in command arguments. No vault password belongs in any client configuration. Creating settings does not turn sharing on or modify another application’s files.
+
+Settings remain in one zeroizing backend buffer until explicit save/reveal, rather than being returned to the interface on registration. Save creates a new 0600 file, refuses an existing file/symlink and refuses detected Git-checkout destinations. It does not merge another app’s settings. Delivery rechecks the current unlock, setup identity and active registration while holding the session lock; a delayed Save panel cannot deliver after vault lock/expiry/replacement or revocation. Closing setup drops unsaved settings, without revoking the client. Saved files and explicitly revealed JavaScript text are not guaranteed to disappear from memory or other applications.
 
 The stdio handshake, discovery and calls are integration tested. Codex CLI 0.169.1 has also passed eight fictional-data acceptance phases (ten actual MCP calls), including approval/source restrictions, memory-only scope, lock, unlock and persisted revocation. The app’s fictional Codex/Grok configuration screens have native evidence; this does not establish setup in every external desktop client. No client is automatically given access.
 

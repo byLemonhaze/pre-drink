@@ -68,21 +68,34 @@ pub fn contains_secret(text: &str) -> bool {
         let value = c["value"]
             .trim_end_matches(['.', ',', ';', '!', '?'])
             .to_ascii_lowercase();
+        let status_phrase = c["value"].eq_ignore_ascii_case("too")
+            && c.name("value").is_some_and(|m| {
+                matches!(
+                    text[m.end()..]
+                        .trim()
+                        .trim_end_matches(['.', '!', '?'])
+                        .trim()
+                        .to_ascii_lowercase()
+                        .as_str(),
+                    "short" | "long"
+                )
+            });
         // Only unquoted prose after "is" gets this narrow exception. Literal
         // assignments, quoted values and any other secret in the text still block.
         !(c["operator"].eq_ignore_ascii_case("is")
             && c["quote"].is_empty()
-            && matches!(
-                value.as_str(),
-                "incorrect"
-                    | "invalid"
-                    | "missing"
-                    | "required"
-                    | "wrong"
-                    | "unset"
-                    | "empty"
-                    | "optional"
-            ))
+            && (status_phrase
+                || matches!(
+                    value.as_str(),
+                    "incorrect"
+                        | "invalid"
+                        | "missing"
+                        | "required"
+                        | "wrong"
+                        | "unset"
+                        | "empty"
+                        | "optional"
+                )))
     });
     assignment
         || SECRETS.is_match(text)
@@ -131,6 +144,8 @@ mod tests {
             "Build identifier 12345678901234567890",
             "2026-11-19 17:04:49",
             "The password is incorrect.",
+            "Your password is too short.",
+            "The password is too long!",
             "PIN is required",
             "Use pin 13",
             "The api key is missing",
@@ -158,6 +173,10 @@ mod tests {
             "SIN: 046454286",
             "046-454-286",
             "password = incorrect",
+            "password = too short",
+            r#"password is "too short""#,
+            "password is too short-fictional",
+            "password is too short. passcode is 4321",
             r#"password is "incorrect""#,
             "password is incorrect. passcode is 4321",
             "mobile number is 447911123456",

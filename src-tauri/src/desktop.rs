@@ -1,6 +1,7 @@
 use crate::{
     agents::AgentClient,
-    client_config::{create_setup, ClientFormat, ClientSetup},
+    client_config::{create_setup, ClientFormat},
+    client_setup::{PreparedClientSetup, SetupRequest},
     db::Vault,
     memory::MemoryInput,
     model::{Conversation, ImportReport, Message, Stats},
@@ -295,7 +296,7 @@ async fn create_client(
     can_curate: bool,
     format: ClientFormat,
     store: State<'_, Store>,
-) -> Result<ClientSetup, String> {
+) -> Result<PreparedClientSetup, String> {
     session_op(store.inner().clone(), move |s| {
         let executable =
             std::env::current_exe().map_err(|_| "Cannot locate the Pre-Drink executable.")?;
@@ -309,8 +310,42 @@ async fn create_client(
             &executable,
             &socket,
         )?;
-        s.touch();
-        Ok(config)
+        let extension = match format {
+            ClientFormat::Codex | ClientFormat::Grok => "toml",
+            _ => "json",
+        };
+        Ok(s.prepare_client_settings(config, extension))
+    })
+    .await
+}
+#[tauri::command]
+async fn reveal_client_settings(
+    request: SetupRequest,
+    store: State<'_, Store>,
+) -> Result<String, String> {
+    session_op(store.inner().clone(), move |s| {
+        s.with_client_settings(&request, |text, _| Ok(text.to_owned()))
+    })
+    .await
+}
+#[tauri::command]
+async fn save_client_settings(
+    request: SetupRequest,
+    path: String,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| {
+        s.with_client_settings(&request, |text, extension| {
+            crate::client_setup::save_settings(std::path::Path::new(&path), text, extension)
+        })
+    })
+    .await
+}
+#[tauri::command]
+async fn discard_client_setup(setup_id: String, store: State<'_, Store>) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| {
+        s.discard_client_settings(&setup_id);
+        Ok(())
     })
     .await
 }
@@ -698,6 +733,9 @@ pub fn run() {
             edit_curation,
             curation_history,
             create_client,
+            reveal_client_settings,
+            save_client_settings,
+            discard_client_setup,
             revoke_client,
             set_sharing,
             start_agent_session,
