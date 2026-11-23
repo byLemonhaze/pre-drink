@@ -8,6 +8,7 @@ pub mod privacy;
 pub mod privacy_recheck;
 pub mod review;
 
+pub mod agent_activity;
 pub mod agents;
 #[cfg(unix)]
 pub mod broker;

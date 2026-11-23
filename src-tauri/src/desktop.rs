@@ -441,7 +441,42 @@ async fn withdraw_curation(
 }
 #[tauri::command]
 async fn revoke_client(id: String, store: State<'_, Store>) -> Result<(), String> {
-    owner_op(store.inner().clone(), move |v| v.revoke_client(&id)).await
+    session_op(store.inner().clone(), move |s| {
+        s.revoke_registered_client(&id)
+    })
+    .await
+}
+#[tauri::command]
+async fn set_client_paused(
+    id: String,
+    paused: bool,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| s.pause_client(&id, paused)).await
+}
+#[tauri::command]
+async fn list_agent_activity(
+    before: Option<i64>,
+    store: State<'_, Store>,
+) -> Result<crate::agent_activity::ActivityPage, String> {
+    session_op(store.inner().clone(), move |s| s.activity_page(before)).await
+}
+#[tauri::command]
+async fn clear_agent_activity(
+    session_generation: u64,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| {
+        s.clear_activity(session_generation)
+    })
+    .await
+}
+#[tauri::command]
+async fn revoke_all_clients(
+    expected_ids: Vec<String>,
+    store: State<'_, Store>,
+) -> Result<(), String> {
+    session_op(store.inner().clone(), move |s| s.revoke_all(&expected_ids)).await
 }
 #[tauri::command]
 async fn set_sharing(enabled: bool, store: State<'_, Store>) -> Result<(), String> {
@@ -737,6 +772,10 @@ pub fn run() {
             save_client_settings,
             discard_client_setup,
             revoke_client,
+            set_client_paused,
+            list_agent_activity,
+            clear_agent_activity,
+            revoke_all_clients,
             set_sharing,
             start_agent_session,
             backup_vault,

@@ -180,8 +180,30 @@ mod tests {
             serde_json::from_str::<serde_json::Value>(&output).unwrap()
         };
         assert_eq!(exchange(&client.token, "connection_status")["ok"], false);
+        assert_eq!(
+            store
+                .lock()
+                .unwrap()
+                .access()
+                .unwrap()
+                .agent_activity(None)
+                .unwrap()
+                .len(),
+            1
+        );
         store.lock().unwrap().sharing = true;
         assert_eq!(exchange(&"x".repeat(64), "connection_status")["ok"], false);
+        assert_eq!(
+            store
+                .lock()
+                .unwrap()
+                .access()
+                .unwrap()
+                .agent_activity(None)
+                .unwrap()
+                .len(),
+            1
+        );
         assert_eq!(exchange(&client.token, "nonexistent_tool")["ok"], false);
         assert!(
             !store
@@ -200,6 +222,20 @@ mod tests {
         let mut s = store.lock().unwrap();
         assert!(s.client_connection(&client.client.id).unwrap().request_seen);
         assert_eq!(s.successful_clients.len(), 1);
+        assert_eq!(s.access().unwrap().agent_activity(None).unwrap().len(), 3);
+        s.pause_client(&client.client.id, true).unwrap();
+        drop(s);
+        assert_eq!(exchange(&client.token, "get_facts")["ok"], false);
+        let mut s = store.lock().unwrap();
+        assert!(!s.client_connection(&client.client.id).unwrap().request_seen);
+        assert_eq!(
+            s.access().unwrap().agent_activity(None).unwrap()[0].outcome,
+            "paused"
+        );
+        s.pause_client(&client.client.id, false).unwrap();
+        drop(s);
+        assert_eq!(exchange(&client.token, "connection_status")["ok"], true);
+        let mut s = store.lock().unwrap();
         s.sharing = false;
         let evidence = s.client_connection(&client.client.id).unwrap();
         assert!(evidence.request_seen && !evidence.sharing);

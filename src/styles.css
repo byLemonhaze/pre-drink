@@ -2122,3 +2122,40 @@ h1,
 .skip-navigation:focus {
   transform: none;
 }
+
+.agent-activity-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+.agent-activity-list li {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid var(--line);
+  overflow-wrap: anywhere;
+}
+.agent-activity-list time {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.client-row .form-actions {
+  flex-wrap: wrap;
+}
+.client-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.8rem 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.client-row > div:first-child {
+  flex: 1 1 220px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

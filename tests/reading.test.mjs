@@ -458,3 +458,68 @@ test("upgrade notice reports legacy approval resets even without new sensitive f
     "",
   );
 });
+
+test("individual client controls distinguish pause, global sharing and last request", () => {
+  const { ClientCard } = component("AgentActivity");
+  const client = {
+    id: "fictional",
+    name: "Fictional reader",
+    provider: null,
+    allow_chats: false,
+    can_curate: false,
+    paused: true,
+    last_request_at: null,
+  };
+  const html = renderToStaticMarkup(
+    React.createElement(ClientCard, {
+      client,
+      busy: false,
+      onPause() {},
+      onRevoke() {},
+    }),
+  );
+  assert.match(html, /Paused/);
+  assert.match(html, /Resume access for Fictional reader/);
+  assert.match(html, /No recorded request/);
+  assert.match(html, /Approved memory and briefs only/);
+  const enabled = renderToStaticMarkup(
+    React.createElement(ClientCard, {
+      client: { ...client, paused: false },
+      busy: true,
+      onPause() {},
+      onRevoke() {},
+    }),
+  );
+  assert.match(enabled, /Allowed when agent sharing is on/);
+  assert.match(enabled, /disabled="" aria-label="Pause access/);
+});
+
+test("activity distinguishes processing from delivery and exposes bounded paging", () => {
+  const Activity = component("AgentActivity").default;
+  const html = renderToStaticMarkup(
+    React.createElement(Activity, {
+      page: {
+        items: [
+          {
+            id: 7,
+            client_name: "Fictional reader",
+            occurred_at: 1000,
+            operation: "get_facts",
+            outcome: "started",
+          },
+        ],
+        next_before: 7,
+        session_generation: 1,
+      },
+      busy: false,
+      onRefresh() {},
+      onMore() {},
+      onClear() {},
+    }),
+  );
+  assert.match(html, /final result not recorded/);
+  assert.match(html, /not that a client received/);
+  assert.match(html, /Older activity/);
+  assert.match(html, /Latest 1,000 events/);
+  assert.doesNotMatch(html, /PRE_DRINK_CLIENT_TOKEN/);
+});

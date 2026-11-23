@@ -10,6 +10,8 @@ export interface Client {
   allow_chats: boolean;
   provider: "chatgpt" | "grok" | "claude" | null;
   can_curate: boolean;
+  paused: boolean;
+  last_request_at: number | null;
 }
 type Format = "codex" | "grok" | "claude" | "generic";
 type Access = "shared" | "history" | "curate";

@@ -24,24 +24,24 @@ The GUI is the only process owning an unlocked database connection. The MCP brid
 
 ## Source map
 
-| Module                                            | Responsibility                                                                                                |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `src/VaultGate.tsx`                               | Password gate, status, owner activity, lock-event unmount                                                     |
-| `src/App.tsx`                                     | Archive, search, branches, imports, privacy, navigation                                                       |
-| `src/Memory.tsx`, `Briefs.tsx`                    | Curation and explicit review                                                                                  |
-| `src/Agents.tsx`, `Backup.tsx`                    | Consent, clients, preview, encrypted backups                                                                  |
-| `src-tauri/src/desktop.rs`                        | Tauri commands, startup, private directory, exclusive app-instance lock                                       |
-| `crypto.rs`                                       | Fixed-format Argon2id/SQLCipher configuration                                                                 |
-| `db.rs`, `schema.sql`                             | Persistence, migrations, FTS, backup and import transactions                                                  |
-| `import.rs`, `provider_import.rs`, `model.rs`     | Bounded ZIP normalization and branch graph                                                                    |
-| `memory.rs`, `briefs.rs`, `privacy.rs`            | Derived knowledge and eligibility predicates                                                                  |
-| `session.rs`, `mac_lock.rs`                       | Connection ownership, idle timer and native notifications                                                     |
-| `client_config.rs`, `client_setup.rs`             | Registration/formatting plus session-bound reveal and private new-file delivery                               |
-| `agents.rs`                                       | Client credentials/scopes and tool policy                                                                     |
-| `broker.rs`                                       | Bounded authenticated Unix socket requests                                                                    |
-| `mcp.rs`                                          | Official rmcp SDK stdio tool server                                                                           |
-| `curation.rs`, `curation.sql`, `curation_jobs.rs` | Provider-private contributions, evidence versions, revision/retry safety, publication and resumable manifests |
-| `src/Curation.tsx`                                | Owner workspace, batch review, edit/history/withdrawal and optional publication rules                         |
+| Module                                                 | Responsibility                                                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `src/VaultGate.tsx`                                    | Password gate, status, owner activity, lock-event unmount                                                     |
+| `src/App.tsx`                                          | Archive, search, branches, imports, privacy, navigation                                                       |
+| `src/Memory.tsx`, `Briefs.tsx`                         | Curation and explicit review                                                                                  |
+| `src/Agents.tsx`, `Backup.tsx`                         | Consent, clients, preview, encrypted backups                                                                  |
+| `src-tauri/src/desktop.rs`                             | Tauri commands, startup, private directory, exclusive app-instance lock                                       |
+| `crypto.rs`                                            | Fixed-format Argon2id/SQLCipher configuration                                                                 |
+| `db.rs`, `schema.sql`                                  | Persistence, migrations, FTS, backup and import transactions                                                  |
+| `import.rs`, `provider_import.rs`, `model.rs`          | Bounded ZIP normalization and branch graph                                                                    |
+| `memory.rs`, `briefs.rs`, `privacy.rs`                 | Derived knowledge and eligibility predicates                                                                  |
+| `session.rs`, `mac_lock.rs`                            | Connection ownership, idle timer and native notifications                                                     |
+| `client_config.rs`, `client_setup.rs`                  | Registration/formatting plus session-bound reveal and private new-file delivery                               |
+| `agents.rs`, `agent_activity.rs`, `agent_activity.sql` | Credentials/scopes, persistent per-client pause, bounded encrypted activity and tool policy                   |
+| `broker.rs`                                            | Bounded authenticated Unix socket requests                                                                    |
+| `mcp.rs`                                               | Official rmcp SDK stdio tool server                                                                           |
+| `curation.rs`, `curation.sql`, `curation_jobs.rs`      | Provider-private contributions, evidence versions, revision/retry safety, publication and resumable manifests |
+| `src/Curation.tsx`                                     | Owner workspace, batch review, edit/history/withdrawal and optional publication rules                         |
 
 ## Data model
 
@@ -174,3 +174,5 @@ Privacy reclassification follows stored message→memory/curation→brief links 
 ## Resumable import preparation — schema 8
 
 Schema 8 adds encrypted import checkpoints without changing encryption or existing approvals. Backups retain unfinished preparation. It is excluded from search and all agent/shared-memory tools until one atomic final save succeeds. Only the owner can resume or discard; unlocking does not resume automatically. Pause/lock stops work at a safe preparation boundary, while an already-started final database transaction must finish or roll back. See [IMPORTS](IMPORTS.md) for the ZIP fingerprint, retry, capacity and interruption contract.
+
+Schema 9 adds per-client controls and bounded metadata-only activity. See [AGENT_ACTIVITY](AGENT_ACTIVITY.md) for migration, retention, logging-failure and processing-versus-delivery semantics. The encryption format is unchanged.

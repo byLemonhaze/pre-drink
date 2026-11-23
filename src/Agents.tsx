@@ -5,6 +5,8 @@ import type { AgentSessionStatus } from "./types";
 import Curation from "./Curation";
 import { ShieldCheck } from "lucide-react";
 import AgentSetup, { type Client } from "./AgentSetup";
+import AgentActivity, { ClientCard, type ActivityPage } from "./AgentActivity";
+import Modal from "./Modal";
 export default function Agents({
   sharing,
   agentSession,
@@ -19,10 +21,75 @@ export default function Agents({
   const [topic, setTopic] = useState("");
   const [pack, setPack] = useState("");
   const [busy, setBusy] = useState(false);
-  const refresh = () =>
-    invoke<Client[]>("list_clients")
-      .then(setClients)
-      .catch((e) => setError(String(e)));
+  const [activity, setActivity] = useState<ActivityPage | null>(null);
+  const [confirm, setConfirm] = useState<"clear" | "revoke" | null>(null);
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [reviewedIds, setReviewedIds] = useState<string[]>([]);
+  const refresh = async () => {
+    try {
+      const [currentClients, currentActivity] = await Promise.all([
+        invoke<Client[]>("list_clients"),
+        invoke<ActivityPage>("list_agent_activity", { before: null }),
+      ]);
+      setClients(currentClients);
+      setActivity(currentActivity);
+    } catch (e) {
+      setError(String(e));
+    }
+  };
+  async function pause(client: Client) {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      await invoke("set_client_paused", {
+        id: client.id,
+        paused: !client.paused,
+      });
+      await refresh();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function more() {
+    if (busy || !activity?.next_before) return;
+    setBusy(true);
+    setError("");
+    try {
+      const next = await invoke<ActivityPage>("list_agent_activity", {
+        before: activity.next_before,
+      });
+      if (next.session_generation !== activity.session_generation)
+        throw new Error("The vault session changed. Refresh activity.");
+      setActivity({ ...next, items: [...activity.items, ...next.items] });
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function applyConfirmed() {
+    if (busy || !acknowledged || !confirm || !activity) return;
+    setBusy(true);
+    setError("");
+    try {
+      if (confirm === "clear")
+        await invoke("clear_agent_activity", {
+          sessionGeneration: activity.session_generation,
+        });
+      else await invoke("revoke_all_clients", { expectedIds: reviewedIds });
+      setConfirm(null);
+      setAcknowledged(false);
+      await refresh();
+    } catch (e) {
+      setConfirm(null);
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
   useEffect(() => {
     void refresh();
   }, []);
@@ -181,25 +248,106 @@ export default function Agents({
         />
       )}
       <Curation />
-      {clients.map((client) => (
-        <section className="client-row" key={client.id}>
-          <div>
-            <strong>{client.name}</strong>
-            <p>
-              {client.allow_chats
-                ? `${client.provider === "grok" ? "Grok" : client.provider === "claude" ? "Claude" : "ChatGPT"} history only${client.can_curate ? " + private curation" : ""}; eligible shared memory`
-                : "Approved memory and briefs only"}
-            </p>
-          </div>
+      <section aria-label="Registered connections">
+        <h2>Your connections</h2>
+        <p className="fine-print">
+          Pause keeps the same credential and permissions. Resume restores that
+          access only when global agent sharing is on. Revoke permanently
+          invalidates the credential. Already returned context cannot be
+          recalled.
+        </p>
+        {!clients.length && <p>No connections registered.</p>}
+        {clients.map((client) => (
+          <ClientCard
+            key={client.id}
+            client={client}
+            busy={busy}
+            onPause={() => void pause(client)}
+            onRevoke={() => void revoke(client.id)}
+          />
+        ))}
+        {!!clients.length && (
           <button
             className="button secondary"
             disabled={busy}
-            onClick={() => void revoke(client.id)}
+            onClick={() => {
+              setReviewedIds(clients.map((c) => c.id));
+              setAcknowledged(false);
+              setConfirm("revoke");
+            }}
           >
-            Revoke access
+            Revoke all connections…
           </button>
-        </section>
-      ))}
+        )}
+      </section>
+      <AgentActivity
+        page={activity}
+        busy={busy}
+        onRefresh={() => void refresh()}
+        onMore={() => void more()}
+        onClear={() => {
+          setAcknowledged(false);
+          setConfirm("clear");
+        }}
+      />
+      {confirm && (
+        <Modal
+          label={
+            confirm === "clear"
+              ? "Clear access history"
+              : "Revoke all connections"
+          }
+          busy={busy}
+          onClose={() => setConfirm(null)}
+        >
+          <h2 data-initial-focus tabIndex={-1}>
+            {confirm === "clear"
+              ? "Clear access history?"
+              : `Revoke ${reviewedIds.length} connections?`}
+          </h2>
+          <p>
+            {confirm === "clear"
+              ? "This permanently clears the current activity record and last-request times in this vault. Connections and their paused states stay unchanged. New requests can create new events. Older encrypted backups retain their history."
+              : "All listed credentials will stop working and agent sharing will turn off. Reconnecting requires new settings. Your conversations and memories are kept; returned context cannot be recalled."}
+          </p>
+          {confirm === "revoke" && (
+            <ul>
+              {clients
+                .filter((c) => reviewedIds.includes(c.id))
+                .map((c) => (
+                  <li key={c.id}>{c.name}</li>
+                ))}
+            </ul>
+          )}
+          <label className="checkbox-row">
+            <input
+              type="checkbox"
+              checked={acknowledged}
+              onChange={(e) => setAcknowledged(e.target.checked)}
+              disabled={busy}
+            />
+            I understand and want to continue.
+          </label>
+          <div className="form-actions">
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => setConfirm(null)}
+            >
+              Cancel
+            </button>
+            <button
+              className="button primary"
+              disabled={busy || !acknowledged}
+              onClick={() => void applyConfirmed()}
+            >
+              {confirm === "clear"
+                ? "Clear activity"
+                : "Revoke all & stop sharing"}
+            </button>
+          </div>
+        </Modal>
+      )}
       <section className="settings-card">
         <h2>Preview the context</h2>
         <p>

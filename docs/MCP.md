@@ -12,7 +12,7 @@ Model Context Protocol is a standard way for an AI application to discover tools
 6. Continue to Verify, explicitly enable sharing and keep Pre-Drink open/unlocked. Send the displayed permission-only `connection_status` instruction to the client, then choose **Check for client request**.
 7. After verification, ask for a narrow context pack or small private curation batch within the authorized scope.
 
-Verification retains only a set of client IDs whose authenticated successful response was delivered during the current unlock. Failed authentication, denied calls and oversized/error replies do not count. It stores no request text, returned content, timestamps or tokens, and clears on lock/unlock. The observation is not a live-connection monitor or model-identity proof. It can reflect any successful tool request from that credential, not exclusively the suggested probe.
+Setup verification retains a set of client IDs whose authenticated successful response was delivered during the current unlock. Separate encrypted metadata-only activity history is described in [AGENT_ACTIVITY](AGENT_ACTIVITY.md). Failed authentication, denied calls and oversized/error replies do not count. It stores no request text, returned content, timestamps or tokens, and clears on lock/unlock. The observation is not a live-connection monitor or model-identity proof. It can reflect any successful tool request from that credential, not exclusively the suggested probe.
 
 The app generates TOML for Codex/Grok Build or common `mcpServers` JSON for other local clients. Every format carries the same absolute executable path, `args: ["--mcp"]`, and `PRE_DRINK_SOCKET`, `PRE_DRINK_CLIENT_ID`, `PRE_DRINK_CLIENT_TOKEN` environment entries. Tokens are never placed in command arguments. No vault password belongs in any client configuration. Creating settings does not turn sharing on or modify another application’s files.
 
@@ -51,7 +51,7 @@ All MCP context packs now contain shared memory/briefs only. Provider-scoped sea
 
 ## Control and cost
 
-Sharing off, locking, or quitting stops future calls. Unlocking does not re-enable sharing. Revoke credentials individually; change scope or replace lost credentials by revoking and creating a new client. Returned content cannot be recalled.
+Sharing off, locking, or quitting stops future calls. Individual pause blocks every tool for that credential without changing its scope; resuming never enables global sharing. Pauses persist, and the owner can review/clear bounded encrypted activity or revoke all connections. No MCP tool can read that activity or change these controls. Unlocking does not re-enable sharing. Revoke credentials individually; change scope or replace lost credentials by revoking and creating a new client. Returned content cannot be recalled.
 
 The local server makes no AI calls and has no per-use charge. Your assistant may consume normal subscription allowances or API tokens when processing context. Cloud assistants may transmit it to their providers. For shared context to remain entirely local, use a local client/model.
 

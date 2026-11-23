@@ -704,7 +704,7 @@ fn schema_seven_upgrade_adds_empty_checkpoints_without_resetting_approvals() {
         v.connection
             .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
             .unwrap(),
-        8
+        9
     );
 }
 

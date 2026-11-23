@@ -63,7 +63,7 @@ impl Vault {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .map_err(|e| e.to_string())?;
-        if version > 8 {
+        if version > 9 {
             return Err("This vault needs a newer Pre-Drink version.".into());
         }
         if version == 1 {
@@ -177,7 +177,9 @@ impl Vault {
         }
         tx.execute_batch(include_str!("import_jobs.sql"))
             .map_err(|e| e.to_string())?;
-        tx.execute_batch("PRAGMA user_version=8;")
+        tx.execute_batch(include_str!("agent_activity.sql"))
+            .map_err(|e| e.to_string())?;
+        tx.execute_batch("PRAGMA user_version=9;")
             .map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
         let mut vault = Self {
@@ -238,7 +240,7 @@ impl Vault {
             }
             let exported = self
                 .connection
-                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=8;");
+                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=9;");
             let detached = self.connection.execute_batch("DETACH DATABASE backup;");
             exported
                 .and(detached)
@@ -619,7 +621,7 @@ mod provider_upgrade_tests {
             v.connection
                 .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
-            8
+            9
         );
         assert_eq!(
             v.connection
@@ -697,5 +699,76 @@ mod provider_upgrade_tests {
                 .unwrap(),
             0
         );
+    }
+}
+
+#[cfg(test)]
+mod activity_upgrade_tests {
+    use super::*;
+    fn version_eight() -> Connection {
+        let c = Connection::open_in_memory().unwrap();
+        c.execute_batch(include_str!("schema.sql")).unwrap();
+        c.execute_batch(include_str!("curation.sql")).unwrap();
+        c.execute_batch(include_str!("import_jobs.sql")).unwrap();
+        c.execute_batch("INSERT INTO agent_clients VALUES('fictional','Fictional reader','fictional-hash',0,1); INSERT INTO memory(id,type,content,approved,created_at,updated_at) VALUES('note','project','Garden bench',1,1,1); PRAGMA user_version=8;").unwrap();
+        c
+    }
+    #[test]
+    fn version_eight_adds_controls_without_new_permissions_or_approval_resets() {
+        let v = Vault::initialize(version_eight(), ":memory:".into()).unwrap();
+        let client = v.clients().unwrap().remove(0);
+        assert!(
+            !client.paused
+                && !client.allow_chats
+                && !client.can_curate
+                && client.last_request_at.is_none()
+        );
+        assert_eq!(v.memories(None, "", true).unwrap().len(), 1);
+        assert!(v.agent_activity(None).unwrap().is_empty());
+        assert_eq!(
+            v.connection
+                .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
+                .unwrap(),
+            9
+        );
+        v.verify().unwrap();
+    }
+    #[test]
+    fn activity_upgrade_failure_rolls_back_version_and_new_tables() {
+        let c = version_eight();
+        // Retain a second handle to inspect the file after initialization fails.
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("fictional-old.sqlite3");
+        c.execute("VACUUM INTO ?1", [path.to_str().unwrap()])
+            .unwrap();
+        drop(c);
+        let c = Connection::open(&path).unwrap();
+        c.execute_batch("CREATE VIEW agent_activity AS SELECT 1 AS id;")
+            .unwrap();
+        assert!(Vault::initialize(c, path.to_string_lossy().into_owned()).is_err());
+        let c = Connection::open(&path).unwrap();
+        assert_eq!(
+            c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
+                .unwrap(),
+            8
+        );
+        assert_eq!(
+            c.query_row(
+                "SELECT count(*) FROM sqlite_master WHERE name='agent_controls'",
+                [],
+                |r| r.get::<_, i64>(0)
+            )
+            .unwrap(),
+            0
+        );
+        assert_eq!(
+            c.query_row("SELECT approved FROM memory WHERE id='note'", [], |r| r
+                .get::<_, i64>(0))
+                .unwrap(),
+            1
+        );
+        c.execute_batch("DROP VIEW agent_activity;").unwrap();
+        let v = Vault::initialize(c, ":memory:".into()).unwrap();
+        assert_eq!(v.clients().unwrap().len(), 1);
     }
 }

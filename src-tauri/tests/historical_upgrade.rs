@@ -31,7 +31,7 @@ fn check(version: i64, upgraded_v5: bool) {
     v.verify().unwrap();
     assert_eq!(v.stats().unwrap().conversations, 4);
     let c = connect(&path);
-    assert_eq!(number(&c, "PRAGMA user_version"), 8);
+    assert_eq!(number(&c, "PRAGMA user_version"), 9);
     for table in ["messages", "conversations"] {
         // Text, raw JSON and branch structure survive; only the privacy bit changes.
         let columns = if table == "messages" {
@@ -372,7 +372,7 @@ fn historical_backup_restore_migrates_only_the_copy_and_revokes_old_clients() {
     assert!(v.clients().unwrap().is_empty());
     assert!(v.agent_call(&request("get_facts")).is_err());
     let c = connect(&s.path().unwrap());
-    assert_eq!(number(&c, "PRAGMA user_version"), 8);
+    assert_eq!(number(&c, "PRAGMA user_version"), 9);
     assert_eq!(number(&c, "SELECT count(*) FROM curation_revisions"), 1);
     assert_eq!(number(&c, "SELECT count(*) FROM curation_owner_holds"), 1);
     assert_eq!(

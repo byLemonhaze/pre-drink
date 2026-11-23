@@ -11,6 +11,8 @@ pub struct AgentClient {
     pub allow_chats: bool,
     pub provider: Option<String>,
     pub can_curate: bool,
+    pub paused: bool,
+    pub last_request_at: Option<f64>,
 }
 
 #[derive(Serialize)]
@@ -75,6 +77,7 @@ impl Vault {
             )
             .map_err(|e| e.to_string())?;
         }
+        crate::agent_activity::record(&tx, Some(&id), name, "client_created", "completed")?;
         tx.commit().map_err(|e| e.to_string())?;
         Ok(NewClient {
             client: AgentClient {
@@ -83,6 +86,8 @@ impl Vault {
                 allow_chats,
                 provider: provider.map(str::to_owned),
                 can_curate,
+                paused: false,
+                last_request_at: None,
             },
             token,
         })
@@ -90,7 +95,7 @@ impl Vault {
     pub fn clients(&self) -> Result<Vec<AgentClient>, String> {
         let mut stmt = self
             .connection
-            .prepare("SELECT a.id,a.name,s.provider IS NOT NULL,s.provider,COALESCE(s.can_curate,0) FROM agent_clients a LEFT JOIN agent_scopes s ON s.client_id=a.id ORDER BY a.created_at,a.id")
+            .prepare("SELECT a.id,a.name,s.provider IS NOT NULL,s.provider,COALESCE(s.can_curate,0),COALESCE(c.paused,0),c.last_request_at FROM agent_clients a LEFT JOIN agent_scopes s ON s.client_id=a.id LEFT JOIN agent_controls c ON c.client_id=a.id ORDER BY a.created_at,a.id")
             .map_err(|e| e.to_string())?;
         let rows = stmt
             .query_map([], |r| {
@@ -100,6 +105,8 @@ impl Vault {
                     allow_chats: r.get(2)?,
                     provider: r.get(3)?,
                     can_curate: r.get(4)?,
+                    paused: r.get(5)?,
+                    last_request_at: r.get(6)?,
                 })
             })
             .map_err(|e| e.to_string())?
@@ -108,30 +115,64 @@ impl Vault {
         rows
     }
     pub fn revoke_client(&self, id: &str) -> Result<(), String> {
-        self.connection
-            .execute("DELETE FROM agent_clients WHERE id=?1", [id])
+        let tx = self
+            .connection
+            .unchecked_transaction()
             .map_err(|e| e.to_string())?;
-        Ok(())
+        let name: Option<String> = tx
+            .query_row("SELECT name FROM agent_clients WHERE id=?1", [id], |r| {
+                r.get(0)
+            })
+            .optional()
+            .map_err(|e| e.to_string())?;
+        if let Some(name) = name {
+            crate::agent_activity::record(&tx, Some(id), &name, "client_revoked", "completed")?;
+            tx.execute("DELETE FROM agent_clients WHERE id=?1", [id])
+                .map_err(|e| e.to_string())?;
+        }
+        tx.commit().map_err(|e| e.to_string())
     }
     pub fn agent_call(&self, request: &AgentRequest) -> Result<serde_json::Value, String> {
         if request.token.len() != 64 || request.client_id.len() > 80 {
             return Err("Client access was denied.".into());
         }
-        let client: Option<(String, Option<String>, bool)> = self
+        let client: Option<(String, Option<String>, bool, bool)> = self
             .connection
             .query_row(
-                "SELECT a.token_hash,s.provider,COALESCE(s.can_curate,0) FROM agent_clients a LEFT JOIN agent_scopes s ON s.client_id=a.id WHERE a.id=?1",
+                "SELECT a.token_hash,s.provider,COALESCE(s.can_curate,0),COALESCE(c.paused,0) FROM agent_clients a LEFT JOIN agent_scopes s ON s.client_id=a.id LEFT JOIN agent_controls c ON c.client_id=a.id WHERE a.id=?1",
                 [&request.client_id],
-                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?)),
+                |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)),
             )
             .optional()
             .map_err(|e| e.to_string())?;
-        let (expected, provider, can_curate) =
+        let (expected, provider, can_curate, paused) =
             client.ok_or("Client access was denied or revoked.")?;
         let actual = hex::encode(Sha256::digest(request.token.as_bytes()));
         if !bool::from(expected.as_bytes().ct_eq(actual.as_bytes())) {
             return Err("Client access was denied.".into());
         }
+        let event = self.begin_agent_activity(&request.client_id, &request.tool)?;
+        if paused {
+            self.finish_agent_activity(event, "paused")?;
+            return Err("This connection is paused. Resume it in Pre-Drink to use its existing permissions.".into());
+        }
+        let result = self.dispatch_agent_call(request, provider, can_curate);
+        self.finish_agent_activity(
+            event,
+            if result.is_ok() {
+                "completed"
+            } else {
+                "failed"
+            },
+        )?;
+        result
+    }
+    fn dispatch_agent_call(
+        &self,
+        request: &AgentRequest,
+        provider: Option<String>,
+        can_curate: bool,
+    ) -> Result<serde_json::Value, String> {
         let limit = request.limit.unwrap_or(20).clamp(1, 50);
         match request.tool.as_str() {
             "connection_status" => Ok(serde_json::json!({
