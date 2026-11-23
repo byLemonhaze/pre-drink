@@ -4,6 +4,8 @@
 
 **Revoke access** invalidates one credential. **Revoke all connections…** reviews the current list, requires acknowledgement and stops global sharing/work sessions before attempting revocation. A changed registration list rejects the deletion and asks for fresh review. Neither operation removes conversations, memories or provider drafts. After revocation, reconnecting requires new settings. Restore/password change still removes all registrations; retained history is not permission to reconnect.
 
+Revoke-all records the verified owner action before ending an extended work session, so normal idle expiry cannot interrupt the credential deletion midway. Already-expired sessions remain locked. The owner view ignores obsolete refresh/page replies after newer reads or control changes.
+
 If a storage error prevents a pause or revocation from being saved, the desktop session stops global sharing. The UI reports that fallback; it must not claim the persistent change succeeded. Successful calls already being processed/written under the session mutex finish before a pause can take effect. Later calls are rechecked. Resume failures never broaden access.
 
 ## What is recorded

@@ -523,3 +523,158 @@ test("activity distinguishes processing from delivery and exposes bounded paging
   assert.match(html, /Latest 1,000 events/);
   assert.doesNotMatch(html, /PRE_DRINK_CLIENT_TOKEN/);
 });
+
+// Exercise the actual Agents handlers with deferred IPC replies. This small
+// hook harness controls state/effect scheduling only; it makes no DOM or native
+// accessibility claims and adds no production/test dependency.
+function interactiveAgents() {
+  const path = fileURLToPath(new URL("../src/Agents.tsx", import.meta.url));
+  const source = ts.transpileModule(readFileSync(path, "utf8"), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      jsx: ts.JsxEmit.ReactJSX,
+      esModuleInterop: true,
+    },
+  }).outputText;
+  const slots = [];
+  let cursor = 0;
+  const effects = [];
+  const requests = [];
+  const hooks = {
+    ...React,
+    useState(initial) {
+      const i = cursor++;
+      if (!(i in slots)) slots[i] = initial;
+      return [
+        slots[i],
+        (value) => {
+          slots[i] = typeof value === "function" ? value(slots[i]) : value;
+        },
+      ];
+    },
+    useRef(initial) {
+      const i = cursor++;
+      if (!(i in slots)) slots[i] = { current: initial };
+      return slots[i];
+    },
+    useEffect(effect, dependencies) {
+      const i = cursor++;
+      if (!(i in slots)) {
+        slots[i] = dependencies;
+        effects.push(effect);
+      }
+    },
+  };
+  const module = { exports: {} };
+  const require = createRequire(path);
+  const imports = (id) => {
+    if (id === "react") return hooks;
+    if (id === "@tauri-apps/api/core")
+      return {
+        invoke: (command, args) =>
+          new Promise((resolve, reject) =>
+            requests.push({ command, args, resolve, reject }),
+          ),
+      };
+    return id.startsWith("./") ? component(id.slice(2)) : require(id);
+  };
+  vm.runInThisContext(`(function(module, exports, require) {${source}\n})`, {
+    filename: path,
+  })(module, module.exports, imports);
+  function render() {
+    cursor = 0;
+    const tree = module.exports.default({ sharing: false, agentSession: null });
+    const elements = [];
+    const visit = (node) => {
+      if (Array.isArray(node)) return node.forEach(visit);
+      if (!React.isValidElement(node)) return;
+      elements.push(node);
+      visit(node.props.children);
+    };
+    visit(tree);
+    return elements;
+  }
+  render();
+  effects.forEach((effect) => effect());
+  return { render, requests };
+}
+const settleHandlers = () => new Promise((resolve) => setImmediate(resolve));
+const activityFixture = (id) => ({
+  items: [
+    {
+      id,
+      client_name: "Fictional reader",
+      occurred_at: 1000,
+      operation: "get_facts",
+      outcome: "completed",
+    },
+  ],
+  next_before: null,
+  session_generation: 1,
+});
+const readerFixture = {
+  id: "fictional",
+  name: "Fictional reader",
+  allow_chats: false,
+  provider: null,
+  can_curate: false,
+  paused: false,
+  last_request_at: 1000,
+};
+function child(view, name) {
+  return view.find((node) => node.type?.name === name);
+}
+
+test("delayed refresh cannot overwrite a confirmed pause with old access status", async () => {
+  const ui = interactiveAgents();
+  ui.requests[0].resolve([readerFixture]);
+  ui.requests[1].resolve(activityFixture(1));
+  await settleHandlers();
+  child(ui.render(), "AgentActivity").props.onRefresh();
+  const stale = ui.requests.slice(2, 4);
+  child(ui.render(), "ClientCard").props.onPause();
+  const pause = ui.requests.find((r) => r.command === "set_client_paused");
+  assert.equal(pause.args.paused, true);
+  pause.resolve();
+  await settleHandlers();
+  const latest = ui.requests.slice(-2);
+  latest[0].resolve([{ ...readerFixture, paused: true }]);
+  latest[1].resolve(activityFixture(2));
+  await settleHandlers();
+  assert.equal(child(ui.render(), "ClientCard").props.client.paused, true);
+  stale[0].resolve([readerFixture]);
+  stale[1].resolve(activityFixture(1));
+  await settleHandlers();
+  assert.equal(child(ui.render(), "ClientCard").props.client.paused, true);
+  assert.equal(child(ui.render(), "AgentActivity").props.page.items[0].id, 2);
+});
+
+test("clearing activity cannot be undone on screen by an older refresh reply", async () => {
+  const ui = interactiveAgents();
+  ui.requests[0].resolve([readerFixture]);
+  ui.requests[1].resolve(activityFixture(1));
+  await settleHandlers();
+  child(ui.render(), "AgentActivity").props.onRefresh();
+  const stale = ui.requests.slice(2, 4);
+  child(ui.render(), "AgentActivity").props.onClear();
+  ui.render()
+    .find((n) => n.type === "input" && n.props.type === "checkbox")
+    .props.onChange({ target: { checked: true } });
+  ui.render()
+    .find((n) => n.type === "button" && n.props.children === "Clear activity")
+    .props.onClick();
+  ui.requests.find((r) => r.command === "clear_agent_activity").resolve();
+  await settleHandlers();
+  const latest = ui.requests.slice(-2);
+  latest[0].resolve([{ ...readerFixture, last_request_at: null }]);
+  latest[1].resolve({ ...activityFixture(1), items: [] });
+  await settleHandlers();
+  stale[0].resolve([readerFixture]);
+  stale[1].resolve(activityFixture(1));
+  await settleHandlers();
+  assert.equal(child(ui.render(), "AgentActivity").props.page.items.length, 0);
+  assert.equal(
+    child(ui.render(), "ClientCard").props.client.last_request_at,
+    null,
+  );
+});

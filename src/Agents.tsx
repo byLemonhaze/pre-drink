@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import ChoiceSelect from "./ChoiceSelect";
 import type { AgentSessionStatus } from "./types";
@@ -25,20 +25,26 @@ export default function Agents({
   const [confirm, setConfirm] = useState<"clear" | "revoke" | null>(null);
   const [acknowledged, setAcknowledged] = useState(false);
   const [reviewedIds, setReviewedIds] = useState<string[]>([]);
+  // Ignore reads started before a newer read, control change, or unmount.
+  // IPC replies can arrive out of order even when backend calls are serialized.
+  const readGeneration = useRef(0);
   const refresh = async () => {
+    const request = ++readGeneration.current;
     try {
       const [currentClients, currentActivity] = await Promise.all([
         invoke<Client[]>("list_clients"),
         invoke<ActivityPage>("list_agent_activity", { before: null }),
       ]);
+      if (request !== readGeneration.current) return;
       setClients(currentClients);
       setActivity(currentActivity);
     } catch (e) {
-      setError(String(e));
+      if (request === readGeneration.current) setError(String(e));
     }
   };
   async function pause(client: Client) {
     if (busy) return;
+    ++readGeneration.current;
     setBusy(true);
     setError("");
     try {
@@ -55,23 +61,26 @@ export default function Agents({
   }
   async function more() {
     if (busy || !activity?.next_before) return;
+    const request = ++readGeneration.current;
     setBusy(true);
     setError("");
     try {
       const next = await invoke<ActivityPage>("list_agent_activity", {
         before: activity.next_before,
       });
+      if (request !== readGeneration.current) return;
       if (next.session_generation !== activity.session_generation)
         throw new Error("The vault session changed. Refresh activity.");
       setActivity({ ...next, items: [...activity.items, ...next.items] });
     } catch (e) {
-      setError(String(e));
+      if (request === readGeneration.current) setError(String(e));
     } finally {
       setBusy(false);
     }
   }
   async function applyConfirmed() {
     if (busy || !acknowledged || !confirm || !activity) return;
+    ++readGeneration.current;
     setBusy(true);
     setError("");
     try {
@@ -92,6 +101,9 @@ export default function Agents({
   }
   useEffect(() => {
     void refresh();
+    return () => {
+      ++readGeneration.current;
+    };
   }, []);
   async function toggleSharing() {
     if (busy) return;
@@ -118,6 +130,7 @@ export default function Agents({
   }
   async function revoke(id: string) {
     if (busy) return;
+    ++readGeneration.current;
     setBusy(true);
     try {
       await invoke("revoke_client", { id });

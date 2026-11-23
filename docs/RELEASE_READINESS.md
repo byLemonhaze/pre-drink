@@ -66,3 +66,7 @@ The owner supplied the separate agent review at `6fafc0d`: no new defect establi
 ## Latest local improvement — agent controls
 
 The current local verifier passed 216 tests (171 Rust, 24 frontend, 21 Python), build/format/source checks, provider fixtures and Clippy. Native fictional pause/resume, history refresh, clear/revoke-all review-and-cancel, and final lock passed; sharing stayed off. The implementation adds schema-9 encrypted metadata history and per-client pause/resume without changing approvals or provider scopes. Migration/rollback and actual clear/revoke-all effects have automated coverage. See [AGENT_ACTIVITY](AGENT_ACTIVITY.md) for semantics and [VALIDATION](VALIDATION.md) for exact scope. The earlier clean release-script run remains historical evidence; this pass used the same underlying local verifier directly. The new delta still needs a separate reviewer before beta invitations.
+
+## Agent controls review follow-up
+
+The implementation-agent review of `515454c` found and fixed the idle revoke-all transition and stale frontend refresh results. The current local gate passed 219 tests, build/format/source checks, provider fixtures and Clippy. See [AGENT_CONTROLS_REVIEW](AGENT_CONTROLS_REVIEW.md). This narrows the current delta for the separate reviewer; it does not turn an implementation-agent review into independent sign-off. Existing dependency/accessibility/provider limits and final Apple distribution remain unchanged.

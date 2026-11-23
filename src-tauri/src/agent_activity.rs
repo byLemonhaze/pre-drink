@@ -200,6 +200,10 @@ impl Session {
     }
     pub fn revoke_all(&mut self, expected_ids: &[String]) -> Result<(), String> {
         self.access()?;
+        // Count the verified owner action before ending an extended work session.
+        // Otherwise the next access() can expire on the old idle timestamp and
+        // leave every credential registered. Expired sessions still fail above.
+        self.touch();
         self.stop_sharing();
         self.pending_client_setup = None;
         self.access()?
@@ -470,6 +474,38 @@ mod tests {
 #[cfg(test)]
 mod fail_safe_tests {
     use super::*;
+    #[test]
+    fn revoke_all_finishes_after_a_long_idle_work_session_without_reviving_expired_sessions() {
+        for work_session in [true, false] {
+            let mut s = Session::new(std::path::PathBuf::new());
+            s.vault = Some(Vault::memory().unwrap());
+            let client = s
+                .access()
+                .unwrap()
+                .create_client("Fictional reader", false)
+                .unwrap();
+            if work_session {
+                s.start_agent_session("until_lock").unwrap();
+            }
+            s.last_activity = std::time::SystemTime::now() - crate::session::IDLE_TIMEOUT;
+            let result = s.revoke_all(std::slice::from_ref(&client.client.id));
+            assert!(!s.sharing);
+            if work_session {
+                result.expect(
+                    "An authorized owner revocation must finish before normal idle expiry resumes",
+                );
+                assert!(s.access().unwrap().clients().unwrap().is_empty());
+                assert!(s.status().unwrap().agent_session.is_none());
+            } else {
+                assert!(result.is_err());
+                assert!(
+                    s.vault.is_none(),
+                    "An expired session must not be revived by revocation"
+                );
+            }
+        }
+    }
+
     #[test]
     fn unsaved_pause_and_revocation_stop_global_sharing() {
         for operation in ["pause", "revoke", "all"] {

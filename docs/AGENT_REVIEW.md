@@ -232,3 +232,7 @@ Read the latest VALIDATION entry before repeating the earlier pending-export gat
 ## Native real-data post-import scope
 
 The latest NATIVE_WALKTHROUGH/VALIDATION entries add observed representative post-import unlock, search/recovery, loading beyond the initial page, privacy-view restoration, empty sharing layers and final lock. The owner performed creation/import before automation resumed. The optimized bundle used a fresh app identifier, not a release data-directory override. The owner's imported copy remains locked in its separate namespace. Do not treat this as initial import-progress/cancel, every reader branch, old-vault migration or full lifecycle acceptance. No archive details or credentials belong in the review record.
+
+## Agent controls follow-up
+
+[AGENT_CONTROLS_REVIEW](AGENT_CONTROLS_REVIEW.md) records the implementation-agent review of `515454c`, two reproduced fixes, inspected boundaries and evidence limits. Separate review should include the revoke-all idle transition and frontend stale-read invalidation along with the schema-9 controls. This is not an independent review sign-off.
