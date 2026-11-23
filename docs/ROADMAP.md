@@ -8,7 +8,9 @@ ChatGPT, Claude and Grok official ZIP adapters with versioned fictional contract
 
 This is a working private pre-release. Basic native review, sharing, recovery and fictional import workflows have evidence. Codex CLI and Grok Build have passed the fictional MCP client policy matrix. Native Finder drop/reimport, password change, Codex/Grok configuration screens and sharing-off after restart are now verified with fictional data. One representative ChatGPT export has passed isolated backend and native post-import checks. Broader native import/lifecycle, full keyboard coverage and distribution gates remain open. Grok/Claude adapters and matching scopes are now implemented; their representative exports are still unverified; MCP-client compatibility is tracked separately in MCP_ACCEPTANCE.
 
-## Agreed execution order
+## Historical execution order
+
+For the current release decision, use RELEASE_READINESS: core local/native gates and the separate review at `abd9bea` have passed; Apple distribution and owner launch approval remain. The milestones below preserve the original sequencing rather than defining new rounds.
 
 1. **M1, in progress:** dependable ChatGPT workflow; contextual sensitivity detection and safe reclassification; build/vault identity; native approval, isolated upgrade, real export and MCP checks.
 2. **M2, implemented; basic native flow verified:** make exact sharing preview the centerpiece; selective copy and Markdown export with privacy/staleness enforcement.
@@ -21,7 +23,7 @@ Apple enrollment is deferred to the end at the owner’s request. Enrollment is 
 
 ## Retained backlog
 
-Per-project/brief agent grants; direct brief retrieval; note/brief FTS and indexed query optimization (backend pages now serve the four owner library views); tagging/branch views; encrypted access metadata and revoke-all; signed-app Keychain client integration; broader backup-filesystem support; richer supersession/conflict discovery; local-model execution with explicitly defined provider isolation. Private draft workspaces and revision history are implemented, not backlog items. These require explicit scheduling and must not silently expand a milestone.
+Per-project/brief agent grants; direct brief retrieval; note/brief FTS and indexed query optimization (backend pages now serve the four owner library views); tagging/branch views; per-client activity retention/drop visibility and bounded aggregate denial metrics (R10-1); signed-app Keychain client integration; broader backup-filesystem support; richer supersession/conflict discovery; local-model execution with explicitly defined provider isolation. Private draft workspaces and revision history are implemented, not backlog items. These require explicit scheduling and must not silently expand a milestone.
 
 No cloud sync, live capture, mandatory paid model dependency, semantic embeddings, mobile, teams, monetization or demand-testing work in this plan.
 

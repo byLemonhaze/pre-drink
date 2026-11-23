@@ -1,5 +1,9 @@
 # Independent agent review guide
 
+## Latest disposition — review received at `abd9bea`
+
+The supplied Nov 22, 11:04 PM ET separate-agent report covers the current implementation, confirms the recent fixes and establishes no new blocking code defect. The separate agent-review gate is satisfied for this snapshot. R10-1 (bounded activity rollover/unrecorded denials) remains a disclosed low-priority limitation; Apple distribution remains last. Read REVIEW_RESPONSE for corrections and Linux-versus-Mac evidence scope. This is not a professional audit or launch approval. Sections below are historical review prompts: their earlier “needs separate review” statements are superseded for code covered by this report. Documentation-only reconciliation introduces no new runtime delta.
+
 ## Individual controls and activity follow-up
 
 Review `agent_activity.rs`/SQL, the schema-9 migration/export stamp, `agents.rs` authentication/dispatch split, desktop commands and the owner controls in `Agents.tsx`/`AgentActivity.tsx`. Pause must block every tool after valid authentication; resuming must preserve provider scope without enabling sharing. Activity must contain only fixed categories, owner labels, timestamps and outcomes, never request arguments/error text/credentials. Started must commit before dispatch; outcome-write failure must report uncertainty. Check invalid-token/sharing-off exclusions, retention/paging, changed-list bulk revocation, stale-session clear, global-off fallback on pause/revocation failures, and restore retaining history while removing grants. Read AGENT_ACTIVITY for limitations and the native evidence. This delta is not covered by the supplied review at `6fafc0d`.
