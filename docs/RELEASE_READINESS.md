@@ -1,6 +1,6 @@
 # Release readiness — 2026-11-22
 
-**Ready for continued owner-only local use.** The supplied separate-agent review at `abd9bea` establishes no new blocking code defect. Core local acceptance and the earlier release preflight passed. The owner-requested logging/UI follow-up passed 226 local checks; its native evidence is separate. **Not yet ready for outside distribution:** Apple Developer ID signing, notarization and a clean downloaded-install check remain last. The repository and landing page stay private/unpublished until the owner chooses launch.
+**Ready for continued owner-only local use.** The supplied separate-agent review at `abd9bea` establishes no new blocking code defect. Core local acceptance and the earlier release preflight passed. The owner-requested logging/UI follow-up passed 226 local checks; the new counters and single-revoke native check remain unverified because computer control failed before returning UI state. Standard and isolated local builds at `720b57a` passed ad-hoc signature verification. **Not yet ready for outside distribution:** Apple Developer ID signing, notarization and a clean downloaded-install check remain last. The repository and landing page stay private/unpublished until the owner chooses launch.
 
 This is an early personal tool, not a professionally security-audited product. Keep original exports and verified encrypted backups. A test count and an agent review are bounded evidence, not a safety certification.
 

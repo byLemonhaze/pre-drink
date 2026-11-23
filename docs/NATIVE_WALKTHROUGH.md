@@ -359,3 +359,11 @@ With explicit owner confirmation, Clear activity removed the previous events and
 Locked and quit the fictional app; checked that the original process had exited, reopened the same isolated app, unlocked, and confirmed no registrations, sharing off, and only the new revocation event persisted. Cleared events did not return. Left the fictional vault locked. No personal vault or real archive was operated, and no screenshot, credential or private diagnostic was committed.
 
 This closes the previously blocked native basic-control and persistence walkthrough. It does not claim a 15-minute idle wait or forced out-of-order IPC delivery in the native app; those exact cases retain their deterministic regression evidence. Sharing/work-session labels refresh on the existing status-poll interval. No new runtime defect or code change was needed.
+
+## Logging/UI native follow-up — runtime `720b57a`
+
+The full local verifier passed 226 checks before commit. Source/docs were pushed to the confirmed-private repository as `720b57a` with `[skip ci]`; the installed pre-push hook matched the exact source receipt and checked documentation. No Actions run was dispatched.
+
+Built a separately named/identified fictional Retention Review Mac app from clean `720b57a`, verified its ad-hoc signature and installed only a disposable fixture in its unique namespace. Computer control failed while selecting/opening the app (`unknown or expired node_repl continuation`) after an unexpectedly long tool delay. No UI state or interaction was returned: **new counters and single-revoke native confirmation/cancel are unverified**, not passed. No retry loop or personal-vault interaction followed. The fake fixture contains no personal archive and stays outside Git. Earlier native-control acceptance remains evidence for the earlier runtime only.
+
+The standard `Pre-Drink.app` was then rebuilt from clean `720b57a` and its ad-hoc signature verified; it was not launched. No Developer ID signing/notarization, external models, paid GitHub usage or public publication occurred. Remaining focused follow-up: native display/confirmation check when computer control works; deferred human VoiceOver listening and final owner-approved Apple distribution checks remain separate.
