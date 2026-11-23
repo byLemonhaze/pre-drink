@@ -14,7 +14,7 @@ Verified locally on 2026-11-19 using synthetic data only. No user export, vault,
 | Landing page                               | Desktop and 375/320-pixel layouts reviewed; no horizontal overflow after fix; FAQ and download-status navigation verified                                                                   |
 | Repository guard and staged-content review | Source/documents/synthetic fixtures only; ignored data and build outputs excluded                                                                                                           |
 
-## Latest release-path check — 2026-11-22
+## Earlier release-path check — 2026-11-22
 
 The real `bash scripts/release-macos.sh --check-only` command completed successfully from clean source `7e7683de1f1a`. It installed the locked frontend dependencies, fetched the locked Rust graph, refreshed advisory evidence, and ran the authoritative local verifier: **199 tests (157 Rust, 21 frontend, 21 Python)**, formatting, production frontend build, source-only guard, three-provider fictional ZIP verification and all-target Clippy. One optional benchmark remains ignored. It exited with the check-only success message before Apple signing, notarization or release packaging. This supplements the earlier mocked routing tests; it does not verify the Apple branch. All three documented upstream warnings remain visible. No GitHub Actions or model calls were used.
 
@@ -487,3 +487,17 @@ Frozen-source local verification passed **219 tests: 172 Rust, 26 frontend, 21 P
 Built an optimized fictional app from clean implementation `1dc3cc010e2a`, with a fresh compiled application identifier and separately generated encrypted fictional storage. Embedded revision/identifier checks and strict/deep local ad-hoc signature verification passed. No personal vault was used and no external agent connected.
 
 Native control failed twice before returning a window state, including after resetting the automation connection. No unlock, pause/resume, clear-history, revoke-all, work-session or lock/reopen action was performed or observed in this attempt. The exact fictional process was identified and stopped. **The new native walkthrough remains pending; process launch and a valid bundle are not acceptance evidence.** No product code change or new full-suite run was warranted by the automation failure. The 219-test result and deterministic idle/deferred-IPC regressions remain the current automated evidence; the earlier native walkthrough retains its narrower scope. No paid service, GitHub Actions or Apple distribution service was used.
+
+## Nov 22 — Agent-control native retry passed
+
+The native-control connection recovered. The isolated optimized app built from clean implementation `1dc3cc010e2a` passed the fictional workflow: unlock; inspect distinct shared-reader/Grok-curator permissions; refresh followed by pause/resume of the shared reader; confirm only that client changed and new events appeared. No broader grant was made and the Grok curator stayed paused.
+
+With explicit owner confirmation, Clear activity removed the previous events and last-request times while preserving both registrations and their pause states. Refresh kept the empty history. Started a one-hour fictional work session, observed sharing on, then reviewed and revoked both registrations. The list became empty, a revocation event appeared, and the ordinary status refresh showed sharing off and the work session ended. No external agent connected.
+
+Locked and quit the fictional app; checked that the original process had exited, reopened the same isolated app, unlocked, and confirmed no registrations, sharing off, and only the new revocation event persisted. Cleared events did not return. Left the fictional vault locked. No personal vault or real archive was operated, and no screenshot, credential or private diagnostic was committed.
+
+This closes the previously blocked native basic-control and persistence walkthrough. It does not claim a 15-minute idle wait or forced out-of-order IPC delivery in the native app; those exact cases retain their deterministic regression evidence. Sharing/work-session labels refresh on the existing status-poll interval. No new runtime defect or code change was needed.
+
+## Nov 22 — Current-source free release preflight passed
+
+Ran the actual `bash scripts/release-macos.sh --check-only` from clean `6b13364` (runtime fixes at `1dc3cc0`). Locked dependency installation/fetch, fresh advisory queries, both Mac dependency graphs and the authoritative verifier passed: **219 tests (172 Rust, 26 frontend, 21 Python)**, formatting, production frontend build, repository guard, three-provider fictional ZIP verification and all-target Clippy. One optional benchmark remains ignored. The script exited with its check-only success message before Apple signing/notarization or release packaging. All three existing upstream warnings remain unresolved. No model/API call, paid GitHub usage or remote workflow was involved.
