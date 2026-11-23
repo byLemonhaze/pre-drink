@@ -8,6 +8,7 @@ export interface Activity {
   outcome: string;
 }
 export interface ActivityPage {
+  totals: { denied: number; trimmed: number };
   items: Activity[];
   next_before: number | null;
   session_generation: number;
@@ -102,17 +103,27 @@ export default function AgentActivity({
     <section className="settings-card" aria-label="Agent access history">
       <h2>Access history</h2>
       <p>
-        Latest 1,000 events, encrypted in this vault. Client names, times, tool
-        categories and results only. No prompts, replies, source IDs or
-        credentials.
+        Up to 100 events per connection and 1,000 overall, encrypted in this
+        vault. When full, the busiest connection loses its oldest events first.
+        Revoked connections share one archived bucket. No prompts, replies,
+        source IDs or credentials.
       </p>
       <p className="fine-print">
         Processed means the vault handled the request, not that a client
         received or used the response. Paused requests appear after
-        authentication. Invalid credentials and attempts while locked or sharing
-        is off are not recorded. This is a local activity record, not a
+        authentication. Rejected credentials are counted without identifying a
+        client. Attempts while locked, sharing is off, or before a request can
+        be parsed are not counted. This is a local activity record, not a
         tamper-proof audit.
       </p>
+      {page && (
+        <p className="fine-print">
+          Rejected credentials: at least {page.totals.denied.toLocaleString()}.
+          Older events removed: at least {page.totals.trimmed.toLocaleString()}.
+          Counts start at the history upgrade or your last clear. They are
+          bounded totals, not a complete record of attempted access.
+        </p>
+      )}
       <div className="form-actions">
         <button
           className="button secondary"
@@ -123,7 +134,11 @@ export default function AgentActivity({
         </button>
         <button
           className="button secondary"
-          disabled={busy || !page?.items.length}
+          disabled={
+            busy ||
+            !page ||
+            (!page.items.length && !page.totals.denied && !page.totals.trimmed)
+          }
           onClick={onClear}
         >
           Clear activity…

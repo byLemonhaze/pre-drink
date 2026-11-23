@@ -1,8 +1,12 @@
 # Independent agent review guide
 
+## New delta after the review at `abd9bea`
+
+Owner-requested R10-1 and small UI follow-up: inspect schema 9→10 migration and backup headers, anonymous counter bounds and exclusion of caller text, fair trimming/archived bucket behaviour, insertion/trim-counter rollback, preserved grants/approvals, and the single-client revoke confirmation. Automated local checks passed (226); this delta is not covered by the prior independent report. Native and spoken-accessibility evidence must be read separately. No paid Actions or personal data are needed for review. See AGENT_ACTIVITY and the latest VALIDATION entry.
+
 ## Latest disposition — review received at `abd9bea`
 
-The supplied Nov 22, 11:04 PM ET separate-agent report covers the current implementation, confirms the recent fixes and establishes no new blocking code defect. The separate agent-review gate is satisfied for this snapshot. R10-1 (bounded activity rollover/unrecorded denials) remains a disclosed low-priority limitation; Apple distribution remains last. Read REVIEW_RESPONSE for corrections and Linux-versus-Mac evidence scope. This is not a professional audit or launch approval. Sections below are historical review prompts: their earlier “needs separate review” statements are superseded for code covered by this report. Documentation-only reconciliation introduces no new runtime delta.
+The supplied Nov 22, 11:04 PM ET separate-agent report covers the implementation at that snapshot, confirms the recent fixes and establishes no new blocking code defect. The separate agent-review gate is satisfied for this snapshot. R10-1 was a disclosed low-priority limitation in that snapshot; Apple distribution remains last. Read REVIEW_RESPONSE for corrections and Linux-versus-Mac evidence scope. This is not a professional audit or launch approval. Sections below are historical review prompts: their earlier “needs separate review” statements are superseded for code covered by this report. The later runtime delta is listed above.
 
 ## Individual controls and activity follow-up
 

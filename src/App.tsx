@@ -482,7 +482,7 @@ function App({
             onClick={() => setPage("sharing")}
           >
             <Share2 size={18} />
-            Share context
+            Export context
           </button>
           <button
             className={page === "agents" ? "nav-item active" : "nav-item"}
@@ -539,7 +539,7 @@ function App({
                   memory: "Memory",
                   briefs: "Briefs",
                   agents: "Agent access",
-                  sharing: "Share context",
+                  sharing: "Export context",
                 }[page]
               }
             </span>
@@ -620,6 +620,20 @@ function App({
                 {format(report.messages)} text messages processed. Saved on this
                 Mac.
               </span>
+              <div className="form-actions">
+                <button
+                  className="button secondary"
+                  onClick={() => setPage("memory")}
+                >
+                  Next: create a memory
+                </button>
+                <button
+                  className="button secondary"
+                  onClick={() => setPage("agents")}
+                >
+                  Connect a curator
+                </button>
+              </div>
               {report.warnings.length > 0 && (
                 <details>
                   <summary>Import notes</summary>
@@ -801,13 +815,21 @@ function App({
                         <strong>
                           {query
                             ? "No matching conversations"
-                            : "Nothing in this view"}
+                            : "No visible conversations"}
                         </strong>
                         <p>
                           {restricted
-                            ? "Try a different search."
-                            : "Private and sensitive conversations are hidden. Use the toggle above to review them."}
+                            ? "Try a different search or provider filter."
+                            : "Private and sensitive conversations are hidden. Reviewing them here does not make them available to agents."}
                         </p>
+                        {!restricted && (
+                          <button
+                            className="button secondary"
+                            onClick={() => setRestricted(true)}
+                          >
+                            Show restricted conversations
+                          </button>
+                        )}
                       </div>
                     ) : (
                       conversations.map((c) => (

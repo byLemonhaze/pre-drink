@@ -5,6 +5,12 @@ use rusqlite::{params, Connection};
 use serde::Serialize;
 
 pub const ACTIVITY_LIMIT: i64 = 1000;
+pub const CLIENT_ACTIVITY_LIMIT: i64 = 100;
+#[derive(Serialize)]
+pub struct ActivityTotals {
+    pub denied: i64,
+    pub trimmed: i64,
+}
 #[derive(Serialize)]
 pub struct AgentActivity {
     pub id: i64,
@@ -15,6 +21,7 @@ pub struct AgentActivity {
 }
 #[derive(Serialize)]
 pub struct ActivityPage {
+    pub totals: ActivityTotals,
     pub items: Vec<AgentActivity>,
     pub next_before: Option<i64>,
     pub session_generation: u64,
@@ -30,12 +37,54 @@ pub(crate) fn record(
     db.execute("INSERT INTO agent_activity(client_id,client_name,occurred_at,operation,outcome) VALUES(?1,?2,unixepoch('subsec'),?3,?4)", params![client_id,client_name,operation,outcome])
         .map_err(|_| "Could not record agent activity. No new request was started.")?;
     let id = db.last_insert_rowid();
-    db.execute("DELETE FROM agent_activity WHERE id IN (SELECT id FROM agent_activity ORDER BY id DESC LIMIT -1 OFFSET ?1)", [ACTIVITY_LIMIT])
-        .map_err(|_| "Could not maintain agent activity history.")?;
+    trim_history(db)?;
     Ok(id)
 }
 
+// Call inside the same transaction as insertion or migration. Archived records
+// (NULL client_id after revocation) share a bucket; labels are never identifiers.
+pub(crate) fn trim_history(db: &Connection) -> Result<(), String> {
+    let mut removed = db.execute("DELETE FROM agent_activity WHERE id IN (SELECT id FROM (SELECT id,row_number() OVER (PARTITION BY client_id ORDER BY id DESC) AS position FROM agent_activity) WHERE position>?1)", [CLIENT_ACTIVITY_LIMIT])
+        .map_err(|_| "Could not maintain agent activity history.")?;
+    let count: i64 = db
+        .query_row("SELECT count(*) FROM agent_activity", [], |r| r.get(0))
+        .map_err(|_| "Could not read agent activity size.")?;
+    // Under the global ceiling, trim the busiest bucket first, oldest event
+    // first within it. A noisy client cannot flush a quiet client's few events.
+    for _ in ACTIVITY_LIMIT..count {
+        removed += db.execute("DELETE FROM agent_activity WHERE id=(SELECT min(id) FROM agent_activity GROUP BY client_id ORDER BY count(*) DESC,min(id) ASC LIMIT 1)", [])
+            .map_err(|_| "Could not maintain agent activity history.")?;
+    }
+    if removed > 0 {
+        db.execute("UPDATE agent_activity_totals SET trimmed=min(9007199254740991,trimmed+?1) WHERE singleton=1", [removed as i64])
+            .map_err(|_| "Could not record trimmed activity.")?;
+    }
+    Ok(())
+}
+
 impl Vault {
+    pub(crate) fn record_denied_credentials(&self) -> Result<(), String> {
+        // Only a bounded numeric counter. Never retain an unverified identity,
+        // token, tool name, argument, or per-attempt row.
+        self.connection.execute("UPDATE agent_activity_totals SET denied=min(9007199254740991,denied+1) WHERE singleton=1", [])
+            .map_err(|_| "Client access was denied; its count could not be recorded.")?;
+        Ok(())
+    }
+    pub fn activity_totals(&self) -> Result<ActivityTotals, String> {
+        self.connection
+            .query_row(
+                "SELECT denied,trimmed FROM agent_activity_totals WHERE singleton=1",
+                [],
+                |r| {
+                    Ok(ActivityTotals {
+                        denied: r.get(0)?,
+                        trimmed: r.get(1)?,
+                    })
+                },
+            )
+            .map_err(|_| "Could not read activity totals.".into())
+    }
+
     pub fn set_client_paused(&self, id: &str, paused: bool) -> Result<(), String> {
         let tx = self
             .connection
@@ -119,7 +168,7 @@ impl Vault {
             .unchecked_transaction()
             .map_err(|e| e.to_string())?;
         tx.execute_batch(
-            "DELETE FROM agent_activity; UPDATE agent_controls SET last_request_at=NULL;",
+            "DELETE FROM agent_activity; UPDATE agent_controls SET last_request_at=NULL; UPDATE agent_activity_totals SET denied=0,trimmed=0;",
         )
         .map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())
@@ -145,6 +194,7 @@ impl Vault {
         record(&tx, None, "All connections", "revoke_all", "completed")?;
         tx.execute("DELETE FROM agent_clients", [])
             .map_err(|e| e.to_string())?;
+        trim_history(&tx)?;
         tx.commit().map_err(|e| e.to_string())
     }
 }
@@ -152,6 +202,7 @@ impl Vault {
 impl Session {
     pub fn activity_page(&mut self, before: Option<i64>) -> Result<ActivityPage, String> {
         let mut items = self.access()?.agent_activity(before)?;
+        let totals = self.access()?.activity_totals()?;
         let more = items.len() > 50;
         items.truncate(50);
         let next_before = if more {
@@ -161,6 +212,7 @@ impl Session {
         };
         self.touch();
         Ok(ActivityPage {
+            totals,
             items,
             next_before,
             session_generation: self.generation,
@@ -315,6 +367,129 @@ mod tests {
         }
     }
     #[test]
+    fn noisy_and_paused_clients_cannot_flush_quiet_clients_and_total_stays_bounded() {
+        let v = Vault::memory().unwrap();
+        let quiet = v.create_client("Fictional quiet reader", false).unwrap();
+        let noisy = v.create_client("Fictional noisy reader", false).unwrap();
+        v.agent_call(&request(&quiet, "get_facts")).unwrap();
+        v.set_client_paused(&noisy.client.id, true).unwrap();
+        for _ in 0..1100 {
+            assert!(v.agent_call(&request(&noisy, "get_facts")).is_err());
+        }
+        assert_eq!(
+            v.connection
+                .query_row(
+                    "SELECT count(*) FROM agent_activity WHERE client_id=?1",
+                    [&quiet.client.id],
+                    |r| r.get::<_, i64>(0)
+                )
+                .unwrap(),
+            2
+        );
+        assert_eq!(v.activity_totals().unwrap().denied, 0);
+        assert!(v.activity_totals().unwrap().trimmed >= 1000);
+        // Enough equally busy connections to exercise the shared ceiling too.
+        for i in 0..12 {
+            let c = v
+                .create_client(&format!("Fictional busy {i}"), false)
+                .unwrap();
+            for _ in 0..100 {
+                v.agent_call(&request(&c, "get_facts")).unwrap();
+            }
+        }
+        assert_eq!(
+            v.connection
+                .query_row("SELECT count(*) FROM agent_activity", [], |r| r
+                    .get::<_, i64>(0))
+                .unwrap(),
+            ACTIVITY_LIMIT
+        );
+        assert_eq!(
+            v.connection
+                .query_row(
+                    "SELECT count(*) FROM agent_activity WHERE client_id=?1",
+                    [&quiet.client.id],
+                    |r| r.get::<_, i64>(0)
+                )
+                .unwrap(),
+            2
+        );
+        let ids: Vec<_> = v.clients().unwrap().into_iter().map(|c| c.id).collect();
+        v.revoke_all_clients(&ids).unwrap();
+        assert!(
+            v.connection
+                .query_row("SELECT count(*) FROM agent_activity", [], |r| r
+                    .get::<_, i64>(0))
+                .unwrap()
+                <= CLIENT_ACTIVITY_LIMIT
+        );
+        v.verify().unwrap();
+    }
+    #[test]
+    fn rejected_credentials_use_only_a_saturating_counter_and_clear_resets_it() {
+        let v = Vault::memory().unwrap();
+        let c = v.create_client("Fictional reader", false).unwrap();
+        let mut bad = request(&c, "fictional-secret-tool");
+        bad.token = "x".repeat(64);
+        assert!(v.agent_call(&bad).is_err());
+        bad.token.clear();
+        assert!(v.agent_call(&bad).is_err());
+        bad = request(&c, "get_facts");
+        bad.client_id = "fictional-unverified-identity".into();
+        assert!(v.agent_call(&bad).is_err());
+        bad.client_id = "x".repeat(81);
+        assert!(v.agent_call(&bad).is_err());
+        v.revoke_client(&c.client.id).unwrap();
+        assert!(v.agent_call(&request(&c, "get_facts")).is_err());
+        assert_eq!(v.activity_totals().unwrap().denied, 5);
+        assert_eq!(v.agent_activity(None).unwrap().len(), 2);
+        v.connection.execute_batch("UPDATE agent_activity_totals SET denied=9007199254740991,trimmed=9007199254740991;").unwrap();
+        assert!(v.agent_call(&bad).is_err());
+        assert_eq!(v.activity_totals().unwrap().denied, 9007199254740991);
+        let tx = v.connection.unchecked_transaction().unwrap();
+        for _ in 0..110 {
+            record(&tx, None, "Fictional archived", "revoke_all", "completed").unwrap();
+        }
+        tx.commit().unwrap();
+        assert_eq!(v.activity_totals().unwrap().trimmed, 9007199254740991);
+        v.clear_agent_activity().unwrap();
+        assert_eq!(v.activity_totals().unwrap().denied, 0);
+        assert_eq!(v.activity_totals().unwrap().trimmed, 0);
+        v.connection.execute_batch("CREATE TRIGGER fail_denied BEFORE UPDATE ON agent_activity_totals BEGIN SELECT RAISE(ABORT,'fictional failure'); END;").unwrap();
+        assert!(v
+            .agent_call(&bad)
+            .unwrap_err()
+            .contains("count could not be recorded"));
+        assert!(v.agent_activity(None).unwrap().is_empty());
+    }
+    #[test]
+    fn failed_retention_accounting_rolls_back_the_new_event_and_old_history() {
+        let v = Vault::memory().unwrap();
+        let c = v.create_client("Fictional reader", false).unwrap();
+        for _ in 1..CLIENT_ACTIVITY_LIMIT {
+            v.agent_call(&request(&c, "get_facts")).unwrap();
+        }
+        let before: (i64, i64) = v
+            .connection
+            .query_row("SELECT min(id),max(id) FROM agent_activity", [], |r| {
+                Ok((r.get(0)?, r.get(1)?))
+            })
+            .unwrap();
+        v.connection.execute_batch("CREATE TRIGGER fail_totals BEFORE UPDATE ON agent_activity_totals BEGIN SELECT RAISE(ABORT,'fictional failure'); END;").unwrap();
+        assert!(v
+            .agent_call(&request(&c, "get_facts"))
+            .unwrap_err()
+            .contains("trimmed activity"));
+        let after: (i64, i64) = v
+            .connection
+            .query_row("SELECT min(id),max(id) FROM agent_activity", [], |r| {
+                Ok((r.get(0)?, r.get(1)?))
+            })
+            .unwrap();
+        assert_eq!(before, after);
+        assert_eq!(v.activity_totals().unwrap().trimmed, 0);
+    }
+    #[test]
     fn failed_recording_never_runs_a_request_or_changes_pause_and_revocation() {
         let v = Vault::memory().unwrap();
         let c = v.create_client("Fictional reader", false).unwrap();
@@ -359,7 +534,7 @@ mod tests {
                 .query_row("SELECT count(*) FROM agent_activity", [], |r| r
                     .get::<_, i64>(0))
                 .unwrap(),
-            1000
+            CLIENT_ACTIVITY_LIMIT
         );
         v.set_client_paused(&c.client.id, true).unwrap();
         assert!(v.agent_call(&request(&c, "get_facts")).is_err());
@@ -375,7 +550,7 @@ mod tests {
                 break;
             }
         }
-        assert_eq!(ids.len(), 1000);
+        assert_eq!(ids.len(), CLIENT_ACTIVITY_LIMIT as usize);
         assert!(ids.windows(2).all(|p| p[0] > p[1]));
         assert!(s.clear_activity(s.generation + 1).is_err());
         s.clear_activity(s.generation).unwrap();
@@ -446,6 +621,9 @@ mod tests {
             .unwrap();
         v.agent_call(&request(&c, "get_facts")).unwrap();
         v.set_client_paused(&c.client.id, true).unwrap();
+        let mut bad = request(&c, "get_facts");
+        bad.token.clear();
+        assert!(v.agent_call(&bad).is_err());
         v.encrypted_backup(&backup, password).unwrap();
         v.checkpoint().unwrap();
         drop(v);
@@ -458,6 +636,7 @@ mod tests {
             assert!(v.clients().unwrap()[0].paused);
             assert!(v.clients().unwrap()[0].last_request_at.is_some());
             assert_eq!(v.agent_activity(None).unwrap().len(), 3);
+            assert_eq!(v.activity_totals().unwrap().denied, 1);
         }
         let restored_dir = dir.path().join("restored");
         std::fs::create_dir(&restored_dir).unwrap();
@@ -468,6 +647,7 @@ mod tests {
         assert!(s.access().unwrap().clients().unwrap().is_empty());
         assert!(!s.sharing);
         assert_eq!(s.activity_page(None).unwrap().items.len(), 3);
+        assert_eq!(s.activity_page(None).unwrap().totals.denied, 1);
     }
 }
 

@@ -394,6 +394,12 @@ export default function AgentSetup({
               {busy ? "Checking…" : "Check for client request"}
             </button>
           </div>
+          <p className="fine-print">
+            After merging the settings and verifying a request, remove the extra
+            saved settings file if you no longer need it. Keep the installed
+            client configuration private: it still contains the credential.
+            Deleting a file does not revoke access or erase backups.
+          </p>
           <div role="status" className="setup-status">
             {connection?.request_seen
               ? `A request from this credential succeeded during this unlock. ${sharing && connection.sharing ? "Sharing is on." : "Sharing is off now."} This does not prove a live connection or which model used the credential.`

@@ -63,7 +63,7 @@ impl Vault {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |r| r.get(0))
             .map_err(|e| e.to_string())?;
-        if version > 9 {
+        if version > 10 {
             return Err("This vault needs a newer Pre-Drink version.".into());
         }
         if version == 1 {
@@ -179,7 +179,8 @@ impl Vault {
             .map_err(|e| e.to_string())?;
         tx.execute_batch(include_str!("agent_activity.sql"))
             .map_err(|e| e.to_string())?;
-        tx.execute_batch("PRAGMA user_version=9;")
+        crate::agent_activity::trim_history(&tx)?;
+        tx.execute_batch("PRAGMA user_version=10;")
             .map_err(|e| e.to_string())?;
         tx.commit().map_err(|e| e.to_string())?;
         let mut vault = Self {
@@ -240,7 +241,7 @@ impl Vault {
             }
             let exported = self
                 .connection
-                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=9;");
+                .execute_batch("SELECT sqlcipher_export('backup'); PRAGMA backup.user_version=10;");
             let detached = self.connection.execute_batch("DETACH DATABASE backup;");
             exported
                 .and(detached)
@@ -621,7 +622,7 @@ mod provider_upgrade_tests {
             v.connection
                 .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
-            9
+            10
         );
         assert_eq!(
             v.connection
@@ -729,9 +730,60 @@ mod activity_upgrade_tests {
             v.connection
                 .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
                 .unwrap(),
-            9
+            10
         );
         v.verify().unwrap();
+    }
+    #[test]
+    fn version_nine_retention_upgrade_keeps_grants_approvals_and_counts_trimming() {
+        let c = version_eight();
+        c.execute_batch(include_str!("agent_activity.sql")).unwrap();
+        c.execute_batch("DROP TABLE agent_activity_totals; INSERT INTO agent_controls VALUES('fictional',1,42); PRAGMA user_version=9;").unwrap();
+        for _ in 0..125 {
+            c.execute("INSERT INTO agent_activity(client_id,client_name,occurred_at,operation,outcome) VALUES('fictional','Fictional reader',1,'get_facts','completed')", []).unwrap();
+        }
+        let v = Vault::initialize(c, ":memory:".into()).unwrap();
+        let client = v.clients().unwrap().remove(0);
+        assert!(client.paused && !client.allow_chats && !client.can_curate);
+        assert_eq!(client.last_request_at, Some(42.0));
+        assert_eq!(v.memories(None, "", true).unwrap().len(), 1);
+        assert_eq!(v.activity_totals().unwrap().trimmed, 25);
+        assert_eq!(v.activity_totals().unwrap().denied, 0);
+        assert_eq!(
+            v.connection
+                .query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
+                .unwrap(),
+            10
+        );
+        v.verify().unwrap();
+    }
+    #[test]
+    fn retention_upgrade_failure_preserves_schema_nine_and_history() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("fictional-nine.sqlite3");
+        let c = version_eight();
+        c.execute_batch(include_str!("agent_activity.sql")).unwrap();
+        c.execute_batch("DROP TABLE agent_activity_totals; CREATE VIEW agent_activity_totals AS SELECT 1 AS singleton; PRAGMA user_version=9;").unwrap();
+        c.execute("VACUUM INTO ?1", [path.to_str().unwrap()])
+            .unwrap();
+        drop(c);
+        assert!(Vault::initialize(
+            Connection::open(&path).unwrap(),
+            path.to_string_lossy().into_owned()
+        )
+        .is_err());
+        let c = Connection::open(&path).unwrap();
+        assert_eq!(
+            c.query_row("PRAGMA user_version", [], |r| r.get::<_, i64>(0))
+                .unwrap(),
+            9
+        );
+        assert_eq!(
+            c.query_row("SELECT count(*) FROM agent_clients", [], |r| r
+                .get::<_, i64>(0))
+                .unwrap(),
+            1
+        );
     }
     #[test]
     fn activity_upgrade_failure_rolls_back_version_and_new_tables() {

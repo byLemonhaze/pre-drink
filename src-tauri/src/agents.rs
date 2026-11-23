@@ -129,11 +129,13 @@ impl Vault {
             crate::agent_activity::record(&tx, Some(id), &name, "client_revoked", "completed")?;
             tx.execute("DELETE FROM agent_clients WHERE id=?1", [id])
                 .map_err(|e| e.to_string())?;
+            crate::agent_activity::trim_history(&tx)?;
         }
         tx.commit().map_err(|e| e.to_string())
     }
     pub fn agent_call(&self, request: &AgentRequest) -> Result<serde_json::Value, String> {
         if request.token.len() != 64 || request.client_id.len() > 80 {
+            self.record_denied_credentials()?;
             return Err("Client access was denied.".into());
         }
         let client: Option<(String, Option<String>, bool, bool)> = self
@@ -145,10 +147,13 @@ impl Vault {
             )
             .optional()
             .map_err(|e| e.to_string())?;
-        let (expected, provider, can_curate, paused) =
-            client.ok_or("Client access was denied or revoked.")?;
+        let Some((expected, provider, can_curate, paused)) = client else {
+            self.record_denied_credentials()?;
+            return Err("Client access was denied or revoked.".into());
+        };
         let actual = hex::encode(Sha256::digest(request.token.as_bytes()));
         if !bool::from(expected.as_bytes().ct_eq(actual.as_bytes())) {
+            self.record_denied_credentials()?;
             return Err("Client access was denied.".into());
         }
         let event = self.begin_agent_activity(&request.client_id, &request.tool)?;

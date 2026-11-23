@@ -22,7 +22,9 @@ export default function Agents({
   const [pack, setPack] = useState("");
   const [busy, setBusy] = useState(false);
   const [activity, setActivity] = useState<ActivityPage | null>(null);
-  const [confirm, setConfirm] = useState<"clear" | "revoke" | null>(null);
+  const [confirm, setConfirm] = useState<"clear" | "revoke" | "single" | null>(
+    null,
+  );
   const [acknowledged, setAcknowledged] = useState(false);
   const [reviewedIds, setReviewedIds] = useState<string[]>([]);
   // Ignore reads started before a newer read, control change, or unmount.
@@ -88,6 +90,8 @@ export default function Agents({
         await invoke("clear_agent_activity", {
           sessionGeneration: activity.session_generation,
         });
+      else if (confirm === "single")
+        await invoke("revoke_client", { id: reviewedIds[0] });
       else await invoke("revoke_all_clients", { expectedIds: reviewedIds });
       setConfirm(null);
       setAcknowledged(false);
@@ -122,19 +126,6 @@ export default function Agents({
     setError("");
     try {
       await invoke("start_agent_session", { mode: duration });
-    } catch (e) {
-      setError(String(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function revoke(id: string) {
-    if (busy) return;
-    ++readGeneration.current;
-    setBusy(true);
-    try {
-      await invoke("revoke_client", { id });
-      await refresh();
     } catch (e) {
       setError(String(e));
     } finally {
@@ -269,14 +260,23 @@ export default function Agents({
           invalidates the credential. Already returned context cannot be
           recalled.
         </p>
-        {!clients.length && <p>No connections registered.</p>}
+        {!clients.length && (
+          <p>
+            No connections yet. Use “Set up a connection” above to choose an
+            agent and its permissions.
+          </p>
+        )}
         {clients.map((client) => (
           <ClientCard
             key={client.id}
             client={client}
             busy={busy}
             onPause={() => void pause(client)}
-            onRevoke={() => void revoke(client.id)}
+            onRevoke={() => {
+              setReviewedIds([client.id]);
+              setAcknowledged(false);
+              setConfirm("single");
+            }}
           />
         ))}
         {!!clients.length && (
@@ -308,7 +308,9 @@ export default function Agents({
           label={
             confirm === "clear"
               ? "Clear access history"
-              : "Revoke all connections"
+              : confirm === "single"
+                ? "Revoke this connection"
+                : "Revoke all connections"
           }
           busy={busy}
           onClose={() => setConfirm(null)}
@@ -316,14 +318,18 @@ export default function Agents({
           <h2 data-initial-focus tabIndex={-1}>
             {confirm === "clear"
               ? "Clear access history?"
-              : `Revoke ${reviewedIds.length} connections?`}
+              : confirm === "single"
+                ? "Revoke this connection?"
+                : `Revoke ${reviewedIds.length} connections?`}
           </h2>
           <p>
             {confirm === "clear"
-              ? "This permanently clears the current activity record and last-request times in this vault. Connections and their paused states stay unchanged. New requests can create new events. Older encrypted backups retain their history."
-              : "All listed credentials will stop working and agent sharing will turn off. Reconnecting requires new settings. Your conversations and memories are kept; returned context cannot be recalled."}
+              ? "This permanently clears the current activity record, counts and last-request times in this vault. Connections and their paused states stay unchanged. New requests can create new events. Older encrypted backups retain their history."
+              : confirm === "single"
+                ? "This credential will stop working permanently. Reconnecting requires new settings. Other connections and agent sharing stay unchanged. Your conversations and memories are kept; returned context cannot be recalled."
+                : "All listed credentials will stop working and agent sharing will turn off. Reconnecting requires new settings. Your conversations and memories are kept; returned context cannot be recalled."}
           </p>
-          {confirm === "revoke" && (
+          {confirm !== "clear" && (
             <ul>
               {clients
                 .filter((c) => reviewedIds.includes(c.id))
@@ -356,7 +362,9 @@ export default function Agents({
             >
               {confirm === "clear"
                 ? "Clear activity"
-                : "Revoke all & stop sharing"}
+                : confirm === "single"
+                  ? "Revoke this connection"
+                  : "Revoke all & stop sharing"}
             </button>
           </div>
         </Modal>

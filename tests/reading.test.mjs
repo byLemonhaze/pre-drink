@@ -499,6 +499,7 @@ test("activity distinguishes processing from delivery and exposes bounded paging
   const html = renderToStaticMarkup(
     React.createElement(Activity, {
       page: {
+        totals: { denied: 5, trimmed: 20 },
         items: [
           {
             id: 7,
@@ -520,7 +521,9 @@ test("activity distinguishes processing from delivery and exposes bounded paging
   assert.match(html, /final result not recorded/);
   assert.match(html, /not that a client received/);
   assert.match(html, /Older activity/);
-  assert.match(html, /Latest 1,000 events/);
+  assert.match(html, /100 events per connection and 1,000 overall/);
+  assert.match(html, /Rejected credentials: at least 5/);
+  assert.match(html, /Older events removed: at least 20/);
   assert.doesNotMatch(html, /PRE_DRINK_CLIENT_TOKEN/);
 });
 
@@ -600,6 +603,7 @@ function interactiveAgents() {
 }
 const settleHandlers = () => new Promise((resolve) => setImmediate(resolve));
 const activityFixture = (id) => ({
+  totals: { denied: 0, trimmed: 0 },
   items: [
     {
       id,
@@ -677,4 +681,66 @@ test("clearing activity cannot be undone on screen by an older refresh reply", a
     child(ui.render(), "ClientCard").props.client.last_request_at,
     null,
   );
+});
+
+test("single revoke requires a reviewed confirmation and targets only that connection", async () => {
+  const ui = interactiveAgents();
+  ui.requests[0].resolve([
+    readerFixture,
+    { ...readerFixture, id: "second", name: "Fictional second" },
+  ]);
+  ui.requests[1].resolve(activityFixture(1));
+  await settleHandlers();
+  child(ui.render(), "ClientCard").props.onRevoke();
+  assert.equal(ui.requests.length, 2);
+  const action = () =>
+    ui
+      .render()
+      .find(
+        (n) =>
+          n.type === "button" && n.props.children === "Revoke this connection",
+      );
+  assert.equal(action().props.disabled, true);
+  action().props.onClick();
+  assert.equal(ui.requests.length, 2);
+  ui.render()
+    .find((n) => n.type === "button" && n.props.children === "Cancel")
+    .props.onClick();
+  assert.equal(action(), undefined);
+  child(ui.render(), "ClientCard").props.onRevoke();
+  ui.render()
+    .find((n) => n.type === "input" && n.props.type === "checkbox")
+    .props.onChange({ target: { checked: true } });
+  action().props.onClick();
+  const revoke = ui.requests.find((r) => r.command === "revoke_client");
+  assert.equal(revoke.args.id, readerFixture.id);
+  assert.equal(
+    ui.requests.some((r) => r.command === "revoke_all_clients"),
+    false,
+  );
+  revoke.resolve();
+  await settleHandlers();
+  ui.requests.slice(-2)[0].resolve([{ ...readerFixture, id: "second" }]);
+  ui.requests.slice(-2)[1].resolve(activityFixture(2));
+  await settleHandlers();
+  assert.equal(child(ui.render(), "ClientCard").props.client.id, "second");
+});
+
+test("denied-only activity can be cleared and explains the missing-attempt boundary", () => {
+  const html = renderToStaticMarkup(
+    React.createElement(component("AgentActivity").default, {
+      page: {
+        ...activityFixture(1),
+        items: [],
+        totals: { denied: 12, trimmed: 0 },
+      },
+      busy: false,
+      onRefresh() {},
+      onMore() {},
+      onClear() {},
+    }),
+  );
+  assert.match(html, /Rejected credentials: at least 12/);
+  assert.match(html, /before a request can be parsed are not counted/);
+  assert.match(html, /<button class="button secondary">Clear activity/);
 });

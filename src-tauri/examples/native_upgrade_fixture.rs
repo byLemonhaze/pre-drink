@@ -90,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     fs::set_permissions(&future_path, fs::Permissions::from_mode(0o600))?;
     let connection = Connection::open(&future_path)?;
     crypto::configure(&connection, &key)?;
-    connection.execute_batch("PRAGMA user_version=9; PRAGMA wal_checkpoint(TRUNCATE);")?;
+    connection.execute_batch("PRAGMA user_version=999; PRAGMA wal_checkpoint(TRUNCATE);")?;
     drop(connection);
 
     // A fully prepared encrypted input for the native no-ZIP Finish path.

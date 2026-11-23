@@ -218,9 +218,21 @@ export default function VaultGate() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   disabled={busy}
-                  aria-describedby={error ? "vault-password-error" : undefined}
+                  aria-describedby={
+                    [
+                      create ? "vault-password-hint" : "",
+                      error ? "vault-password-error" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ") || undefined
+                  }
                 />
               </label>
+              {create && (
+                <p id="vault-password-hint" className="fine-print">
+                  At least 14 characters. Choose a unique, memorable phrase.
+                </p>
+              )}
               {create && (
                 <label>
                   Confirm password

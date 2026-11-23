@@ -191,8 +191,42 @@ mod tests {
                 .len(),
             1
         );
+        assert_eq!(
+            store
+                .lock()
+                .unwrap()
+                .access()
+                .unwrap()
+                .activity_totals()
+                .unwrap()
+                .denied,
+            0
+        );
+        assert_eq!(exchange(&"x".repeat(64), "connection_status")["ok"], false);
+        assert_eq!(
+            store
+                .lock()
+                .unwrap()
+                .access()
+                .unwrap()
+                .activity_totals()
+                .unwrap()
+                .denied,
+            0
+        );
         store.lock().unwrap().sharing = true;
         assert_eq!(exchange(&"x".repeat(64), "connection_status")["ok"], false);
+        assert_eq!(
+            store
+                .lock()
+                .unwrap()
+                .access()
+                .unwrap()
+                .activity_totals()
+                .unwrap()
+                .denied,
+            1
+        );
         assert_eq!(
             store
                 .lock()
