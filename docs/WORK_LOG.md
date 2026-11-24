@@ -486,3 +486,7 @@ Native retry passed the fictional activity display (zero counters), single-revok
 Self-review of the logging/UI delta identified no additional blocking application-code issue. A fresh audit correctly failed on newly published RUSTSEC-2026-0594. Patched only cookie 0.18.2→0.18.3 in Cargo.lock; no vault encryption or permission changes. `npm run verify:local` then passed 177 Rust + 28 frontend + 21 Python = **226 tests**, fresh advisories, both Mac dependency graphs, production build, formatting/source guard, provider fixtures and Clippy. Three existing warnings remain disclosed. No new independent report is implied; see AGENT_CONTROLS_REVIEW and DEPENDENCY_CHECKS.
 
 Only source, lockfile and evidence documentation belong in this change. Personal vault/history untouched; no screenshots, passwords, raw audit reports or diagnostics committed. No Actions or paid services; Apple signing remains deferred.
+
+### Patched local artifact
+
+Source/docs patch `74a7f8a` was pushed to the confirmed-private repository through the exact-source pre-push gate with `[skip ci]`; no remote checks started. The standard `Pre-Drink.app` was built from clean `74a7f8a` using the patched lockfile and passed deep/strict ad-hoc signature verification. It was not launched and no personal vault was opened. This is a local unsigned-for-distribution build, not Developer ID/notarization acceptance. The focused native UI evidence above remains explicitly tied to runtime `720b57a`; the later change is dependency-only.
