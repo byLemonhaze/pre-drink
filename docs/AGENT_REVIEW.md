@@ -1,5 +1,9 @@
 # Independent agent review guide
 
+## Nov 24 handoff update
+
+The implementing assistant completed focused source review and native activity-display/single-revoke acknowledgement, Cancel/Escape and focus-restoration checks. No new blocking application-code finding. This is self-review, not a new independent report. Fresh advisories flagged cookie 0.18.2 (RUSTSEC-2026-0594); only that lockfile entry/checksum changed to 0.18.3, followed by the full 226-check local verifier with fresh advisories. Read AGENT_CONTROLS_REVIEW, DEPENDENCY_CHECKS and NATIVE_WALKTHROUGH for exact scope. The older independent review remains bounded to `abd9bea`.
+
 ## New delta after the review at `abd9bea`
 
 Owner-requested R10-1 and small UI follow-up: inspect schema 9→10 migration and backup headers, anonymous counter bounds and exclusion of caller text, fair trimming/archived bucket behaviour, insertion/trim-counter rollback, preserved grants/approvals, and the single-client revoke confirmation. Automated local checks passed (226); this delta is not covered by the prior independent report. Native and spoken-accessibility evidence must be read separately. No paid Actions or personal data are needed for review. See AGENT_ACTIVITY and the latest VALIDATION entry.
