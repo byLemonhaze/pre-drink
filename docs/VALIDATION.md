@@ -537,3 +537,11 @@ Only source, lockfile and evidence documentation belong in this change. Personal
 ### Patched local artifact
 
 Source/docs patch `74a7f8a` was pushed to the confirmed-private repository through the exact-source pre-push gate with `[skip ci]`; no remote checks started. The standard `Pre-Drink.app` was built from clean `74a7f8a` using the patched lockfile and passed deep/strict ad-hoc signature verification. It was not launched and no personal vault was opened. This is a local unsigned-for-distribution build, not Developer ID/notarization acceptance. The focused native UI evidence above remains explicitly tied to runtime `720b57a`; the later change is dependency-only.
+
+## Nov 25 — Cabinet UI foundation
+
+See DESIGN for the implemented/proposed scope and WORK_LOG for the full evidence. Only a newly created fictional encrypted garden fixture was used, with sharing off. Native light workspace/lock and dark workspace were inspected at 1280 × 840; both-theme unlock and light first-run layout were checked at 980 × 640. The complete first-run form and recovery footer fit after a compact-spacing correction. No new credential was submitted in that check.
+
+Type filters/counts, card/list switching, restricted notes labeled Withheld, search, full-note side dialog, Tab containment, Escape/focus return, and brief-editor cancellation passed. The source action initially failed through title search; the corrected stable-ID lookup then opened the exact original message and returned to the full archive. A backend regression covers duplicate/punctuated titles, a source beyond the first 100 records, missing IDs, and private/sensitive filtering. No new agent access or publication behavior was added.
+
+Full local verification passed 229 checks (178 Rust, 30 frontend, 21 Python), plus build/format/source guard, provider quality fixtures, Clippy, refreshed free advisories and Mac graphs. Same three dependency warnings remain. No personal data or screenshots entered Git; no paid services, Actions, model calls or Apple notarization. Native evidence is from working-tree builds. Final owner visual acceptance, a new independent review of this delta, 1440-wide visual inspection, enlarged-text coverage and the previously deferred spoken VoiceOver announcements remain separate; do not infer them from these checks.

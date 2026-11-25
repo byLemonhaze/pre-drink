@@ -19,7 +19,7 @@ export default function ThemeSwitch() {
       void Promise.all([
         getCurrentWindow().setTheme(theme),
         getCurrentWindow().setBackgroundColor(
-          theme === "dark" ? "#101112" : "#f5efe4",
+          theme === "dark" ? "#23211f" : "#dfd8cc",
         ),
       ]).catch(() => {});
   }, [theme]);

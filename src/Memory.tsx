@@ -1,10 +1,11 @@
 import ChoiceSelect from "./ChoiceSelect";
 import Modal from "./Modal";
+import MemoryCard, { MemoryInspector } from "./MemoryCard";
 import LibraryPage, { useLibraryPage } from "./LibraryPage";
 import ReviewDialog from "./Review";
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
-import { FileText, Plus, ShieldCheck, X } from "lucide-react";
+import { LayoutGrid, List, Plus, ShieldCheck, X } from "lucide-react";
 import type { Message } from "./types";
 
 export interface MemoryItem {
@@ -152,6 +153,8 @@ export function MemoryView({
   onSource: (id: string, title: string) => void;
 }) {
   const [filter, setFilter] = useState("all");
+  const [layout, setLayout] = useState<"cards" | "list">("cards");
+  const [reading, setReading] = useState<MemoryItem | null>(null);
   const [query, setQuery] = useState("");
   const [restricted, setRestricted] = useState(false);
   const [editing, setEditing] = useState<MemoryItem | null | undefined>();
@@ -176,10 +179,10 @@ export function MemoryView({
   }
   return (
     <div className="secondary-page memory-page">
-      <div className="eyebrow">02 / REVIEWED KNOWLEDGE</div>
+      <div className="eyebrow">02 / YOUR KNOWLEDGE, CURATED</div>
       <div className="section-heading">
         <div>
-          <h1>Memory</h1>
+          <h1>Memory cabinet</h1>
           <p className="page-intro">
             Facts, decisions, and projects. Your notes and released agent
             contributions.
@@ -190,18 +193,41 @@ export function MemoryView({
           New memory
         </button>
       </div>
+      <div className="cabinet-toolbar">
+        <div className="folder-tabs" role="group" aria-label="Memory type">
+          {[
+            ["all", "All memories"],
+            ["fact", "Facts"],
+            ["decision", "Decisions"],
+            ["project", "Projects"],
+          ].map(([value, label]) => (
+            <button
+              key={value}
+              aria-pressed={filter === value}
+              onClick={() => setFilter(value)}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <div className="view-switch" role="group" aria-label="Memory layout">
+          <button
+            aria-label="Card view"
+            aria-pressed={layout === "cards"}
+            onClick={() => setLayout("cards")}
+          >
+            <LayoutGrid size={16} />
+          </button>
+          <button
+            aria-label="List view"
+            aria-pressed={layout === "list"}
+            onClick={() => setLayout("list")}
+          >
+            <List size={16} />
+          </button>
+        </div>
+      </div>
       <div className="memory-filters">
-        <ChoiceSelect
-          label="Memory type"
-          value={filter}
-          onChange={setFilter}
-          options={[
-            { value: "all", label: "All memories" },
-            { value: "fact", label: "Facts" },
-            { value: "decision", label: "Decisions" },
-            { value: "project", label: "Projects" },
-          ]}
-        />
         <input
           aria-label="Search memory"
           autoCorrect="off"
@@ -226,41 +252,13 @@ export function MemoryView({
           {error}
         </p>
       )}
-      <LibraryPage state={library} label="memories" className="memory-grid">
+      <LibraryPage
+        state={library}
+        label="memories"
+        className={`memory-grid${layout === "list" ? " memory-list" : ""}`}
+      >
         {(m) => (
-          <article className="settings-card memory-card" key={m.id}>
-            <div className="memory-meta">
-              <span>{m.kind.toUpperCase()}</span>
-              <span
-                className={`approval ${m.approved && !m.private && !m.sensitive && !m.source_restricted ? "ready" : ""}`}
-              >
-                {m.private || m.sensitive || m.source_restricted
-                  ? "Restricted"
-                  : m.approved
-                    ? m.publication_basis === "automatic_policy"
-                      ? "Auto-shared"
-                      : "Approved"
-                    : "Draft"}
-              </span>
-            </div>
-            <p className="memory-content">{m.content}</p>
-            {m.curator_provider && (
-              <p className="fine-print">
-                {m.curator_provider} · revision {m.curator_revision}. Manage
-                this contribution and its history in Agent access.
-              </p>
-            )}
-            {m.source_conversation_id && (
-              <button
-                className="source-link"
-                onClick={() =>
-                  onSource(m.source_conversation_id!, m.source_title || "")
-                }
-              >
-                <FileText size={12} />
-                {m.source_title || "View source"}
-              </button>
-            )}
+          <MemoryCard memory={m} key={m.id} onRead={() => setReading(m)}>
             <div className="card-actions">
               <button
                 disabled={!!m.curator_provider}
@@ -291,7 +289,7 @@ export function MemoryView({
                 </button>
               )}
             </div>
-          </article>
+          </MemoryCard>
         )}
       </LibraryPage>
       {library.page?.total === 0 && (
@@ -308,6 +306,13 @@ export function MemoryView({
               : "Save a note from any message in your archive, or write one here. New notes start as drafts."}
           </p>
         </div>
+      )}
+      {reading && (
+        <MemoryInspector
+          memory={reading}
+          onClose={() => setReading(null)}
+          onSource={onSource}
+        />
       )}
       {reviewing && (
         <ReviewDialog

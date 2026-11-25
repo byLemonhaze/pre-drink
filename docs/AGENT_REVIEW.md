@@ -1,5 +1,9 @@
 # Independent agent review guide
 
+## Nov 25 cabinet UI delta
+
+The cabinet brief is implemented as a visual/reading foundation over existing workflows; DESIGN maps future ideas separately. Review `MemoryCard` status semantics (automatic publication must not become Reviewed; restrictions must override eligibility), full inert note text, inspector focus/Escape, both themes, compact first-run/unlock layout, and unchanged explicit save/approval behavior. Inspect the stable-ID owner source lookup added after native testing exposed title-search navigation failure: it must retain private/sensitive filtering, stay outside MCP, and work for duplicate titles and conversations beyond the first list page. No schema, encryption, credential, provider-grant or agent-tool expansion is intended. See WORK_LOG for verification evidence and scope; this delta has not had a new independent review.
+
 ## Nov 24 handoff update
 
 The implementing assistant completed focused source review and native activity-display/single-revoke acknowledgement, Cancel/Escape and focus-restoration checks. No new blocking application-code finding. This is self-review, not a new independent report. Fresh advisories flagged cookie 0.18.2 (RUSTSEC-2026-0594); only that lockfile entry/checksum changed to 0.18.3, followed by the full 226-check local verifier with fresh advisories. Read AGENT_CONTROLS_REVIEW, DEPENDENCY_CHECKS and NATIVE_WALKTHROUGH for exact scope. The older independent review remains bounded to `abd9bea`.

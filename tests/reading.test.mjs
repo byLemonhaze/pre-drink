@@ -744,3 +744,80 @@ test("denied-only activity can be cleared and explains the missing-attempt bound
   assert.match(html, /before a request can be parsed are not counted/);
   assert.match(html, /<button class="button secondary">Clear activity/);
 });
+
+const cabinetMemory = {
+  id: "fictional-cabinet-note",
+  kind: "decision",
+  content: "Use native plants.",
+  approved: false,
+  private: false,
+  sensitive: false,
+  source_restricted: false,
+  source_message_id: null,
+  source_conversation_id: null,
+  source_title: null,
+  created_at: 0,
+  updated_at: 0,
+};
+
+test("cabinet review and sharing labels remain independent", () => {
+  const { memoryLabels } = component("MemoryCard");
+  assert.deepEqual(memoryLabels(cabinetMemory), {
+    review: "Draft",
+    access: "Not approved for sharing",
+    eligible: false,
+  });
+  assert.deepEqual(memoryLabels({ ...cabinetMemory, approved: true }), {
+    review: "Reviewed",
+    access: "Eligible for sharing",
+    eligible: true,
+  });
+  for (const restriction of ["private", "sensitive", "source_restricted"]) {
+    const status = memoryLabels({
+      ...cabinetMemory,
+      approved: true,
+      [restriction]: true,
+    });
+    assert.equal(status.review, "Reviewed");
+    assert.equal(status.access, "Withheld");
+    assert.equal(status.eligible, false);
+  }
+  assert.equal(
+    memoryLabels({
+      ...cabinetMemory,
+      approved: true,
+      publication_basis: "automatic_policy",
+    }).review,
+    "Auto-published",
+  );
+});
+
+test("memory inspector retains full inert text and describes conditional access", () => {
+  const { default: Card, MemoryInspector } = component("MemoryCard");
+  const content =
+    "Fictional garden. ".repeat(1000) + "<script>fictional-tail</script>";
+  const memory = {
+    ...cabinetMemory,
+    content,
+    curator_provider: "grok",
+    curator_revision: 3,
+  };
+  const card = renderToStaticMarkup(
+    React.createElement(Card, { memory, onRead() {} }),
+  );
+  assert.match(card, /Read note/);
+  assert.match(card, /grok contribution/);
+  assert.doesNotMatch(card, /<script>/);
+  const inspector = renderToStaticMarkup(
+    React.createElement(MemoryInspector, {
+      memory,
+      onClose() {},
+      onSource() {},
+    }),
+  );
+  assert.match(inspector, /aria-label="Memory details"/);
+  assert.match(inspector, /fictional-tail/);
+  assert.match(inspector, /Eligibility is not an access grant/);
+  assert.match(inspector, /revision 3/);
+  assert.doesNotMatch(inspector, /<script>/);
+});

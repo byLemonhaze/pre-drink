@@ -129,10 +129,15 @@ async fn list_conversations(
     query: String,
     include_restricted: bool,
     offset: u32,
+    source_id: Option<String>,
     store: State<'_, Store>,
 ) -> Result<Vec<Conversation>, String> {
-    owner_op(store.inner().clone(), move |v| {
-        v.list(&query, include_restricted, offset)
+    owner_op(store.inner().clone(), move |v| match source_id {
+        Some(id) => Ok(v
+            .conversation(&id, include_restricted)?
+            .into_iter()
+            .collect()),
+        None => v.list(&query, include_restricted, offset),
     })
     .await
 }

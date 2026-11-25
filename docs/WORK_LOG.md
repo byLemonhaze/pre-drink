@@ -490,3 +490,19 @@ Only source, lockfile and evidence documentation belong in this change. Personal
 ### Patched local artifact
 
 Source/docs patch `74a7f8a` was pushed to the confirmed-private repository through the exact-source pre-push gate with `[skip ci]`; no remote checks started. The standard `Pre-Drink.app` was built from clean `74a7f8a` using the patched lockfile and passed deep/strict ad-hoc signature verification. It was not launched and no personal vault was opened. This is a local unsigned-for-distribution build, not Developer ID/notarization acceptance. The focused native UI evidence above remains explicitly tied to runtime `720b57a`; the later change is dependency-only.
+
+## Nov 25 — Cabinet UI foundation
+
+Applied the owner's cabinet brief to the existing app: warm paper/burgundy light theme, warm dark theme, system serif headings, retained orange glass mark, 208px sidebar, drawer-style memory cards, type filters, compact list layout, full-note side dialog, paper briefs, and clearer archive typography. The ordinary lock screen fits the smallest 980 × 640 window; decorative drawers disappear at short heights. No schema, agent grants, cloud calls, or export-policy changes.
+
+Review and sharing are separate labels: automatic publication is never labeled Reviewed; private/sensitive/source-restricted content remains Withheld. The inspector explains that eligibility is not an access grant. It uses the existing modal focus containment and Escape behavior. Existing save/review/delete flows remain explicit.
+
+Native checks used only newly created fictional cabinet storage, with sharing off. Light/dark 1280 × 840 and compact 980 × 640 lock screens, memory type filters/counts, card/list switching, restricted-note display, text search, inspector keyboard wrapping/Escape/focus return, and brief editor open/cancel passed. The first visual pass found an older hard-coded unlock text color; corrected and confirmed in both themes. The source link revealed an existing title-search failure; replaced with stable-ID owner lookup that preserves privacy filtering and has a regression for duplicate/punctuated titles, old pages, missing sources, and private/sensitive sources. Final source-link retest and full gate follow below.
+
+DESIGN now maps implemented UI versus proposed backend capabilities. Global search, project folders, new memory types, exact per-project grants, local-model configuration and autosave/conflict handling are not presented as working features. No personal exports, vault data, screenshots, credentials or raw logs are committed. No paid services, GitHub Actions or Apple notarization.
+
+### Cabinet verification completed
+
+The native source-link retest opened the exact original conversation and its message with the punctuated title, kept restricted viewing off, and returned to the full archive through the explicit button. The light first-run form initially pushed recovery links below the compact viewport; reduced short-window spacing and rechecked at 980 × 640: both password fields, create action, no-reset notice and recovery footer are visible without scrolling. No credentials were entered or created during that visual check. The existing fictional fixture was moved aside reversibly and restored afterward; personal storage was never opened.
+
+`npm run verify:local` passed: 178 Rust + 30 frontend + 21 Python = 229 checks, production frontend build, formatting, tracked-file privacy guard, fictional provider contracts/quality fixture, all-target Clippy and both Mac dependency graphs. Free refreshed advisories reported no vulnerability findings and the same three documented warnings. Native checks ran against local working-tree builds, not a newly independently reviewed release. The only post-verification edits are documentation. Ordinary and fictional builds use ad-hoc signatures; Apple distribution remains deferred. No workflow was dispatched and the repository was confirmed private.

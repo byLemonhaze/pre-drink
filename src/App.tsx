@@ -95,7 +95,7 @@ function App({
     | "sharing"
   >("library");
   const [memorySource, setMemorySource] = useState<Message | null>(null);
-  const pendingSource = useRef<string | null>(null);
+  const [sourceId, setSourceId] = useState<string | null>(null);
   const [stats, setStats] = useState<Stats>(emptyStats);
   const [query, setQuery] = useState("");
   const [restricted, setRestricted] = useState(false);
@@ -203,19 +203,17 @@ function App({
           query,
           includeRestricted: restricted,
           offset: 0,
+          sourceId,
         })
           .then((rows) => {
             if (cancelled || generation !== listGeneration.current) return;
             setConversations(rows);
             setMore(rows.length === 100);
             setSelected((previous) =>
-              rows.some((c) => c.id === pendingSource.current)
-                ? pendingSource.current
-                : rows.some((c) => c.id === previous)
-                  ? previous
-                  : (rows[0]?.id ?? null),
+              rows.some((c) => c.id === previous)
+                ? previous
+                : (rows[0]?.id ?? null),
             );
-            pendingSource.current = null;
           })
           .catch((e) => {
             if (!cancelled) {
@@ -234,7 +232,7 @@ function App({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [query, restricted, revision]);
+  }, [query, restricted, revision, sourceId]);
 
   const importFiles = useCallback(
     async (paths: string[]) => {
@@ -445,9 +443,7 @@ function App({
       <aside className="sidebar">
         <div className="brand">
           <img className="app-mark" src="/favicon.svg" alt="" />
-          <span>
-            pre-drink<span className="brand-dot">.</span>
-          </span>
+          <span>Pre-Drink</span>
         </div>
         <div className="workspace-label">YOUR PERSONAL VAULT</div>
         <nav aria-label="Main navigation">
@@ -466,7 +462,7 @@ function App({
             onClick={() => setPage("memory")}
           >
             <Brain size={18} />
-            Memory
+            Memory cabinet
           </button>
           <button
             className={page === "briefs" ? "nav-item active" : "nav-item"}
@@ -536,7 +532,7 @@ function App({
                   library: "Archive",
                   imports: "Imports",
                   settings: "Settings",
-                  memory: "Memory",
+                  memory: "Memory cabinet",
                   briefs: "Briefs",
                   agents: "Agent access",
                   sharing: "Export context",
@@ -654,9 +650,9 @@ function App({
 
         {page === "memory" && (
           <MemoryView
-            onSource={(id, title) => {
-              pendingSource.current = id;
-              setQuery(title);
+            onSource={(id) => {
+              setSourceId(id);
+              setQuery("");
               setPage("library");
               setRevision((n) => n + 1);
             }}
@@ -690,7 +686,10 @@ function App({
                   placeholder="Search your conversations…"
                   value={query}
                   maxLength={1000}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSourceId(null);
+                    setQuery(e.target.value);
+                  }}
                 />
                 {query && (
                   <button
@@ -711,6 +710,19 @@ function App({
                 <span>Show private & sensitive</span>
               </label>
             </div>
+            {sourceId && (
+              <div className="source-navigation">
+                <span>
+                  Viewing a linked source. Privacy filters still apply.
+                </span>
+                <button
+                  className="text-button"
+                  onClick={() => setSourceId(null)}
+                >
+                  Show all conversations
+                </button>
+              </div>
+            )}
             {stats.conversations === 0 && !loading && !query ? (
               <section className="onboarding">
                 <div className="onboarding-copy">

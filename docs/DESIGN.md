@@ -1,23 +1,27 @@
 # Interface direction
 
-Pre-Drink defaults to warm cream and orange. A locally remembered Dark option keeps the charcoal/orange interface available. Appearance is a visual preference, independent of vault approval, privacy and agent-sharing state. The lock screen should feel spacious and welcoming; the workspace should prioritize readable history, clear curation state and deliberate sharing.
+Pre-Drink defaults to a warm cabinet workspace: cream paper, muted cabinet surfaces, serif headings, and burgundy controls. A locally remembered Dark option uses warm charcoal and pale rose accents. The original orange glass remains the app mark. Appearance is independent of vault approval, privacy, and agent-sharing state.
+
+The November 25 cabinet brief informs this foundation pass. It is a visual and interaction direction, not a claim that every proposed product capability is implemented. See the scope mapping below.
 
 ## Palette and type
 
-| Role              | Light     | Dark      |
-| ----------------- | --------- | --------- |
-| Canvas            | `#f5efe4` | `#101112` |
-| Surface           | `#fffaf1` | `#181a1c` |
-| Raised controls   | `#eee5d7` | `#242729` |
-| Borders           | `#d9cbb8` | `#34393b` |
-| Primary text      | `#302b25` | `#e7e9e9` |
-| Secondary text    | `#6e6357` | `#a4abad` |
-| Brand orange      | `#ff742b` | `#ff742b` |
-| Small accent text | `#a93d0a` | `#ff742b` |
-| Success text      | `#396044` | `#9bc5ae` |
-| Error text        | `#a7352f` | `#f1a19a` |
+| Role              | Light           | Dark            |
+| ----------------- | --------------- | --------------- |
+| Canvas            | `#dfd8cc`       | `#23211f`       |
+| Paper surface     | `#f2ebdd`       | `#2d2925`       |
+| Raised controls   | `#e6ded0`       | `#353029`       |
+| Borders           | `#c8bcaa`       | `#52483b`       |
+| Primary text      | `#292421`       | `#f1e8da`       |
+| Secondary text    | `#60574e`       | `#c4b8a7`       |
+| Primary button    | `#702d35`       | `#e3b0a2`       |
+| Button text       | `#fff5e9`       | `#341c20`       |
+| Small accent text | `#702d35`       | `#edb1a7`       |
+| Glass artwork     | orange on cream | orange on cream |
 
-Use the system sans-serif stack for the wordmark, content and controls. Keep system monospace for compact metadata and code. No remote fonts. In light mode small accent text uses a deeper orange for legibility; large brand artwork and the unlock action retain the bright orange. Status always includes words, not color alone.
+Use locally available Iowan/Palatino/Georgia serif for headings and the wordmark, system sans-serif for reading and controls, and monospace for compact metadata. No remote fonts or bitmap interface. Decorative cabinet drawers contain only fixed labels, never vault data. Functional boundaries, focus indicators, and body text retain contrast checks in both themes. Status always includes words, not color alone.
+
+`public/theme.css` owns semantic colors. `src/cabinet.css`, loaded after the older screen styles, owns the cabinet foundation while individual screens migrate. It does not replace the existing keyboard, modal, privacy, or import logic. Reduced-motion preference disables transitions and animations.
 
 ## One glass mark
 
@@ -35,13 +39,13 @@ The password panel keeps the no-reset message and local-storage boundary explici
 
 ## Workspace
 
-The sidebar is 176 pixels wide (164 at narrower widths). Repeated import-source and three-layer copy is removed. The header keeps lock and agent-sharing state visible while scrolling. The reader has more room, with privacy and reviewed deletion beside its title. Memory/brief filters wrap at narrow widths. Long content scrolls inside the workspace; the one-viewport requirement applies specifically to the ordinary lock screen.
+The sidebar is 208 pixels wide. Repeated import-source and three-layer copy is removed. The header keeps lock and agent-sharing state visible while scrolling. The reader has more room, with privacy and reviewed deletion beside its title. Memory/brief filters wrap at narrow widths. Long content scrolls inside the workspace; the one-viewport requirement applies specifically to the ordinary lock screen.
 
 The sharing picker renders 25 choices per page and retains selections across pages and searches. Exact outgoing Markdown and exclusions remain the review point. Paging and visual changes do not change approval or export policy.
 
 ## Distribution and review state
 
-The owner requested light-default cream/orange, retained dark mode, a less crowded lock screen and consistent logo artwork. These refinements are implemented for review; they are not a claim that final visual acceptance or public-launch readiness is complete. Native checks use only fictional data. The static landing page still needs a full visual alignment pass and remains unpublished. Keep the repository private until the owner's explicit launch decision.
+The owner supplied a cabinet-style UI brief after the earlier cream/orange direction. This foundation keeps light as default, retains dark mode and the orange glass, and applies the new paper/burgundy direction. These refinements are implemented for review; they are not a claim that final visual acceptance or public-launch readiness is complete. Native checks use only fictional data. The static landing page still needs a full visual alignment pass and remains unpublished. Keep the repository private until the owner's explicit launch decision.
 
 ## Provider curation controls
 
@@ -50,3 +54,25 @@ Agent access contains the provider workspace selector, 30-item draft pages, expl
 Edit/history and batch review use the shared contained modal with keyboard focus isolation and Escape cancellation while idle. Closing restores focus to the opening control. Earlier text is saved as a new held revision; it never silently reinstates a previous release. Manual Memory cards direct agent contribution edits back to this workspace.
 
 Keep automatic rules collapsed and off initially. Consent explains future eligible project/decision publication and distinguishes archive from session origin. Registration separates source access, curation and provider-processing consent. Cloud curation is optional; avoid copy implying that connecting a cloud model is required to use the app. A local-model option must not appear available until implemented.
+
+## Cabinet implementation and proposed follow-up
+
+| Brief direction                                    | Current implementation / boundary                                                                                                                                                                                          |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cabinet shell and paper surfaces                   | Theme tokens, 208px navigation, editorial headings, paper cards, drawer channels, restrained depth; no continuous animation or sound.                                                                                      |
+| Memory cabinet                                     | Existing paginated library; type filter buttons and card/list layouts; local search and restricted-note toggle. Counts come from the actual filtered library.                                                              |
+| Read a memory                                      | A contained side dialog displays complete inert text, review state, sharing eligibility, curator revision when available, and the existing source link. Escape closes and returns focus to the opener.                     |
+| Review versus access                               | Draft, Reviewed, and Auto-published describe publication basis. Withheld / Not approved / Eligible describe eligibility. Eligibility explicitly does not grant an agent access. Existing backend enforcement is unchanged. |
+| Briefs                                             | Paper-folder styling over the working brief editor, linked memories, review, and deletion. No invented project folder model or snapshot semantics.                                                                         |
+| Archive and lock                                   | Larger archive titles/excerpts, paper reader, consistent glass mark, compact viewport lock form. Decorative drawers disappear in short windows.                                                                            |
+| Review Queue and Projects navigation               | Proposed, not added. Current review actions and provider curation stay in their existing screens. No dead navigation.                                                                                                      |
+| Global search / command palette                    | Proposed. Existing archive, memory, and brief searches retain their actual scope.                                                                                                                                          |
+| Project folders, preferences, constraints          | Proposed schema changes. Existing memory types remain fact, decision, project.                                                                                                                                             |
+| Project/brief-specific agent grants                | Proposed backend work. Current per-client and provider boundaries remain authoritative.                                                                                                                                    |
+| Autosave, conflict merging, local AI configuration | Proposed; not implied by the new interface. Explicit save and approval-reset behavior remain unchanged.                                                                                                                    |
+
+New UX work must preserve manual-versus-automatic publication labeling, source restrictions, explicit review, provider isolation, encrypted storage, and disclosure before any cloud processing. The attached brief's unrelated product concepts are outside this app's scope.
+
+## November 25 verification
+
+The frontend build and 25 reading regressions pass, including both-theme contrast, independent review/access labels, full inert note text, and inspector disclosure. Native checks covered the light lock screen and light/dark workspace at 1280 × 840, both-theme unlock screens and the light first-run screen at 980 × 640, using only the fictional fixture. The first pass exposed an old unlock-button color override, corrected and rechecked in both themes. Native filtering, search, restricted visibility, inspector Tab wrapping/Escape/focus return, and brief-editor cancellation also passed. Source navigation exposed a title-search bug: the owner list command now accepts an exact source ID, with the existing restricted-content toggle still enforced. A regression covers identical punctuated titles, sources beyond the first page, missing IDs, and both private/sensitive restrictions. The exact source-link native retest passed, including return to the full archive. The full local verifier passed 229 checks; details are recorded in WORK_LOG. Tests use a new fictional encrypted cabinet fixture; no personal archive is used for screenshots or design examples. Final owner visual acceptance remains open.

@@ -152,7 +152,7 @@ Remaining release gates before Apple signing:
 
 Do not treat successful native paths as proof of all crash, hardware, lock-screen or clipboard-manager behavior. Keep open cases in VALIDATION and the next reviewer brief; queued GitHub checks are not passes.
 
-The cream/orange light-default UI and optional dark mode remain the current visual base. Further visual refinement is secondary to working curation and sharing. Source scopes are now changed only through explicit registrations; broad legacy grants are downgraded during migration. Cloud curation is optional and local inference remains planned.
+The November 25 cabinet foundation supersedes the cream/orange interface palette with paper/burgundy and warm dark themes, retaining the orange glass mark. See DESIGN for the implemented UI scope and proposed product capabilities; working curation and sharing remain the foundation. Source scopes are now changed only through explicit registrations; broad legacy grants are downgraded during migration. Cloud curation is optional and local inference remains planned.
 
 ## Provider curation implementation update — 2026-11-20
 

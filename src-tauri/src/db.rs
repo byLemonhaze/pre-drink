@@ -508,6 +508,25 @@ impl Vault {
             .map_err(|e| e.to_string())
     }
 
+    /// Owner navigation by stable ID; never inferred from a searchable title.
+    pub fn conversation(
+        &self,
+        id: &str,
+        include_restricted: bool,
+    ) -> Result<Option<Conversation>, String> {
+        self.connection.query_row(
+            "SELECT c.id,c.platform,c.title,c.created_at,c.updated_at,c.private,c.sensitive,
+             (SELECT count(*) FROM messages m WHERE m.conversation_id=c.id),
+             COALESCE((SELECT substr(content,1,180) FROM messages m WHERE m.conversation_id=c.id ORDER BY is_active DESC,position LIMIT 1),'No readable text messages')
+             FROM conversations c WHERE c.id=?1 AND (?2 OR (c.private=0 AND c.sensitive=0))",
+            params![id, include_restricted],
+            |r| Ok(Conversation {
+                id:r.get(0)?, platform:r.get(1)?, title:r.get(2)?, created_at:r.get(3)?, updated_at:r.get(4)?,
+                private:r.get(5)?, sensitive:r.get(6)?, message_count:r.get(7)?, preview:r.get(8)?,
+            }),
+        ).optional().map_err(|e|e.to_string())
+    }
+
     pub fn messages(&self, id: &str, include_restricted: bool) -> Result<Vec<Message>, String> {
         let allowed: bool = self.connection.query_row("SELECT EXISTS(SELECT 1 FROM conversations WHERE id=?1 AND (?2 OR (private=0 AND sensitive=0)))", params![id, include_restricted], |r| r.get(0)).map_err(|e| e.to_string())?;
         if !allowed {
@@ -822,5 +841,52 @@ mod activity_upgrade_tests {
         c.execute_batch("DROP VIEW agent_activity;").unwrap();
         let v = Vault::initialize(c, ":memory:".into()).unwrap();
         assert_eq!(v.clients().unwrap().len(), 1);
+    }
+}
+
+#[cfg(test)]
+mod source_navigation_tests {
+    use super::*;
+
+    #[test]
+    fn exact_source_navigation_ignores_titles_paging_and_respects_restrictions() {
+        let vault = Vault::memory().unwrap();
+        for i in 0..105 {
+            vault.connection.execute(
+                "INSERT INTO conversations(id,platform,title,raw_json,updated_at) VALUES (?1,'chatgpt','Fictional garden · design notes','{}',?2)",
+                params![format!("source-{i}"), i],
+            ).unwrap();
+        }
+        assert!(!vault
+            .list("", false, 0)
+            .unwrap()
+            .iter()
+            .any(|c| c.id == "source-0"));
+        assert_eq!(
+            vault.conversation("source-0", false).unwrap().unwrap().id,
+            "source-0"
+        );
+        assert!(vault.conversation("missing", true).unwrap().is_none());
+        for column in ["private", "sensitive"] {
+            vault
+                .connection
+                .execute(
+                    &format!("UPDATE conversations SET {column}=1 WHERE id='source-0'"),
+                    [],
+                )
+                .unwrap();
+            assert!(vault.conversation("source-0", false).unwrap().is_none());
+            assert_eq!(
+                vault.conversation("source-0", true).unwrap().unwrap().id,
+                "source-0"
+            );
+            vault
+                .connection
+                .execute(
+                    &format!("UPDATE conversations SET {column}=0 WHERE id='source-0'"),
+                    [],
+                )
+                .unwrap();
+        }
     }
 }
