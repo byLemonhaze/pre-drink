@@ -12,6 +12,8 @@ Built with **Rust, Tauri 2, React, TypeScript, and SQLCipher/SQLite FTS5**.
 
 These screenshots show the current cream/orange interface with **fictional garden data only**. They are native app captures, not design mockups. The interface is still evolving.
 
+![The locked vault, with no history exposed](docs/screenshots/locked.png)
+
 ![Search and read an imported conversation](docs/screenshots/archive.png)
 
 ![Review and edit structured memories](docs/screenshots/memory.png)

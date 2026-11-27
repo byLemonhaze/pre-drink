@@ -35,6 +35,6 @@ On November 27, the restored-interface publication tree passed `npm run verify:l
 
 Fresh npm and RustSec checks reported **zero vulnerability findings**. Three informational warnings remain: Chrono is an active Mac dependency marked unmaintained; proc-macro-error and GLib warnings are in the cross-platform lockfile but absent from both resolved Mac normal/build dependency graphs. See [dependency checks](DEPENDENCY_CHECKS.md).
 
-A fresh native build of the restored interface was opened against separate fictional encrypted storage. Archive reading, memory listing, exact selected-context preview, and lock were observed. All three screenshots were visually inspected; their metadata contains only image dimensions/resolution and the generic screenshot label. No context was copied, saved, or sent to an agent.
+A fresh native build of the restored interface was opened against separate fictional encrypted storage. Archive reading, memory listing, exact selected-context preview, and lock were observed. All four screenshots, including the locked-vault opening image, were visually inspected; their metadata contains only image dimensions/resolution and the generic screenshot label. No context was copied, saved, or sent to an agent.
 
 Remaining distribution, accessibility, platform, and provider checks are listed in [release readiness](RELEASE_READINESS.md). Source publication does not close them.
