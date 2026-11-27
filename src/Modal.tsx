@@ -7,7 +7,6 @@ export default function Modal({
   busy = false,
   onClose,
   returnFocus,
-  placement = "center",
   children,
 }: {
   label: string;
@@ -15,7 +14,6 @@ export default function Modal({
   busy?: boolean;
   onClose: () => void;
   returnFocus?: RefObject<HTMLElement | null>;
-  placement?: "center" | "side";
   children: ReactNode;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
@@ -36,7 +34,7 @@ export default function Modal({
   return (
     <dialog
       ref={ref}
-      className={`editor-modal${wide ? " wide" : ""}${placement === "side" ? " side-panel" : ""}`}
+      className={`editor-modal${wide ? " wide" : ""}`}
       aria-label={label}
       aria-modal="true"
       aria-busy={busy}

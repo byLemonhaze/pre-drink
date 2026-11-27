@@ -846,9 +846,9 @@ dialog.editor-modal::backdrop {
   border-radius: 8px;
   margin-top: 12px;
   font-size: 13px;
-  background: var(--primary-bg);
-  color: var(--primary-text);
-  border-color: var(--primary-line);
+  background: var(--accent);
+  color: #402511;
+  border-color: var(--accent);
   box-shadow: none;
 }
 .unlock-card .security-caption {

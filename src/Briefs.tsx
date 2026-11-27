@@ -39,7 +39,7 @@ export default function Briefs() {
     }
   }
   return (
-    <div className="secondary-page briefs-page">
+    <div className="secondary-page">
       <div className="eyebrow">03 / CURATED CONTEXT</div>
       <div className="section-heading">
         <div>
@@ -80,9 +80,9 @@ export default function Briefs() {
           {error}
         </p>
       )}
-      <LibraryPage state={library} label="briefs" className="brief-grid">
+      <LibraryPage state={library} label="briefs">
         {(b) => (
-          <article className="settings-card brief-card" key={b.id}>
+          <article className="settings-card" key={b.id}>
             <div className="memory-meta">
               <h2>{b.title}</h2>
               <span className="approval">

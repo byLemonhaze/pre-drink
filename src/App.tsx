@@ -443,7 +443,9 @@ function App({
       <aside className="sidebar">
         <div className="brand">
           <img className="app-mark" src="/favicon.svg" alt="" />
-          <span>Pre-Drink</span>
+          <span>
+            pre-drink<span className="brand-dot">.</span>
+          </span>
         </div>
         <div className="workspace-label">YOUR PERSONAL VAULT</div>
         <nav aria-label="Main navigation">
@@ -462,7 +464,7 @@ function App({
             onClick={() => setPage("memory")}
           >
             <Brain size={18} />
-            Memory cabinet
+            Memory
           </button>
           <button
             className={page === "briefs" ? "nav-item active" : "nav-item"}
@@ -532,7 +534,7 @@ function App({
                   library: "Archive",
                   imports: "Imports",
                   settings: "Settings",
-                  memory: "Memory cabinet",
+                  memory: "Memory",
                   briefs: "Briefs",
                   agents: "Agent access",
                   sharing: "Export context",

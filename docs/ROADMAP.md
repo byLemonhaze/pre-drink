@@ -1,32 +1,27 @@
 # Roadmap
 
-The detailed agreed order and exit criteria are in [EXECUTION_PLAN](EXECUTION_PLAN.md). Completed work and open verification are in [WORK_LOG](WORK_LOG.md); checks are in [VALIDATION](VALIDATION.md).
+Pre-Drink is currently published as source-only work in progress. A public Mac download is a separate milestone.
 
-## Current implementation
+## Implemented foundation
 
-ChatGPT, Claude and Grok official ZIP adapters with versioned fictional contracts; branch/snapshot archive; FTS5; separate-password SQLCipher vault; editable memory and briefs; source-aware sharing rules; selected Markdown preview/copy/file export; local authenticated MCP; encrypted backups; manual/idle/macOS lifecycle locking. Owner-controlled longer work sessions support deliberate unattended curation; independent owner holds survive agent edits. Privacy updates reset linked approvals only, and local verification guards pushes without paid CI. Manual saves produce drafts and require a separate saved-version review. Provider curators now have private drafts, revisions, resumable source manifests and batch release; narrow automatic publication is separately opt-in. Cloud curation is optional; all manual local workflows remain available without a model. No local-model runner is implemented. Schema-8 encrypted import checkpoints support explicit pause/resume and finish-without-ZIP after preparation; unfinished work is never searchable or shared. The native interface now uses a paper/burgundy cabinet theme by default, optional warm dark mode, and the existing orange glass icon. Memory cards have type filters, a compact list option, and a full-note side dialog; see DESIGN for proposed capabilities that are not implemented. Static landing assets remain unpublished.
+Official ChatGPT/Claude/Grok ZIP adapters, encrypted resumable imports, text/branch archive, FTS5 search, manual memories and briefs, selected outgoing Markdown preview, scoped local MCP, provider-private curation drafts, revision history, optional narrow automatic publication, per-client controls, encrypted backup/recovery, and Mac lifecycle locking.
 
-This is a working private pre-release. Basic native review, sharing, recovery and fictional import workflows have evidence. Codex CLI and Grok Build have passed the fictional MCP client policy matrix. Native Finder drop/reimport, password change, Codex/Grok configuration screens and sharing-off after restart are now verified with fictional data. One representative ChatGPT export has passed isolated backend and native post-import checks. Broader native import/lifecycle, full keyboard coverage and distribution gates remain open. Grok/Claude adapters and matching scopes are now implemented; their representative exports are still unverified; MCP-client compatibility is tracked separately in MCP_ACCEPTANCE.
+The current interface is the cream/orange light theme with optional charcoal/orange dark mode. The experimental cabinet redesign was withdrawn. Its separate stable-ID source-navigation fix is retained.
 
-## Historical execution order
+## Before a downloadable Mac release
 
-For the current release decision, use RELEASE_READINESS: core local/native gates and the separate review at `abd9bea` have passed; Apple distribution and owner launch approval remain. The milestones below preserve the original sequencing rather than defining new rounds.
+1. Complete Developer ID signing, notarization, ticket/checksum verification, and a clean downloaded-install walkthrough.
+2. Recheck current dependency advisories and run the complete local gate for the exact release commit.
+3. Expand representative Claude/Grok export coverage and publish the tested architecture/OS matrix.
+4. Confirm automatic import-status/completion announcements with a human screen-reader check and broaden enlarged-text/layout coverage.
+5. Reassess remaining review findings and disclose unresolved limits. A prior passing review covers its snapshot, not every later change.
 
-1. **M1, in progress:** dependable ChatGPT workflow; contextual sensitivity detection and safe reclassification; build/vault identity; native approval, isolated upgrade, real export and MCP checks.
-2. **M2, implemented; basic native flow verified:** make exact sharing preview the centerpiece; selective copy and Markdown export with privacy/staleness enforcement.
-3. **M3, implemented; validation in progress:** reviewed in-app restore/password change, preserved encrypted generations, client reset, conversation deletion and explicit raw-snapshot cleanup. Disposable recovery and lifecycle regression suites include backup-capacity/publication faults, partial restore cleanup, interrupted imports and safe retry. Backup success requires a folder flush. Native, physical power-loss and broader filesystem limits remain documented.
-4. **Provider curation, implemented; acceptance in progress:** scoped archive curation and explicit end-of-chat memory writes, durable/incremental jobs, revisions and reviewed/policy-controlled shared collections. Codex and Grok each passed a bounded three-session fictional writing check; real-export, broader model-quality and other-client writing acceptance remain; see [AGENT_CURATION](AGENT_CURATION.md).
-5. **M4, implementation expanded:** ChatGPT/Grok/Claude adapters and curator roles; finish native and representative-format acceptance. Gemini, Copilot and additional official adapters follow validated structures, not name-only UI support.
-6. **M5, planned:** signed/notarized release, clean installation test, fictional-data demo, strong README and owner-approved public launch.
+## Product improvements under consideration
 
-Apple enrollment is deferred to the end at the owner’s request. Enrollment is not confirmed. No account/legal/payment action is automatic.
+- More accessible and refined UI on the existing working foundation.
+- Project organization, richer memory classification, and narrower topic/project grants, with backend enforcement designed first.
+- A local-model curator with explicit access and resource controls.
+- Indexed large-library queries and tighter individual-record memory budgets.
+- Additional official providers when their export formats can be validated.
 
-## Retained backlog
-
-Per-project/brief agent grants; direct brief retrieval; note/brief FTS and indexed query optimization (backend pages now serve the four owner library views); tagging/branch views; signed-app Keychain client integration; broader backup-filesystem support; richer supersession/conflict discovery; local-model execution with explicitly defined provider isolation. Private draft workspaces and revision history are implemented, not backlog items. These require explicit scheduling and must not silently expand a milestone.
-
-No cloud sync, live capture, mandatory paid model dependency, semantic embeddings, mobile, teams, monetization or demand-testing work in this plan.
-
-Keep the repository private and public download disabled until the owner explicitly chooses publication after the release gates pass.
-
-Optional future mode: explicitly authorize a selected curator to process multiple chosen source archives, with distinct delegated attribution and independent publication. Default isolation stays unchanged. This is not implemented; see AGENT_CURATION. Gemini/Copilot format discovery is documented in PROVIDERS.
+These are proposals, not available controls or promised dates. No cloud sync, live scraping, mobile app, or team workspace is currently planned for the first release.

@@ -33,7 +33,7 @@ If the process dies before final commit, archive writes and checkpoint deletion 
 
 ## Verification and remaining limits
 
-Local regressions cover persisted encrypted checkpoints and backup, mismatched/renamed ZIPs, skipped-prefix normalization and report counts, duplicates/malformed late records, discard, lock/reunlock/expiry/concurrent attempts, preparation and publication capacity failures with retry, current privacy rechecking, schema-7 migration preserving approvals, and a killed final transaction followed by retry. Frontend rendering tests cover paused/ready/running controls, escaped filenames, named progress and the non-cancellable save explanation. Native outcomes are recorded separately in NATIVE_WALKTHROUGH.
+Local regressions cover persisted encrypted checkpoints and backup, mismatched/renamed ZIPs, skipped-prefix normalization and report counts, duplicates/malformed late records, discard, lock/reunlock/expiry/concurrent attempts, preparation and publication capacity failures with retry, current privacy rechecking, schema-7 migration preserving approvals, and a killed final transaction followed by retry. Frontend rendering tests cover paused/ready/running controls, escaped filenames, named progress and the non-cancellable save explanation. Native outcomes are recorded separately in VALIDATION.
 
 This does not remove the 256 MiB recognized-JSON limit, bound every individual record, eliminate the final atomic transaction's memory/latency cost, or prove physical power-loss durability. Actual hardware/filesystem failures and all historical schemas remain separate coverage.
 

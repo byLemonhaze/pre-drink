@@ -109,7 +109,7 @@ Export a fresh encrypted database, verify it, then publish without overwrite. Ex
 - Backup target collision never overwrites it.
 - A failed old-file cleanup preserves the verified encrypted migration result.
 
-Tests and pending validation are documented in AGENT_REVIEW.md. No remote AI provider, embedding pipeline, or synchronization service is present.
+Tests and pending validation are documented in [Validation](VALIDATION.md). No remote AI provider, embedding pipeline, or synchronization service is present.
 
 ## Explicit sensitivity reclassification
 

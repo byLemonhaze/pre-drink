@@ -8,7 +8,7 @@ This document separates the acceptance procedure from results for each client. A
 | ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Codex CLI 0.169.1 | Passed   | Eight phases, ten real MCP calls through the production stdio bridge and fictional encrypted fixture; actual tool events independently checked. Desktop configuration UI and native app restart remain open. |
 | Grok Build 1.0.41 | Passed   | Eight phases, ten real MCP calls across three disposable fixtures after owner sign-in. Four built-in tool-discovery calls also ran. Native setup/restart and Grok web/Bot remain unverified.                 |
-| Claude Code       | Deferred | Owner chose Codex/Grok instead. No Claude model calls made.                                                                                                                                                  |
+| Claude Code       | Deferred | No Claude model calls made; client acceptance remains unverified.                                                                                                                                            |
 
 The Codex phases were sharing-off denial; approved facts and brief retrieval plus memory-only chat denial; approval invalidation on edit; source privacy exclusion; lock with a still-valid credential; unlock retaining sharing-off; revocation with sharing enabled; and backend-session replacement retaining revocation. Draft/private/sensitive fictional markers never appeared in successful facts/context responses. All ten completed tool events belonged to Pre-Drink; no other tools executed.
 
@@ -17,8 +17,6 @@ Codex used existing ChatGPT authentication, no API key, an empty working folder,
 Grok passed the same eight policy phases using the production bridge: sharing off; approved facts/context plus memory-only chat denial; edit invalidation; private-source exclusion; lock; unlock retaining sharing-off; revocation; and revocation after backend-session replacement. Assertions inspected actual ACP tool results, not the model's summary. All ten MCP calls targeted the three requested Pre-Drink tools; the only other executed tool was Grok's built-in discovery (four calls). No shell, file, web, unrelated connector or subagent call executed.
 
 The Grok runs used existing account authentication, an empty working folder, isolated temporary configuration, disabled compatibility connectors and no API key. Credentials traveled through the local ACP session setup; no persistent MCP registration was added. Fictional vault/configuration files were removed after revocation and lock. Cloud-client history can retain content it already received; these checks used invented content only.
-
-The earlier authentication block was resolved when the owner completed `grok login --oauth`. Initialization then advertised `cached_token` and `grok.com`, and cached authentication succeeded. The [Grok ACP guide](https://docs.x.ai/build/cli/headless-scripting) describes that flow; inspect the advertised methods for the installed client. One local test-driver attempt redundantly unlocked an already-unlocked restarted fixture and stopped before making its final MCP call. Correcting that sequence and rerunning the single restart case passed; no product change was required.
 
 ## Generated settings acceptance
 

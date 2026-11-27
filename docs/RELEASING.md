@@ -1,6 +1,6 @@
 # macOS distribution
 
-**Pre-release visibility:** Keep the repository private and Pages unpublished until the owner explicitly chooses to launch. A successful build or UI change does not authorize making either public.
+**Source-only publication:** The source repository is public work in progress. Do not publish local/ad-hoc app bundles or DMGs. A downloadable release and any download landing page require separate completion of the distribution gates below.
 
 Local/ad-hoc builds do not establish a verified publisher identity. Developer ID signing associates the app with an Apple identity and lets macOS detect modification. Notarization adds Apple's automated distribution check and ticket. Neither replaces vault encryption or a security audit. References: [Apple Developer ID](https://developer.apple.com/developer-id/), [Tauri signing](https://v2.tauri.app/distribute/sign/macos/).
 
@@ -26,11 +26,9 @@ The script installs/caches locked dependencies and calls `npm run verify:local` 
 
 Review current dependency advisories and complete real-export/native-drag/large-library validation before distribution. A configured minimum OS is not evidence of testing every macOS version or Intel hardware. Never tell users to disable Gatekeeper to compensate for an unsigned release.
 
-## Landing page and download switch
+## Future downloads
 
-The static landing page lives in `docs/index.html` and is suitable for GitHub Pages from `main:/docs`. It has no analytics, remote fonts, signup form or client script. The hosting provider still receives ordinary web requests; this is separate from the offline app.
-
-After a signed/notarized release passes the remaining validation gates, publish its archive and SHA-256 checksum as GitHub release assets. Replace the disabled download control with that verified release asset URL, state the supported architecture/version, and update availability text and the validation record. Never point the public button to a local ad-hoc bundle or call an unsigned artifact notarized.
+After a signed/notarized release passes the remaining validation gates, publish its archive, source commit, supported architecture/version, and SHA-256 checksum as release assets. A future landing page may link to that verified asset. Never point a download button to a local ad-hoc bundle or call an unsigned artifact notarized. The previous unfinished landing-page files are not part of the source-only presentation.
 
 ## Manual updates (v1)
 

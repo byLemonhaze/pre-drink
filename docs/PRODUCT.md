@@ -6,7 +6,7 @@
 
 Pre-Drink is a free, MIT-licensed, macOS-first memory manager for people who use several AI products. It keeps their imported histories in an encrypted local vault, lets each authorized provider curate only its own history, and makes selected knowledge available as a shared memory layer. Useful context can move between agents without giving each agent the other providers’ raw archives.
 
-This extends the existing app. The encrypted archive, search, manual notes, briefs, sharing preview and recovery system remain the foundation. It is an independent implementation informed by Loominary, not a fork; see [PROVENANCE](PROVENANCE.md). The repository remains private until the owner chooses public launch.
+This extends the existing app. The encrypted archive, search, manual notes, briefs, sharing preview and recovery system remain the foundation. It is an independent implementation informed by Loominary, not a fork; see [PROVENANCE](PROVENANCE.md). The repository is published as source-only work in progress; a downloadable Mac release is a separate milestone.
 
 **Cloud curation is optional, never a requirement.** Import, search, manual memory editing, briefs, selected exports, encryption and backups work offline with no model, API key or account. A connected external agent can do the curation work if the owner authorizes it. The app contains no model runner or background inference service. A local-model curator is a desired future option, with an explicit access policy still to be designed.
 
@@ -84,7 +84,7 @@ Implemented and deterministically tested: scoped source reads and writes, retry/
 
 Grok Build additionally passed three fictional provider-matched sessions and 29 MCP calls. Context packs match words in the saved summary; they do not infer topic associations. Curators should retain recognizable project names.
 
-Still open: broader curation quality and Claude model-led writing; broader native real-data lifecycle and existing-vault upgrade acceptance following successful ChatGPT backend and post-import checks; broader scale, accessibility and filesystem failure coverage; fresh independent review; signed/notarized distribution and clean installation. See [VALIDATION](VALIDATION.md) for precise evidence, [AGENT_CURATION](AGENT_CURATION.md) for the contract and [EXECUTION_PLAN](EXECUTION_PLAN.md) for order.
+Still open: broader curation quality and Claude model-led writing; broader native real-data lifecycle and existing-vault upgrade acceptance following successful ChatGPT backend and post-import checks; broader scale, accessibility and filesystem failure coverage; fresh independent review; signed/notarized distribution and clean installation. See [VALIDATION](VALIDATION.md) for precise evidence, [AGENT_CURATION](AGENT_CURATION.md) for the contract and [ROADMAP](ROADMAP.md) for order.
 
 ## Future ideas and exclusions
 
@@ -94,7 +94,7 @@ No cloud sync, mandatory model subscription, live capture, semantic embeddings, 
 
 ## Distribution and portfolio
 
-A simple landing page will explain provider-private histories, optional curation, controlled shared memory and offline use. Download remains disabled until a verified Developer ID signed/notarized artifact exists and the owner chooses publication. Apple enrollment stays at the end. Users run independent local vaults; no hosted vault or account is required. The demo uses fictional data and shows exact outgoing context, a curator revision returning to private state and a denied foreign-source request. Source/docs remain MIT-licensed and private until launch; no public-ready or independent-audit claim is implied by passing tests.
+A simple landing page will explain provider-private histories, optional curation, controlled shared memory and offline use. Download remains disabled until a verified Developer ID signed/notarized artifact exists and the owner chooses publication. Apple enrollment stays at the end. Users run independent local vaults; no hosted vault or account is required. The demo uses fictional data and shows exact outgoing context, a curator revision returning to private state and a denied foreign-source request. Source and documentation are publicly available under MIT as work in progress; passing tests does not imply a finished Mac release or an independent security audit.
 
 ## Optional cross-provider delegation — approved future direction
 
@@ -106,4 +106,4 @@ This advanced mode is not implemented yet. It requires a dedicated owner-issued 
 
 An owner-applied hold is independent of an agent's conflict flag. Agents may keep revising their own provider's draft but cannot clear the hold or release it. The owner clears it in **Edit / resolve**, then reviews the new saved version. Existing conflict flags from older vaults migrate conservatively to owner holds. The shared layer remains controlled by the owner; longer sessions do not broaden scopes or publication policy.
 
-**Agent access → Let your agents work** offers one hour, four hours, or until Mac lock. Starting explicitly enables sharing and keeps the vault unlocked for that period, including while idle. A timed session locks at its deadline. Agents cannot renew it. Stopping sharing cancels it; manual lock, Mac lock and sleep still lock immediately, and unlocking/restarting never resumes it. The control does not launch a model or buy usage. External clients still have their own usage costs; this project's current policy prohibits further paid calls.
+**Agent access → Let your agents work** offers one hour, four hours, or until Mac lock. Starting explicitly enables sharing and keeps the vault unlocked for that period, including while idle. A timed session locks at its deadline. Agents cannot renew it. Stopping sharing cancels it; manual lock, Mac lock and sleep still lock immediately, and unlocking/restarting never resumes it. The control does not launch a model or buy usage. External clients still have their own usage costs; review their subscription or API terms before enabling cloud curation.

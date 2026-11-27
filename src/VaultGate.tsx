@@ -171,7 +171,7 @@ export default function VaultGate() {
         <header className="lock-brandbar">
           <div className="brand">
             <img className="app-mark" src="/favicon.svg" alt="" />
-            <span>Pre-Drink</span>
+            <span>pre-drink.</span>
           </div>
           <ThemeSwitch />
         </header>
@@ -187,20 +187,6 @@ export default function VaultGate() {
               <br />
               Better context for whatever comes next.
             </p>
-            <div className="closed-cabinet" aria-hidden="true">
-              <div>
-                <span>01 / ARCHIVE</span>
-                <i />
-              </div>
-              <div>
-                <span>02 / MEMORY</span>
-                <i />
-              </div>
-              <div>
-                <span>03 / BRIEFS</span>
-                <i />
-              </div>
-            </div>
             <div className="local-promise">
               <ShieldCheck size={15} /> Local. Encrypted. Under your control.
             </div>

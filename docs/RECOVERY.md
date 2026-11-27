@@ -85,7 +85,7 @@ Schema 7 adds independent owner holds. All pre-v7 conflict flags are conservativ
 
 ## Native import interruption evidence
 
-The 2026-11-22 fictional native pass covers manual lock during active parsing, reopen without a late import, complete retry, and Command-Q during active import followed by a locked restart with the original archive intact. See NATIVE_WALKTHROUGH for counts and scope. This does not add resumable imports or a Cancel button. Parsing runs outside the session mutex and may finish after locking; its captured generation must still match before saving. Once saving holds the mutex, lock waits for the transaction. Commit-boundary rollback has separate killed-writer test evidence. No destructive interruption was attempted on personal data.
+The 2026-11-22 fictional native pass covers manual lock during active parsing, reopen without a late import, complete retry, and Command-Q during active import followed by a locked restart with the original archive intact. See [Validation](VALIDATION.md) for the evidence summary and remaining limits. This does not add resumable imports or a Cancel button. Parsing runs outside the session mutex and may finish after locking; its captured generation must still match before saving. Once saving holds the mutex, lock waits for the transaction. Commit-boundary rollback has separate killed-writer test evidence. No destructive interruption was attempted on personal data.
 
 ## Resumable import preparation — schema 8
 

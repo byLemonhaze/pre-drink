@@ -45,3 +45,7 @@ chat.html
 # Python developer-tool caches.
 __pycache__/
 *.py[cod]
+
+# Source-only publication: generated Mac installers stay local.
+*.dmg
+*.app/

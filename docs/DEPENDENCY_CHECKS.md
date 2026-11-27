@@ -33,7 +33,7 @@ The audit gate rejects vulnerabilities and reports informational warnings separa
 
 ## Mac impact and upgrade assessment — Nov 22
 
-The official registry reports that the currently locked `rmcp` 3.11.0, Tauri 2.12.7 and dialog plugin 2.8.4 are the latest stable versions. Tauri 3 prereleases are not a drop-in security patch. The current supported dependency stack cannot eliminate all three warnings with a compatible stable update. No library was forked, advisory suppressed or prerelease substituted to produce a green report.
+On November 22, the official registry reported that the locked `rmcp` 3.11.0, Tauri 2.12.7 and dialog plugin 2.8.4 were the latest stable versions at that check. Tauri 3 prereleases are not a drop-in security patch. The current supported dependency stack cannot eliminate all three warnings with a compatible stable update. No library was forked, advisory suppressed or prerelease substituted to produce a green report.
 
 | Warning                                | Apple Silicon and Intel Mac dependency graphs                            | Resolution path                                                                                                                                                                                                                          |
 | -------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -47,7 +47,7 @@ These are dependency-graph checks, not Intel hardware/build acceptance or a proo
 
 ## Direct replacement and consistent release requirements — Nov 22
 
-Rechecked official registry metadata: the stable MCP/Tauri/dialog versions above remain current. Replaced the app's direct Chrono requirement with `time` 0.3.55 (`std` and `parsing`, no clock/network feature). That version was already in the lockfile; the lockfile change moves only the root dependency edge. No transitive library was downgraded or forked.
+Official registry metadata was rechecked on November 22 for the versions above; recheck before future dependency changes. Replaced the app's direct Chrono requirement with `time` 0.3.55 (`std` and `parsing`, no clock/network feature). That version was already in the lockfile; the lockfile change moves only the root dependency edge. No transitive library was downgraded or forked.
 
 The same fictional timestamp contract passed against the old parser and replacement: offsets, millisecond flooring including pre-epoch fractions, arbitrary fractional precision, upper/lowercase separators, the earlier accepted space separator and leap-second representation, Mongo dates, missing/invalid dates and complete raw JSON retention. Both Claude/Grok adapters are exercised. The remaining Chrono tree is MCP SDK → Chrono and SDK-enabled schema integration → Chrono. All three upstream warnings remain visible; this is partial replacement, not a warning-free claim.
 
